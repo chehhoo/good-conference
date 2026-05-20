@@ -7,7 +7,7 @@ import SessionCard from '../components/SessionCard'
 function groupByTime(sessions: CampSession[]): [string, CampSession[]][] {
   const map = new Map<string, CampSession[]>()
   for (const s of sessions) {
-    const key = s.startTime.slice(0, 16) // "YYYY-MM-DDTHH:MM"
+    const key = s.startTime.slice(0, 16)
     const bucket = map.get(key) ?? []
     bucket.push(s)
     map.set(key, bucket)
@@ -20,7 +20,7 @@ function fmtSlot(iso: string) {
 }
 
 function fmtDayDate(iso: string) {
-  return new Date(iso).toLocaleDateString('zh-TW', { month: 'long', day: 'numeric', weekday: 'short' })
+  return new Date(iso).toLocaleDateString('zh-TW', { month: 'short', day: 'numeric', weekday: 'short' })
 }
 
 export default function Schedule() {
@@ -42,7 +42,6 @@ export default function Schedule() {
     onSuccess: () => qc.invalidateQueries({ queryKey: ['schedule'] }),
   })
 
-  // Derive available days from data
   const days = [...new Set(sessions.map(s => s.day).filter((d): d is number => d != null))].sort()
 
   const visible = selectedDay != null
@@ -54,25 +53,28 @@ export default function Schedule() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header */}
+      {/* Header — compact on mobile, roomier on desktop */}
       <header className="bg-brand-900 text-white">
-        <div className="max-w-4xl mx-auto px-5 py-8">
-          <div className="flex items-center gap-3 mb-1">
-            <CalendarDays size={28} />
-            <h1 className="text-2xl font-bold tracking-tight">大會行程</h1>
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 py-5 sm:py-8">
+          <div className="flex items-center gap-2.5 mb-0.5">
+            <CalendarDays size={22} className="sm:hidden" />
+            <CalendarDays size={28} className="hidden sm:block" />
+            <h1 className="text-xl sm:text-2xl font-bold tracking-tight">大會行程</h1>
           </div>
-          <p className="text-blue-200 text-sm">Conference Schedule</p>
+          <p className="text-blue-200 text-xs sm:text-sm">Conference Schedule</p>
         </div>
+      </header>
 
-        {/* Day tabs */}
-        {days.length > 0 && (
-          <div className="max-w-4xl mx-auto px-5 pb-0 flex gap-1 overflow-x-auto">
+      {/* Day tab bar — sticky so it stays visible while scrolling */}
+      {days.length > 0 && (
+        <div className="sticky top-0 z-10 bg-brand-900 border-b border-brand-700 shadow-sm">
+          <div className="max-w-4xl mx-auto px-4 sm:px-6 flex gap-0.5 overflow-x-auto scrollbar-hide">
             <button
               onClick={() => setSelectedDay(null)}
-              className={`px-4 py-2 text-sm font-medium rounded-t-lg transition-colors whitespace-nowrap ${
+              className={`shrink-0 px-4 py-2.5 text-sm font-medium transition-colors whitespace-nowrap ${
                 selectedDay === null
-                  ? 'bg-gray-50 text-brand-900'
-                  : 'text-blue-200 hover:text-white hover:bg-brand-700'
+                  ? 'border-b-2 border-white text-white'
+                  : 'text-blue-300 hover:text-white'
               }`}
             >
               全部
@@ -83,15 +85,16 @@ export default function Schedule() {
                 <button
                   key={d}
                   onClick={() => setSelectedDay(d)}
-                  className={`px-4 py-2 text-sm font-medium rounded-t-lg transition-colors whitespace-nowrap ${
+                  className={`shrink-0 px-4 py-2.5 text-sm font-medium transition-colors whitespace-nowrap ${
                     selectedDay === d
-                      ? 'bg-gray-50 text-brand-900'
-                      : 'text-blue-200 hover:text-white hover:bg-brand-700'
+                      ? 'border-b-2 border-white text-white'
+                      : 'text-blue-300 hover:text-white'
                   }`}
                 >
                   第 {d} 天
+                  {/* Show date only on larger screens — too cramped on mobile */}
                   {firstSession && (
-                    <span className="ml-1 text-xs opacity-70">
+                    <span className="hidden sm:inline ml-1 text-xs opacity-60">
                       {fmtDayDate(firstSession.startTime)}
                     </span>
                   )}
@@ -99,11 +102,11 @@ export default function Schedule() {
               )
             })}
           </div>
-        )}
-      </header>
+        </div>
+      )}
 
       {/* Content */}
-      <main className="max-w-4xl mx-auto px-5 py-8">
+      <main className="max-w-4xl mx-auto px-4 sm:px-6 py-6 sm:py-8 pb-safe">
         {isLoading && (
           <div className="flex justify-center py-20 text-gray-400">
             <Loader2 size={32} className="animate-spin" />
@@ -111,27 +114,28 @@ export default function Schedule() {
         )}
 
         {isError && (
-          <div className="text-center py-20 text-red-500 text-sm">
-            無法載入行程，請稍後再試。<br />
-            <span className="text-gray-400">Could not load schedule. Please try again later.</span>
+          <div className="text-center py-20 text-sm">
+            <p className="text-red-500">無法載入行程，請稍後再試。</p>
+            <p className="text-gray-400 mt-1">Could not load schedule. Please try again later.</p>
           </div>
         )}
 
         {!isLoading && !isError && visible.length === 0 && (
-          <div className="text-center py-20 text-gray-400 text-sm">
-            尚未排定行程。<br />No sessions scheduled yet.
+          <div className="text-center py-20 text-sm">
+            <p className="text-gray-400">尚未排定行程。</p>
+            <p className="text-gray-300 mt-1">No sessions scheduled yet.</p>
           </div>
         )}
 
         {grouped.map(([timeKey, slot]) => (
-          <section key={timeKey} className="mb-8">
-            <div className="flex items-center gap-3 mb-4">
-              <span className="text-sm font-semibold text-brand-700 bg-blue-50 px-3 py-1 rounded-full">
+          <section key={timeKey} className="mb-6 sm:mb-8">
+            <div className="flex items-center gap-3 mb-3 sm:mb-4">
+              <span className="text-xs sm:text-sm font-semibold text-brand-700 bg-blue-50 px-3 py-1 rounded-full whitespace-nowrap">
                 {fmtSlot(timeKey)}
               </span>
               <div className="flex-1 h-px bg-gray-200" />
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
               {slot.map(s => (
                 <SessionCard
                   key={s.id}

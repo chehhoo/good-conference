@@ -33,13 +33,13 @@ export default function SessionCard({ session: s, onSignup, onUnsignup, loading 
   const pct = s.capacity ? Math.min(100, Math.round((s.signupCount / s.capacity) * 100)) : null
 
   return (
-    <div className="bg-white rounded-xl border border-gray-100 border-t-[3px] border-t-blue-600 shadow-sm p-5 flex flex-col gap-3">
+    <div className="bg-white rounded-xl border border-gray-100 border-t-[3px] border-t-blue-600 shadow-sm p-4 sm:p-5 flex flex-col gap-3">
       {/* Type badge + time */}
       <div className="flex items-center justify-between gap-2">
         <span className={`text-[11px] font-semibold px-2 py-0.5 rounded-full ${TYPE_COLORS[s.sessionType] ?? TYPE_COLORS.OTHER}`}>
           {TYPE_LABELS[s.sessionType] ?? s.sessionType}
         </span>
-        <span className="flex items-center gap-1 text-xs text-gray-500">
+        <span className="flex items-center gap-1 text-xs text-gray-500 shrink-0">
           <Clock size={12} />
           {fmt(s.startTime)}–{fmt(s.endTime)}
         </span>
@@ -53,18 +53,18 @@ export default function SessionCard({ session: s, onSignup, onUnsignup, loading 
 
       {/* Speaker */}
       {(s.speaker || s.speakerEng) && (
-        <div className="flex items-center gap-1.5 text-sm text-gray-700">
+        <div className="flex items-center gap-1.5 text-sm text-gray-700 min-w-0">
           <User size={13} className="shrink-0 text-gray-400" />
-          <span>{s.speaker}</span>
-          {s.speakerEng && <span className="text-gray-400">· {s.speakerEng}</span>}
+          <span className="truncate">{s.speaker}</span>
+          {s.speakerEng && <span className="text-gray-400 shrink-0">· {s.speakerEng}</span>}
         </div>
       )}
 
       {/* Location */}
       {s.location && (
-        <div className="flex items-center gap-1.5 text-sm text-gray-600">
+        <div className="flex items-center gap-1.5 text-sm text-gray-600 min-w-0">
           <MapPin size={13} className="shrink-0 text-gray-400" />
-          {s.location}
+          <span className="truncate">{s.location}</span>
         </div>
       )}
 
@@ -72,7 +72,9 @@ export default function SessionCard({ session: s, onSignup, onUnsignup, loading 
       {s.capacity != null && (
         <div className="space-y-1">
           <div className="flex items-center justify-between text-xs text-gray-500">
-            <span className="flex items-center gap-1"><Users size={12} />{s.signupCount} / {s.capacity}</span>
+            <span className="flex items-center gap-1">
+              <Users size={12} />{s.signupCount} / {s.capacity}
+            </span>
             {atCapacity && <span className="text-red-600 font-medium">已額滿 Full</span>}
           </div>
           <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
@@ -91,22 +93,22 @@ export default function SessionCard({ session: s, onSignup, onUnsignup, loading 
         <p className="text-xs text-gray-500 leading-relaxed line-clamp-3">{s.description}</p>
       )}
 
-      {/* Signup button */}
+      {/* Signup button — tall touch target (min ~48px) for mobile */}
       {(onSignup || onUnsignup) && (
-        <div className="pt-1">
+        <div className="pt-1 mt-auto">
           {s.signedUp ? (
             <button
               disabled={loading}
               onClick={() => onUnsignup?.(s.id)}
-              className="w-full py-2 rounded-lg text-sm font-medium bg-green-50 text-green-700 border border-green-200 hover:bg-red-50 hover:text-red-700 hover:border-red-200 transition-colors disabled:opacity-50"
+              className="w-full py-3 rounded-xl text-sm font-semibold bg-green-50 text-green-700 border border-green-200 hover:bg-red-50 hover:text-red-700 hover:border-red-200 active:scale-95 transition-all disabled:opacity-50"
             >
-              ✓ 已報名 · 取消
+              ✓ 已報名 · 取消報名
             </button>
           ) : (
             <button
               disabled={loading || atCapacity}
               onClick={() => onSignup?.(s.id)}
-              className="w-full py-2 rounded-lg text-sm font-medium bg-blue-600 text-white hover:bg-blue-700 transition-colors disabled:opacity-40"
+              className="w-full py-3 rounded-xl text-sm font-semibold bg-blue-600 text-white hover:bg-blue-700 active:scale-95 transition-all disabled:opacity-40"
             >
               {atCapacity ? '額滿 Full' : '報名 Sign Up'}
             </button>
