@@ -1,8 +1,9 @@
 import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { CalendarDays, Loader2 } from 'lucide-react'
+import { CalendarDays, Loader2, Share2 } from 'lucide-react'
 import { scheduleApi, type CampSession } from '../api/client'
 import SessionCard from '../components/SessionCard'
+import ShareModal from '../components/ShareModal'
 
 function groupByTime(sessions: CampSession[]): [string, CampSession[]][] {
   const map = new Map<string, CampSession[]>()
@@ -26,6 +27,8 @@ function fmtDayDate(iso: string) {
 export default function Schedule() {
   const qc = useQueryClient()
   const [selectedDay, setSelectedDay] = useState<number | null>(null)
+  const [showShare, setShowShare] = useState(false)
+  const shareUrl = window.location.origin + import.meta.env.BASE_URL
 
   const { data: sessions = [], isLoading, isError } = useQuery<CampSession[]>({
     queryKey: ['schedule'],
@@ -56,12 +59,24 @@ export default function Schedule() {
       {/* Header — compact on mobile, roomier on desktop */}
       <header className="bg-brand-900 text-white">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 py-5 sm:py-8">
-          <div className="flex items-center gap-2.5 mb-0.5">
-            <CalendarDays size={22} className="sm:hidden" />
-            <CalendarDays size={28} className="hidden sm:block" />
-            <h1 className="text-xl sm:text-2xl font-bold tracking-tight">大會行程</h1>
+          <div className="flex items-center justify-between">
+            <div>
+              <div className="flex items-center gap-2.5 mb-0.5">
+                <CalendarDays size={22} className="sm:hidden" />
+                <CalendarDays size={28} className="hidden sm:block" />
+                <h1 className="text-xl sm:text-2xl font-bold tracking-tight">大會行程</h1>
+              </div>
+              <p className="text-blue-200 text-xs sm:text-sm">Conference Schedule</p>
+            </div>
+            <button
+              onClick={() => setShowShare(true)}
+              className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-white/10 hover:bg-white/20 transition-colors text-white text-sm font-medium"
+              aria-label="分享 Share"
+            >
+              <Share2 size={16} />
+              <span className="hidden sm:inline">分享</span>
+            </button>
           </div>
-          <p className="text-blue-200 text-xs sm:text-sm">Conference Schedule</p>
         </div>
       </header>
 
@@ -149,6 +164,8 @@ export default function Schedule() {
           </section>
         ))}
       </main>
+
+      {showShare && <ShareModal url={shareUrl} onClose={() => setShowShare(false)} />}
     </div>
   )
 }
