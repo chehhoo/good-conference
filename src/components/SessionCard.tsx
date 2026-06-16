@@ -80,9 +80,9 @@ export default function SessionCard({ session: s, onSignup, onUnsignup, loading 
           <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
             <div
               className={`h-full rounded-full transition-all ${
-                pct! >= 100 ? 'bg-red-500' : pct! >= 75 ? 'bg-amber-400' : 'bg-green-500'
+                (pct ?? 0) >= 100 ? 'bg-red-500' : (pct ?? 0) >= 75 ? 'bg-amber-400' : 'bg-green-500'
               }`}
-              style={{ width: `${pct}%` }}
+              style={{ width: `${pct ?? 0}%` }}
             />
           </div>
         </div>
