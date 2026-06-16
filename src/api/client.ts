@@ -1,8 +1,26 @@
 import axios from 'axios'
+import { getToken, clearAuth, type StoredPerson } from '../auth'
 
 const api = axios.create({
   baseURL: import.meta.env.VITE_API_BASE_URL ?? '/api',
 })
+
+api.interceptors.request.use(config => {
+  const token = getToken()
+  if (token) config.headers.Authorization = `Bearer ${token}`
+  return config
+})
+
+api.interceptors.response.use(
+  r => r,
+  err => {
+    if (err.response?.status === 401) {
+      clearAuth()
+      window.location.replace('/login')
+    }
+    return Promise.reject(err)
+  }
+)
 
 export type SessionType = 'PLENARY' | 'GENERAL' | 'WORSHIP' | 'WORKSHOP' | 'OTHER'
 
@@ -36,4 +54,10 @@ export const scheduleApi = {
 
   unsignup: (id: number) =>
     api.delete<CampSession>(`/schedule/${id}/signup`).then(r => r.data),
+}
+
+export const conferenceApi = {
+  login: (registrationCode: string, lastName: string) =>
+    api.post<{ token: string; person: StoredPerson }>('/conference/login', { registrationCode, lastName })
+      .then(r => r.data),
 }
