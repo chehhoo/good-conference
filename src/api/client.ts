@@ -61,3 +61,13 @@ export const conferenceApi = {
     api.post<{ token: string; person: StoredPerson }>('/conference/login', { registrationCode, lastName })
       .then(r => r.data),
 }
+
+export const otpApi = {
+  send: (contact: string) =>
+    api.post<{ channel: string; maskedDestination: string }>('/conference/otp/send', { contact })
+      .then(r => r.data),
+
+  verify: (contact: string, code: string) =>
+    api.post<{ token: string; person: StoredPerson }>('/conference/otp/verify', { contact, code })
+      .then(r => r.data),
+}
