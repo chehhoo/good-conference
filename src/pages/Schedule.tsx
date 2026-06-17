@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { CalendarDays, Loader2, Share2 } from 'lucide-react'
 import { scheduleApi, type CampSession } from '../api/client'
+import { useAuth } from '../auth-context'
 import SessionCard from '../components/SessionCard'
 import ShareModal from '../components/ShareModal'
 
@@ -26,33 +27,50 @@ function fmtDayDate(iso: string) {
 
 export default function Schedule() {
   const qc = useQueryClient()
+  const { person } = useAuth()
+  const personId = person?.id ?? null
+
   const [selectedDay, setSelectedDay] = useState<number | null>(null)
+  const [pendingId, setPendingId] = useState<number | null>(null)
   const [showShare, setShowShare] = useState(false)
   const shareUrl = window.location.origin + import.meta.env.BASE_URL
 
   const { data: sessions = [], isLoading, isError } = useQuery<CampSession[]>({
-    queryKey: ['schedule'],
+    queryKey: ['schedule', personId],
     queryFn: scheduleApi.getAll,
   })
 
   const signup = useMutation({
     mutationFn: (id: number) => scheduleApi.signup(id),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['schedule'] }),
+    onMutate: (id) => setPendingId(id),
+    onSettled: () => {
+      setPendingId(null)
+      qc.invalidateQueries({ queryKey: ['schedule', personId] })
+    },
   })
 
   const unsignup = useMutation({
     mutationFn: (id: number) => scheduleApi.unsignup(id),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['schedule'] }),
+    onMutate: (id) => setPendingId(id),
+    onSettled: () => {
+      setPendingId(null)
+      qc.invalidateQueries({ queryKey: ['schedule', personId] })
+    },
   })
 
   const days = [...new Set(sessions.map(s => s.day).filter((d): d is number => d != null))].sort()
+
+  // Build a lookup once so tab rendering is O(n) not O(n²)
+  const firstByDay = new Map<number, CampSession>()
+  for (const s of sessions) {
+    if (s.day != null && !firstByDay.has(s.day)) firstByDay.set(s.day, s)
+  }
 
   const visible = selectedDay != null
     ? sessions.filter(s => s.day === selectedDay)
     : sessions
 
   const grouped = groupByTime(visible)
-  const isMutating = signup.isPending || unsignup.isPending
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -95,7 +113,7 @@ export default function Schedule() {
               全部
             </button>
             {days.map(d => {
-              const firstSession = sessions.find(s => s.day === d)
+              const first = firstByDay.get(d)
               return (
                 <button
                   key={d}
@@ -108,9 +126,9 @@ export default function Schedule() {
                 >
                   第 {d} 天
                   {/* Show date only on larger screens — too cramped on mobile */}
-                  {firstSession && (
+                  {first && (
                     <span className="hidden sm:inline ml-1 text-xs opacity-60">
-                      {fmtDayDate(firstSession.startTime)}
+                      {fmtDayDate(first.startTime)}
                     </span>
                   )}
                 </button>
@@ -157,7 +175,7 @@ export default function Schedule() {
                   session={s}
                   onSignup={id => signup.mutate(id)}
                   onUnsignup={id => unsignup.mutate(id)}
-                  loading={isMutating}
+                  loading={pendingId === s.id}
                 />
               ))}
             </div>
