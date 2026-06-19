@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { CalendarDays, Loader2, Share2 } from 'lucide-react'
+import { Loader2, Share2 } from 'lucide-react'
 import { scheduleApi, type CampSession } from '../api/client'
 import { useAuth } from '../auth-context'
 import SessionCard from '../components/SessionCard'
@@ -46,6 +46,7 @@ export default function Schedule() {
     onSettled: () => {
       setPendingId(null)
       qc.invalidateQueries({ queryKey: ['schedule', personId] })
+      qc.invalidateQueries({ queryKey: ['my-signups', personId] })
     },
   })
 
@@ -55,6 +56,7 @@ export default function Schedule() {
     onSettled: () => {
       setPendingId(null)
       qc.invalidateQueries({ queryKey: ['schedule', personId] })
+      qc.invalidateQueries({ queryKey: ['my-signups', personId] })
     },
   })
 
@@ -74,34 +76,10 @@ export default function Schedule() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header — compact on mobile, roomier on desktop */}
-      <header className="bg-brand-900 text-white">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 py-5 sm:py-8">
-          <div className="flex items-center justify-between">
-            <div>
-              <div className="flex items-center gap-2.5 mb-0.5">
-                <CalendarDays size={22} className="sm:hidden" />
-                <CalendarDays size={28} className="hidden sm:block" />
-                <h1 className="text-xl sm:text-2xl font-bold tracking-tight">大會行程</h1>
-              </div>
-              <p className="text-blue-200 text-xs sm:text-sm">Conference Schedule</p>
-            </div>
-            <button
-              onClick={() => setShowShare(true)}
-              className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-white/10 hover:bg-white/20 transition-colors text-white text-sm font-medium"
-              aria-label="分享 Share"
-            >
-              <Share2 size={16} />
-              <span className="hidden sm:inline">分享</span>
-            </button>
-          </div>
-        </div>
-      </header>
-
       {/* Day tab bar — sticky so it stays visible while scrolling */}
       {days.length > 0 && (
         <div className="sticky top-0 z-10 bg-brand-900 border-b border-brand-700 shadow-sm">
-          <div className="max-w-4xl mx-auto px-4 sm:px-6 flex gap-0.5 overflow-x-auto scrollbar-hide">
+          <div className="max-w-4xl mx-auto px-4 sm:px-6 flex gap-0.5 overflow-x-auto scrollbar-hide items-center">
             <button
               onClick={() => setSelectedDay(null)}
               className={`shrink-0 px-4 py-2.5 text-sm font-medium transition-colors whitespace-nowrap ${
@@ -134,6 +112,13 @@ export default function Schedule() {
                 </button>
               )
             })}
+            <button
+              onClick={() => setShowShare(true)}
+              className="ml-auto shrink-0 p-2 rounded-lg text-blue-300 hover:text-white hover:bg-white/10 transition-colors"
+              aria-label="分享 Share"
+            >
+              <Share2 size={16} />
+            </button>
           </div>
         </div>
       )}

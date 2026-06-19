@@ -71,3 +71,40 @@ export const otpApi = {
     api.post<{ token: string; person: StoredPerson }>('/conference/otp/verify', { contact, code })
       .then(r => r.data),
 }
+
+export interface MealDay {
+  breakfast: boolean | null
+  lunch: boolean | null
+  dinner: boolean | null
+}
+
+export interface MemberLodging {
+  status: string | null
+  nights: Record<string, string | null>
+}
+
+export interface FamilyMember {
+  id: number
+  firstName: string
+  lastName: string
+  chineseName: string
+  gender: string | null
+  ageCode: string | null
+  isMe: boolean
+  meals?: Record<string, MealDay>
+  lodging?: MemberLodging
+}
+
+export interface FamilyInfo {
+  personId: number
+  familyId: number | null
+  members: FamilyMember[]
+}
+
+export const myApi = {
+  family: () =>
+    api.get<FamilyInfo>('/conference/my/family').then(r => r.data),
+
+  mySignups: () =>
+    api.get<CampSession[]>('/schedule/my-signups').then(r => r.data),
+}
