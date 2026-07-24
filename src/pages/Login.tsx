@@ -85,9 +85,7 @@ export default function Login() {
 
         {/* Logo */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-brand-900 mb-4">
-            <span className="text-white text-2xl font-bold">GV</span>
-          </div>
+          <img src="/logo.svg" alt="Good Vessel" className="w-16 h-16 rounded-2xl mx-auto mb-4" />
           <h1 className="text-2xl font-bold text-gray-900">大會入口</h1>
           <p className="text-gray-500 text-sm mt-1">Conference Portal</p>
         </div>
