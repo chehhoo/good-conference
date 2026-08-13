@@ -32,6 +32,7 @@ export default function Schedule() {
 
   const [selectedDay, setSelectedDay] = useState<number | null>(null)
   const [pendingId, setPendingId] = useState<number | null>(null)
+  const [mutationError, setMutationError] = useState<string | null>(null)
   const [showShare, setShowShare] = useState(false)
   const shareUrl = window.location.origin + import.meta.env.BASE_URL
 
@@ -42,7 +43,8 @@ export default function Schedule() {
 
   const signup = useMutation({
     mutationFn: (id: number) => scheduleApi.signup(id),
-    onMutate: (id) => setPendingId(id),
+    onMutate: (id) => { setPendingId(id); setMutationError(null) },
+    onError: () => setMutationError('報名失敗，請再試一次。 Sign up failed, please try again.'),
     onSettled: () => {
       setPendingId(null)
       qc.invalidateQueries({ queryKey: ['schedule', personId] })
@@ -52,7 +54,8 @@ export default function Schedule() {
 
   const unsignup = useMutation({
     mutationFn: (id: number) => scheduleApi.unsignup(id),
-    onMutate: (id) => setPendingId(id),
+    onMutate: (id) => { setPendingId(id); setMutationError(null) },
+    onError: () => setMutationError('取消報名失敗，請再試一次。 Cancel failed, please try again.'),
     onSettled: () => {
       setPendingId(null)
       qc.invalidateQueries({ queryKey: ['schedule', personId] })
@@ -125,6 +128,13 @@ export default function Schedule() {
 
       {/* Content */}
       <main className="max-w-4xl mx-auto px-4 sm:px-6 py-6 sm:py-8 pb-safe">
+        {mutationError && (
+          <div className="mb-4 text-sm text-red-600 bg-red-50 rounded-lg px-3 py-2 flex justify-between items-center">
+            <span>{mutationError}</span>
+            <button onClick={() => setMutationError(null)} className="ml-3 text-red-400 hover:text-red-600">✕</button>
+          </div>
+        )}
+
         {isLoading && (
           <div className="flex justify-center py-20 text-gray-400">
             <Loader2 size={32} className="animate-spin" />
