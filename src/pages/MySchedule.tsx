@@ -20,7 +20,7 @@ export default function MySchedule() {
   const { person, token } = useAuth()
   const personId = person?.id ?? null
 
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, isError } = useQuery({
     queryKey: ['my-signups', personId],
     queryFn: myApi.mySignups,
     staleTime: 60_000,
@@ -39,6 +39,16 @@ export default function MySchedule() {
     return (
       <div className="flex justify-center py-20">
         <Loader2 className="animate-spin text-blue-600" size={32} />
+      </div>
+    )
+  }
+
+  if (isError) {
+    return (
+      <div className="flex flex-col items-center justify-center py-20 gap-3 text-red-500">
+        <BookMarked size={40} strokeWidth={1.5} />
+        <p className="text-lg font-medium">無法載入我的行程</p>
+        <p className="text-sm text-gray-400">Could not load your schedule. Please try again later.</p>
       </div>
     )
   }

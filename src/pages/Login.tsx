@@ -165,8 +165,22 @@ export default function Login() {
 
               <button
                 type="button"
-                onClick={() => { setCode(''); setError(''); setMode('otp-contact') }}
-                className="w-full text-sm text-gray-500 hover:text-gray-700 text-center"
+                disabled={loading}
+                onClick={async () => {
+                  setCode('')
+                  setError('')
+                  setLoading(true)
+                  try {
+                    const result = await otpApi.send(contact.trim())
+                    setChannel(result.channel as 'EMAIL' | 'SMS')
+                    setMasked(result.maskedDestination)
+                  } catch {
+                    setError('重新發送失敗，請稍後再試。')
+                  } finally {
+                    setLoading(false)
+                  }
+                }}
+                className="w-full text-sm text-gray-500 hover:text-gray-700 text-center disabled:opacity-50"
               >
                 重新發送 Resend code
               </button>
