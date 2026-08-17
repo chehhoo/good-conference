@@ -38,6 +38,14 @@ function todayDay(sessions: CampSession[]): number | null {
   return match?.day ?? null
 }
 
+function fmtDate(iso: string) {
+  return new Date(iso).toLocaleDateString('zh-TW', { month: 'short', day: 'numeric', weekday: 'short' })
+}
+
+function todayFull() {
+  return new Date().toLocaleDateString('zh-TW', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' })
+}
+
 function BadgeOverlay({ uid, displayName, onClose }: {
   uid: string; displayName: string; onClose: () => void
 }) {
@@ -140,6 +148,14 @@ export default function Dashboard() {
 
   const me = family?.members.find(m => m.isMe)
 
+  // Map conference day number → actual date string (from session data)
+  const dayDateMap = new Map<number, string>()
+  for (const s of sessions) {
+    if (s.day != null && !dayDateMap.has(s.day)) {
+      dayDateMap.set(s.day, s.startTime)
+    }
+  }
+
   // All meal days available across family members
   const allMealDays = [...new Set(
     (family?.members ?? []).flatMap(m => Object.keys(m.meals ?? {}).map(Number))
@@ -177,8 +193,13 @@ export default function Dashboard() {
         <div className="absolute -top-10 -right-10 w-44 h-44 rounded-full pointer-events-none"
           style={{ background: 'rgba(239,160,32,0.1)' }} />
 
-        <div className="text-xs font-bold tracking-widest uppercase mb-3" style={{ color: 'rgba(236,241,255,0.5)' }}>
-          ATTENDEE · 大會學員
+        <div className="flex items-center justify-between mb-3">
+          <div className="text-xs font-bold tracking-widest uppercase" style={{ color: 'rgba(236,241,255,0.5)' }}>
+            ATTENDEE · 大會學員
+          </div>
+          <div className="text-xs font-medium" style={{ color: 'rgba(236,241,255,0.45)' }}>
+            {todayFull()}
+          </div>
         </div>
 
         <div className="text-5xl font-black tracking-tight leading-none mb-2 text-white" style={{ textWrap: 'balance' }}>
@@ -251,6 +272,8 @@ export default function Dashboard() {
               {allMealDays.map(d => {
                 const isToday = d === todayDayNum
                 const isSelected = d === mealDay
+                const dateIso = dayDateMap.get(d)
+                const dateLabel = dateIso ? fmtDate(dateIso) : `第 ${d} 天`
                 return (
                   <button
                     key={d}
@@ -262,7 +285,7 @@ export default function Dashboard() {
                       border: `1px solid ${isSelected ? 'transparent' : 'var(--border)'}`,
                     }}
                   >
-                    第 {d} 天{isToday ? ' · 今日' : ''}
+                    {isToday ? `今日 · ${dateLabel}` : dateLabel}
                   </button>
                 )
               })}
