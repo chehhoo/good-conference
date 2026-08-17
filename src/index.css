@@ -1,3 +1,78 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* ── Design tokens ───────────────────────────────────────────────────────── */
+:root {
+  --bg:          #0B1629;
+  --surface:     #16264A;
+  --surface2:    #1E3060;
+  --border:      rgba(255,255,255,0.08);
+  --border2:     rgba(255,255,255,0.05);
+  --accent:      #C8341A;
+  --accent-dim:  rgba(200,52,26,0.18);
+  --gold:        #EFA020;
+  --gold-dim:    rgba(239,160,32,0.15);
+  --green:       #22C55E;
+  --green-dim:   rgba(34,197,94,0.15);
+  --amber:       #F59E0B;
+  --text:        #ECF1FF;
+  --text-mid:    #9AAED4;
+  --text-dim:    #4D6494;
+  --nav:         #060E1F;
+}
+
+/* light mode — system preference */
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme="dark"]) {
+    --bg:       #F5F1E8;
+    --surface:  #FFFFFF;
+    --surface2: #EDE9DF;
+    --border:   rgba(0,0,0,0.08);
+    --border2:  rgba(0,0,0,0.04);
+    --text:     #0B1629;
+    --text-mid: #4A5A78;
+    --text-dim: #9AAED4;
+    --nav:      #FFFFFF;
+  }
+}
+/* light — explicit toggle */
+:root[data-theme="light"] {
+  --bg:       #F5F1E8;
+  --surface:  #FFFFFF;
+  --surface2: #EDE9DF;
+  --border:   rgba(0,0,0,0.08);
+  --border2:  rgba(0,0,0,0.04);
+  --text:     #0B1629;
+  --text-mid: #4A5A78;
+  --text-dim: #9AAED4;
+  --nav:      #FFFFFF;
+}
+/* dark — explicit toggle */
+:root[data-theme="dark"] {
+  --bg:       #0B1629;
+  --surface:  #16264A;
+  --surface2: #1E3060;
+  --border:   rgba(255,255,255,0.08);
+  --border2:  rgba(255,255,255,0.05);
+  --text:     #ECF1FF;
+  --text-mid: #9AAED4;
+  --text-dim: #4D6494;
+  --nav:      #060E1F;
+}
+
+/* ── Global base ──────────────────────────────────────────────────────────── */
+html { background: var(--bg); }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ── Scrollbar hide ───────────────────────────────────────────────────────── */
+.scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+.scrollbar-hide::-webkit-scrollbar { display: none; }
+
+/* ── Safe area ────────────────────────────────────────────────────────────── */
+.pb-safe { padding-bottom: env(safe-area-inset-bottom, 1.5rem); }

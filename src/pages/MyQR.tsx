@@ -1,90 +1,116 @@
-import { useQuery } from '@tanstack/react-query'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import QRCode from 'react-qr-code'
-import { QrCode, Utensils } from 'lucide-react'
-import { myApi, type MealDay } from '../api/client'
+import { QrCode, Maximize2, X } from 'lucide-react'
 import { useAuth } from '../auth-context'
 
-const MEAL_LABELS: { key: keyof MealDay; zh: string; en: string }[] = [
-  { key: 'breakfast', zh: '早餐', en: 'Breakfast' },
-  { key: 'lunch',     zh: '午餐', en: 'Lunch'     },
-  { key: 'dinner',    zh: '晚餐', en: 'Dinner'    },
-]
+// ── Full-screen badge overlay ─────────────────────────────────────────────────
 
-function MealPill({ value }: { value: boolean | null }) {
-  if (value === true)  return <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-700">✓ 有</span>
-  if (value === false) return <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-500">無</span>
-  return <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-gray-50 text-gray-400">—</span>
+function BadgeOverlay({ uid, displayName, onClose }: {
+  uid: string; displayName: string; onClose: () => void
+}) {
+  const wakeLockRef = useRef<WakeLockSentinel | null>(null)
+
+  useEffect(() => {
+    if ('wakeLock' in navigator) {
+      navigator.wakeLock.request('screen')
+        .then(lock => { wakeLockRef.current = lock })
+        .catch(() => {})
+    }
+    const handleVisibility = () => {
+      if (document.visibilityState === 'visible' && 'wakeLock' in navigator) {
+        navigator.wakeLock.request('screen').then(lock => { wakeLockRef.current = lock }).catch(() => {})
+      }
+    }
+    document.addEventListener('visibilitychange', handleVisibility)
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibility)
+      wakeLockRef.current?.release().catch(() => {})
+    }
+  }, [])
+
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose() }
+    window.addEventListener('keydown', handler)
+    return () => window.removeEventListener('keydown', handler)
+  }, [onClose])
+
+  return (
+    <div className="fixed inset-0 z-[9999] flex flex-col items-center justify-center gap-6"
+      style={{ background: '#FFFFFF' }} onClick={onClose}>
+      <button onClick={onClose} className="absolute top-5 right-5 p-2 rounded-full"
+        style={{ background: 'rgba(0,0,0,0.07)', color: '#1A1A1A' }} aria-label="Close">
+        <X size={20} />
+      </button>
+      <div className="p-4 rounded-3xl" style={{ boxShadow: '0 0 0 3px rgba(0,0,0,0.06)' }}>
+        <QRCode value={uid} size={Math.min(window.innerWidth - 80, 300)} />
+      </div>
+      <div className="text-center px-6">
+        <p className="font-black text-4xl tracking-tight leading-none" style={{ color: '#111111' }}>{displayName}</p>
+        <p className="mt-2 text-sm font-medium" style={{ color: '#999999' }}>出示此碼給工作人員 · Show to staff</p>
+      </div>
+      <p className="absolute bottom-8 text-xs font-semibold tracking-widest uppercase" style={{ color: 'rgba(0,0,0,0.25)' }}>
+        點擊任意處關閉 · Tap anywhere to close
+      </p>
+    </div>
+  )
 }
+
+// ── Page ─────────────────────────────────────────────────────────────────────
 
 export default function MyQR() {
   const { person } = useAuth()
-  const personId = person?.id ?? null
   const displayName = person?.chineseName || (person ? `${person.firstName} ${person.lastName}` : '')
-  // Match good-scan's fallback: use uid if set, otherwise person id string
   const uid = person?.uid || (person ? String(person.id) : null)
-
-  const { data: family } = useQuery({
-    queryKey: ['my-family', personId],
-    queryFn: myApi.family,
-    staleTime: 60_000,
-  })
-
-  // Find "me" in the family response and extract meal plan
-  const me = family?.members.find(m => m.isMe)
-  const meals = me?.meals ?? {}
+  const [badgeOpen, setBadgeOpen] = useState(false)
+  const openBadge = useCallback(() => setBadgeOpen(true), [])
+  const closeBadge = useCallback(() => setBadgeOpen(false), [])
 
   return (
-    <div className="max-w-sm mx-auto px-4 py-8 flex flex-col items-center gap-6">
+    <>
+      {badgeOpen && uid && <BadgeOverlay uid={uid} displayName={displayName} onClose={closeBadge} />}
 
-      {/* QR code card */}
-      <div className="w-full bg-white rounded-2xl shadow-sm border border-gray-100 p-6 flex flex-col items-center gap-4">
-        <div className="flex items-center gap-2 text-gray-500 text-sm">
-          <QrCode size={16} />
-          <span>入場 QR · Check-in Code</span>
-        </div>
+      <div className="max-w-sm mx-auto px-4 py-6 flex flex-col items-center gap-5">
+        <div className="w-full rounded-3xl p-6 flex flex-col items-center gap-4 border"
+          style={{ background: 'var(--surface)', borderColor: 'var(--border)' }}>
 
-        {uid && (
-          <div className="p-3 bg-white rounded-xl border border-gray-100">
-            <QRCode value={uid} size={220} />
+          <div className="flex items-center gap-2 text-xs font-semibold tracking-wide uppercase"
+            style={{ color: 'var(--text-dim)' }}>
+            <QrCode size={14} />
+            入場 QR · Check-in Code
           </div>
-        )}
 
-        <div className="text-center">
-          <p className="text-lg font-bold text-gray-900">{displayName}</p>
-          <p className="text-xs text-gray-400 mt-0.5">出示此碼給工作人員掃描 · Show to staff</p>
-        </div>
-      </div>
+          {uid ? (
+            <div className="p-3 bg-white rounded-2xl">
+              <QRCode value={uid} size={220} />
+            </div>
+          ) : (
+            <div className="w-[220px] h-[220px] rounded-2xl flex items-center justify-center"
+              style={{ background: 'var(--surface2)' }}>
+              <span className="text-sm text-center px-4" style={{ color: 'var(--text-dim)' }}>尚未分配 QR 碼</span>
+            </div>
+          )}
 
-      {/* Meal status card */}
-      <div className="w-full bg-white rounded-2xl shadow-sm border border-gray-100 p-5">
-        <div className="flex items-center gap-2 text-gray-500 text-sm mb-4">
-          <Utensils size={15} />
-          <span>餐食計劃 · Meal Plan</span>
-        </div>
-
-        {Object.keys(meals).length === 0 ? (
-          <p className="text-sm text-gray-400 text-center py-2">無餐食資料 No meal data</p>
-        ) : (
-          <div className="space-y-4">
-            {Object.entries(meals)
-              .sort(([a], [b]) => Number(a) - Number(b))
-              .map(([day, mealDay]) => (
-                <div key={day}>
-                  <p className="text-xs font-semibold text-gray-500 mb-1.5">第 {day} 天 · Day {day}</p>
-                  <div className="space-y-1.5">
-                    {MEAL_LABELS.map(({ key, zh, en }) => (
-                      <div key={key} className="flex items-center justify-between">
-                        <span className="text-sm text-gray-700">{zh} <span className="text-gray-400 text-xs">{en}</span></span>
-                        <MealPill value={mealDay[key]} />
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              ))}
+          <div className="text-center">
+            <p className="text-lg font-black" style={{ color: 'var(--text)' }}>{displayName}</p>
+            <p className="text-xs mt-0.5" style={{ color: 'var(--text-dim)' }}>出示此碼給工作人員掃描 · Show to staff</p>
           </div>
-        )}
-      </div>
 
-    </div>
+          {uid && (
+            <button
+              onClick={openBadge}
+              className="flex items-center gap-2 px-4 py-3 rounded-2xl text-sm font-bold w-full justify-center"
+              style={{ background: 'var(--accent)', color: '#fff' }}>
+              <Maximize2 size={15} />
+              顯示大碼 · Show Full Badge
+            </button>
+          )}
+        </div>
+
+        <p className="text-xs text-center px-4" style={{ color: 'var(--text-dim)' }}>
+          工作人員會掃描此碼為您報到或取餐。<br />
+          Staff will scan this code for check-in and meal pickup.
+        </p>
+      </div>
+    </>
   )
 }

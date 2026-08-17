@@ -91,6 +91,7 @@ export interface FamilyMember {
   gender: string | null
   ageCode: string | null
   isMe: boolean
+  church?: { nameChn: string | null; nameEng: string } | null
   meals?: Record<string, MealDay>
   lodging?: MemberLodging
 }
@@ -101,11 +102,20 @@ export interface FamilyInfo {
   members: FamilyMember[]
 }
 
+export interface MealScanRecord {
+  personId: number
+  day: number
+  slot: 'breakfast' | 'lunch' | 'dinner'
+  scannedAt: string        // ISO local datetime, e.g. "2024-12-20T18:34:21"
+}
+
 export const myApi = {
   family: () =>
     api.get<FamilyInfo>('/conference/my/family').then(r => r.data),
 
+  mealScans: () =>
+    api.get<MealScanRecord[]>('/conference/my/meal-scans').then(r => r.data),
+
   mySignups: () =>
     api.get<CampSession[]>('/schedule/my-signups').then(r => r.data),
-
 }

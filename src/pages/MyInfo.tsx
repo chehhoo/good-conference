@@ -7,44 +7,30 @@ const MEAL_LABELS = ['早餐', '午餐', '晚餐'] as const
 const MEAL_KEYS: (keyof MealDay)[] = ['breakfast', 'lunch', 'dinner']
 const NIGHT_LABELS = ['第一夜', '第二夜', '第三夜', '第四夜']
 
-const LODGING_BADGES: Record<string, { label: string; cn: string }> = {
-  STAY:          { label: '住宿 Stay',     cn: 'bg-blue-100 text-blue-700' },
-  COMMUTE:       { label: '通勤 Commute',  cn: 'bg-amber-100 text-amber-700' },
-  SELF_ARRANGED: { label: '自行安排',      cn: 'bg-gray-100 text-gray-600' },
+const LODGING_STATUS: Record<string, { label: string; color: string; bg: string }> = {
+  STAY:          { label: '住宿 Stay',    color: '#63B3ED', bg: 'rgba(99,179,237,0.15)' },
+  COMMUTE:       { label: '通勤 Commute', color: 'var(--gold)', bg: 'var(--gold-dim)' },
+  SELF_ARRANGED: { label: '自行安排',     color: 'var(--text-dim)', bg: 'var(--border)' },
 }
 
 const AGE_LABELS: Record<string, string> = {
-  AD: '成人',
-  YA: '青年',
-  JR: '少年',
-  CH: '兒童',
-  IN: '嬰幼兒',
+  AD: '成人', YA: '青年', JR: '少年', CH: '兒童', IN: '嬰幼兒',
 }
 
-const GENDER_LABELS: Record<string, string> = {
-  M: '男',
-  F: '女',
-  C: '兒',
-}
+const GENDER_LABELS: Record<string, string> = { M: '男', F: '女', C: '兒' }
 
 function MealsGrid({ meals }: { meals: FamilyMember['meals'] }) {
-  if (!meals) return <p className="text-xs text-gray-400">無膳食資料</p>
-
+  if (!meals) return <p className="text-xs" style={{ color: 'var(--text-dim)' }}>無膳食資料</p>
   const days = Object.keys(meals).sort()
-  const hasAnyMeal = days.some(d =>
-    MEAL_KEYS.some(k => meals[d][k] === true)
-  )
-  if (!hasAnyMeal) return <p className="text-xs text-gray-400">無膳食安排</p>
-
+  const hasAny = days.some(d => MEAL_KEYS.some(k => meals[d][k] === true))
+  if (!hasAny) return <p className="text-xs" style={{ color: 'var(--text-dim)' }}>無膳食安排</p>
   return (
     <div className="overflow-x-auto">
       <table className="w-full text-xs border-collapse">
         <thead>
-          <tr className="text-gray-500">
+          <tr style={{ color: 'var(--text-dim)' }}>
             <th className="text-left py-1 pr-2 font-medium">天</th>
-            {MEAL_LABELS.map(l => (
-              <th key={l} className="text-center py-1 px-1 font-medium">{l}</th>
-            ))}
+            {MEAL_LABELS.map(l => <th key={l} className="text-center py-1 px-2 font-medium">{l}</th>)}
           </tr>
         </thead>
         <tbody>
@@ -52,13 +38,13 @@ function MealsGrid({ meals }: { meals: FamilyMember['meals'] }) {
             const row = meals[d]
             if (MEAL_KEYS.every(k => !row[k])) return null
             return (
-              <tr key={d} className="border-t border-gray-100">
-                <td className="py-1 pr-2 text-gray-500">第{d}天</td>
+              <tr key={d} className="border-t" style={{ borderColor: 'var(--border)' }}>
+                <td className="py-1 pr-2" style={{ color: 'var(--text-dim)' }}>第{d}天</td>
                 {MEAL_KEYS.map(k => (
-                  <td key={k} className="text-center py-1 px-1">
+                  <td key={k} className="text-center py-1 px-2">
                     {row[k] === true
-                      ? <span className="text-green-600 font-bold">✓</span>
-                      : <span className="text-gray-200">—</span>
+                      ? <span style={{ color: 'var(--green)' }} className="font-bold">✓</span>
+                      : <span style={{ color: 'var(--border)' }}>—</span>
                     }
                   </td>
                 ))}
@@ -72,29 +58,28 @@ function MealsGrid({ meals }: { meals: FamilyMember['meals'] }) {
 }
 
 function LodgingInfo({ lodging }: { lodging: FamilyMember['lodging'] }) {
-  if (!lodging) return <p className="text-xs text-gray-400">無住宿資料</p>
-
-  const badge = lodging.status ? LODGING_BADGES[lodging.status] : null
+  if (!lodging) return <p className="text-xs" style={{ color: 'var(--text-dim)' }}>無住宿資料</p>
+  const badge = lodging.status ? LODGING_STATUS[lodging.status] : null
   const rooms = Object.entries(lodging.nights).filter(([, room]) => room != null)
-
   return (
-    <div className="space-y-1.5">
+    <div className="space-y-2">
       {badge && (
-        <span className={`inline-block text-xs px-2 py-0.5 rounded-full font-medium ${badge.cn}`}>
+        <span className="inline-block text-xs px-2 py-0.5 rounded-full font-semibold"
+          style={{ background: badge.bg, color: badge.color }}>
           {badge.label}
         </span>
       )}
       {rooms.length > 0 && (
-        <div className="flex flex-wrap gap-2 mt-1">
+        <div className="flex flex-wrap gap-2">
           {rooms.map(([night, room]) => (
-            <span key={night} className="text-xs bg-gray-50 border border-gray-200 rounded px-2 py-0.5 text-gray-700">
+            <span key={night} className="text-xs px-2 py-0.5 rounded border" style={{ borderColor: 'var(--border)', color: 'var(--text-mid)' }}>
               {NIGHT_LABELS[Number(night) - 1] ?? `夜${night}`}: {room}
             </span>
           ))}
         </div>
       )}
       {rooms.length === 0 && lodging.status === 'STAY' && (
-        <p className="text-xs text-gray-400">房間尚未分配</p>
+        <p className="text-xs" style={{ color: 'var(--text-dim)' }}>房間尚未分配</p>
       )}
     </div>
   )
@@ -105,39 +90,40 @@ function MemberCard({ member }: { member: FamilyMember }) {
   const engName = member.chineseName ? `${member.firstName} ${member.lastName}` : null
 
   return (
-    <div className={`bg-white rounded-xl border border-t-[3px] shadow-sm p-4 space-y-4 ${
-      member.isMe ? 'border-t-blue-600 border-blue-100' : 'border-t-gray-300 border-gray-100'
-    }`}>
+    <div className="rounded-2xl p-4 space-y-4 border"
+      style={{
+        background: 'var(--surface)',
+        borderColor: member.isMe ? 'var(--accent)' : 'var(--border)',
+        borderTopWidth: member.isMe ? 2 : 1,
+        borderTopColor: member.isMe ? 'var(--accent)' : 'var(--border)',
+      }}>
       <div className="flex items-center gap-3">
-        <div className={`rounded-full p-2 ${member.isMe ? 'bg-blue-100' : 'bg-gray-100'}`}>
-          <User size={20} className={member.isMe ? 'text-blue-600' : 'text-gray-500'} />
+        <div className="rounded-full p-2" style={{ background: member.isMe ? 'var(--accent-dim)' : 'var(--surface2)' }}>
+          <User size={18} style={{ color: member.isMe ? 'var(--accent)' : 'var(--text-dim)' }} />
         </div>
         <div>
           <div className="flex items-center gap-2">
-            <span className="font-bold text-gray-900">{displayName}</span>
+            <span className="font-bold" style={{ color: 'var(--text)' }}>{displayName}</span>
             {member.isMe && (
-              <span className="text-[11px] bg-blue-600 text-white px-1.5 py-0.5 rounded-full font-medium">我</span>
+              <span className="text-[10px] px-1.5 py-0.5 rounded-full font-bold"
+                style={{ background: 'var(--accent)', color: '#fff' }}>我</span>
             )}
           </div>
-          {engName && <p className="text-xs text-gray-500">{engName}</p>}
+          {engName && <p className="text-xs" style={{ color: 'var(--text-dim)' }}>{engName}</p>}
           <div className="flex gap-1.5 mt-0.5">
-            {member.gender && (
-              <span className="text-[11px] text-gray-500">{GENDER_LABELS[member.gender] ?? member.gender}</span>
-            )}
-            {member.ageCode && (
-              <span className="text-[11px] text-gray-500">· {AGE_LABELS[member.ageCode] ?? member.ageCode}</span>
-            )}
+            {member.gender && <span className="text-[11px]" style={{ color: 'var(--text-dim)' }}>{GENDER_LABELS[member.gender] ?? member.gender}</span>}
+            {member.ageCode && <span className="text-[11px]" style={{ color: 'var(--text-dim)' }}>· {AGE_LABELS[member.ageCode] ?? member.ageCode}</span>}
           </div>
         </div>
       </div>
 
-      <div className="space-y-1">
-        <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">膳食 Meals</p>
+      <div className="space-y-1.5">
+        <p className="text-xs font-bold uppercase tracking-widest" style={{ color: 'var(--text-dim)' }}>膳食 Meals</p>
         <MealsGrid meals={member.meals} />
       </div>
 
-      <div className="space-y-1">
-        <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">住宿 Lodging</p>
+      <div className="space-y-1.5">
+        <p className="text-xs font-bold uppercase tracking-widest" style={{ color: 'var(--text-dim)' }}>住宿 Lodging</p>
         <LodgingInfo lodging={member.lodging} />
       </div>
     </div>
@@ -158,14 +144,14 @@ export default function MyInfo() {
   if (isLoading) {
     return (
       <div className="flex justify-center py-20">
-        <Loader2 className="animate-spin text-blue-600" size={32} />
+        <Loader2 className="animate-spin" size={32} style={{ color: 'var(--text-dim)' }} />
       </div>
     )
   }
 
   if (error || !data) {
     return (
-      <div className="flex flex-col items-center py-20 gap-2 text-gray-500">
+      <div className="flex flex-col items-center py-20 gap-2" style={{ color: 'var(--text-dim)' }}>
         <p>無法載入資料</p>
         <p className="text-sm">Unable to load info</p>
       </div>
@@ -173,10 +159,11 @@ export default function MyInfo() {
   }
 
   return (
-    <div className="max-w-2xl mx-auto px-4 py-6 space-y-6">
-      <h1 className="text-2xl font-bold text-gray-800">
-        我的資訊 <span className="text-base font-normal text-gray-500">My Info</span>
-      </h1>
+    <div className="max-w-2xl mx-auto px-4 py-5 space-y-4">
+      <div className="flex items-baseline gap-2">
+        <h1 className="text-2xl font-black" style={{ color: 'var(--text)' }}>我的資訊</h1>
+        <span className="text-sm" style={{ color: 'var(--text-dim)' }}>My Info</span>
+      </div>
 
       {data.members.map(m => (
         <MemberCard key={m.id} member={m} />
