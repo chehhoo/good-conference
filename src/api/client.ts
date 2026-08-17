@@ -91,6 +91,7 @@ export interface FamilyMember {
   gender: string | null
   ageCode: string | null
   isMe: boolean
+  church?: { nameChn: string | null; nameEng: string } | null
   meals?: Record<string, MealDay>
   lodging?: MemberLodging
 }

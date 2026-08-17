@@ -3,7 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { Loader2, MapPin, QrCode, Maximize2, X } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import QRCode from 'react-qr-code'
-import { scheduleApi, myApi, type CampSession, type MealDay } from '../api/client'
+import { scheduleApi, myApi, type CampSession, type MealDay, type MealScanRecord } from '../api/client'
 import { useAuth } from '../auth-context'
 
 const MEAL_SLOTS: { key: keyof MealDay; zh: string; emoji: string }[] = [
@@ -113,6 +113,13 @@ export default function Dashboard() {
     staleTime: 60_000,
   })
 
+  const { data: scanRecords = [] } = useQuery<MealScanRecord[]>({
+    queryKey: ['my-meal-scans', personId],
+    queryFn: myApi.mealScans,
+    staleTime: 30_000,
+    retry: false,
+  })
+
   const [pendingId, setPendingId] = useState<number | null>(null)
   const signup = useMutation({
     mutationFn: (id: number) => scheduleApi.signup(id),
@@ -162,7 +169,14 @@ export default function Dashboard() {
         <div className="text-5xl font-black tracking-tight leading-none mb-2 text-white" style={{ textWrap: 'balance' }}>
           {displayName}
         </div>
-        {engName && <div className="text-sm mb-4" style={{ color: 'rgba(236,241,255,0.6)' }}>{engName}</div>}
+        {engName && <div className="text-sm" style={{ color: 'rgba(236,241,255,0.6)' }}>{engName}</div>}
+        {me?.church && (
+          <div className="text-xs mt-1 mb-4 font-medium" style={{ color: 'rgba(236,241,255,0.45)' }}>
+            {me.church.nameChn ?? me.church.nameEng}
+            {me.church.nameChn && me.church.nameEng && ` · ${me.church.nameEng}`}
+          </div>
+        )}
+        {!me?.church && <div className="mb-4" />}
 
         <div className="flex items-center justify-between gap-2">
           <div className="text-xs flex items-center gap-1.5" style={{ color: 'rgba(236,241,255,0.5)' }}>
@@ -201,15 +215,30 @@ export default function Dashboard() {
           <div className="grid grid-cols-3 gap-2">
             {MEAL_SLOTS.map(({ key, zh, emoji }) => {
               const has = todayMeals[key]
+              if (!has) return (
+                <div key={key} className="rounded-2xl p-3 flex flex-col items-center gap-1.5 border opacity-40"
+                  style={{ background: 'var(--surface)', borderColor: 'var(--border)' }}>
+                  <span className="text-xl">{emoji}</span>
+                  <span className="text-xs font-semibold" style={{ color: 'var(--text-mid)' }}>{zh}</span>
+                  <span className="text-xs font-bold px-2 py-0.5 rounded-full" style={{ background: 'rgba(255,255,255,0.05)', color: 'var(--text-dim)' }}>—</span>
+                </div>
+              )
+              const members = family?.members ?? []
+              const ordered = members.filter(m => todayDayNum != null && m.meals?.[String(todayDayNum)]?.[key] === true).length
+              const picked = scanRecords.filter(s => s.day === todayDayNum && s.slot === key).length
+              const allPicked = ordered > 0 && picked >= ordered
               return (
                 <div key={key} className="rounded-2xl p-3 flex flex-col items-center gap-1.5 border"
                   style={{ background: 'var(--surface)', borderColor: 'var(--border)' }}>
                   <span className="text-xl">{emoji}</span>
                   <span className="text-xs font-semibold" style={{ color: 'var(--text-mid)' }}>{zh}</span>
-                  {has === true
-                    ? <span className="text-xs font-bold px-2 py-0.5 rounded-full" style={{ background: 'var(--green-dim)', color: 'var(--green)' }}>✓ 有</span>
-                    : <span className="text-xs font-bold px-2 py-0.5 rounded-full" style={{ background: 'rgba(255,255,255,0.05)', color: 'var(--text-dim)' }}>—</span>
-                  }
+                  <span className="text-xs font-bold px-2 py-0.5 rounded-full"
+                    style={{
+                      background: allPicked ? 'var(--green-dim)' : picked > 0 ? 'var(--gold-dim)' : 'rgba(255,255,255,0.05)',
+                      color: allPicked ? 'var(--green)' : picked > 0 ? 'var(--gold)' : 'var(--text-dim)',
+                    }}>
+                    {picked}/{ordered}
+                  </span>
                 </div>
               )
             })}
