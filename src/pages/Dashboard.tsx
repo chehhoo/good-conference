@@ -1,7 +1,8 @@
-import { useState } from 'react'
+import { useState, useCallback, useEffect, useRef } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { Loader2, MapPin, QrCode } from 'lucide-react'
+import { Loader2, MapPin, QrCode, Maximize2, X } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
+import QRCode from 'react-qr-code'
 import { scheduleApi, myApi, type CampSession, type MealDay } from '../api/client'
 import { useAuth } from '../auth-context'
 
@@ -37,6 +38,58 @@ function todayDay(sessions: CampSession[]): number | null {
   return match?.day ?? null
 }
 
+function BadgeOverlay({ uid, displayName, onClose }: {
+  uid: string; displayName: string; onClose: () => void
+}) {
+  const wakeLockRef = useRef<WakeLockSentinel | null>(null)
+
+  useEffect(() => {
+    if ('wakeLock' in navigator) {
+      navigator.wakeLock.request('screen')
+        .then(lock => { wakeLockRef.current = lock })
+        .catch(() => {})
+    }
+    const handleVisibility = () => {
+      if (document.visibilityState === 'visible' && 'wakeLock' in navigator) {
+        navigator.wakeLock.request('screen').then(lock => { wakeLockRef.current = lock }).catch(() => {})
+      }
+    }
+    document.addEventListener('visibilitychange', handleVisibility)
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibility)
+      wakeLockRef.current?.release().catch(() => {})
+    }
+  }, [])
+
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose() }
+    window.addEventListener('keydown', handler)
+    return () => window.removeEventListener('keydown', handler)
+  }, [onClose])
+
+  return (
+    <div
+      className="fixed inset-0 z-[9999] flex flex-col items-center justify-center gap-6"
+      style={{ background: '#FFFFFF' }}
+      onClick={onClose}
+    >
+      <button onClick={onClose} className="absolute top-5 right-5 p-2 rounded-full" style={{ background: 'rgba(0,0,0,0.07)', color: '#1A1A1A' }} aria-label="Close">
+        <X size={20} />
+      </button>
+      <div className="p-4 rounded-3xl" style={{ boxShadow: '0 0 0 3px rgba(0,0,0,0.06)' }}>
+        <QRCode value={uid} size={Math.min(window.innerWidth - 80, 300)} />
+      </div>
+      <div className="text-center px-6">
+        <p className="font-black text-4xl tracking-tight leading-none" style={{ color: '#111111' }}>{displayName}</p>
+        <p className="mt-2 text-sm font-medium" style={{ color: '#999999' }}>出示此碼給工作人員 · Show to staff</p>
+      </div>
+      <p className="absolute bottom-8 text-xs font-semibold tracking-widest uppercase" style={{ color: 'rgba(0,0,0,0.25)' }}>
+        點擊任意處關閉 · Tap anywhere to close
+      </p>
+    </div>
+  )
+}
+
 export default function Dashboard() {
   const { person } = useAuth()
   const qc = useQueryClient()
@@ -44,6 +97,10 @@ export default function Dashboard() {
   const personId = person?.id ?? null
   const displayName = person?.chineseName || (person ? `${person.firstName} ${person.lastName}` : '')
   const engName = person?.chineseName ? `${person.firstName} ${person.lastName}` : ''
+  const uid = person?.uid || (person ? String(person.id) : null)
+  const [badgeOpen, setBadgeOpen] = useState(false)
+  const openBadge = useCallback(() => setBadgeOpen(true), [])
+  const closeBadge = useCallback(() => setBadgeOpen(false), [])
 
   const { data: sessions = [], isLoading: sessLoading } = useQuery<CampSession[]>({
     queryKey: ['schedule', personId],
@@ -85,6 +142,8 @@ export default function Dashboard() {
   const todayLabel = todayDayNum != null ? `第 ${todayDayNum} 天` : ''
 
   return (
+    <>
+    {badgeOpen && uid && <BadgeOverlay uid={uid} displayName={displayName} onClose={closeBadge} />}
     <div className="max-w-lg mx-auto px-4 py-4 space-y-5">
 
       {/* ── Badge card ── */}
@@ -105,19 +164,31 @@ export default function Dashboard() {
         </div>
         {engName && <div className="text-sm mb-4" style={{ color: 'rgba(236,241,255,0.6)' }}>{engName}</div>}
 
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between gap-2">
           <div className="text-xs flex items-center gap-1.5" style={{ color: 'rgba(236,241,255,0.5)' }}>
             <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg>
             {me?.lodging?.status === 'STAY' ? '住宿' : me?.lodging?.status === 'COMMUTE' ? '通勤' : ''}
           </div>
-          <button
-            onClick={() => navigate('/my-qr')}
-            className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-semibold text-white"
-            style={{ background: 'rgba(255,255,255,0.15)', border: '1px solid rgba(255,255,255,0.2)' }}
-          >
-            <QrCode size={14} />
-            我的 QR
-          </button>
+          <div className="flex items-center gap-2">
+            {uid && (
+              <button
+                onClick={openBadge}
+                className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-semibold text-white"
+                style={{ background: 'rgba(255,255,255,0.22)', border: '1px solid rgba(255,255,255,0.25)' }}
+              >
+                <Maximize2 size={13} />
+                顯示大碼
+              </button>
+            )}
+            <button
+              onClick={() => navigate('/my-qr')}
+              className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-semibold text-white"
+              style={{ background: 'rgba(255,255,255,0.15)', border: '1px solid rgba(255,255,255,0.2)' }}
+            >
+              <QrCode size={14} />
+              我的 QR
+            </button>
+          </div>
         </div>
       </div>
 
@@ -184,6 +255,7 @@ export default function Dashboard() {
         )}
       </div>
     </div>
+    </>
   )
 }
 
