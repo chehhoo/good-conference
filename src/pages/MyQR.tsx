@@ -1,25 +1,24 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import QRCode from 'react-qr-code'
-import { QrCode, Utensils, Maximize2, X, CheckCircle2, Clock, Minus } from 'lucide-react'
-import { myApi, type MealDay, type MealScanRecord } from '../api/client'
+import { QrCode, Utensils, Maximize2, X } from 'lucide-react'
+import { myApi, type MealDay, type MealScanRecord, type FamilyMember } from '../api/client'
 import { useAuth } from '../auth-context'
 
 // ── helpers ──────────────────────────────────────────────────────────────────
 
-const MEAL_SLOTS: { key: keyof MealDay; zh: string; emoji: string }[] = [
-  { key: 'breakfast', zh: '早餐', emoji: '🌅' },
-  { key: 'lunch',     zh: '午餐', emoji: '☀️' },
-  { key: 'dinner',    zh: '晚餐', emoji: '🌙' },
+const MEAL_SLOTS: { key: keyof MealDay; zh: string; en: string; emoji: string }[] = [
+  { key: 'breakfast', zh: '早餐', en: 'Breakfast', emoji: '🌅' },
+  { key: 'lunch',     zh: '午餐', en: 'Lunch',     emoji: '☀️' },
+  { key: 'dinner',    zh: '晚餐', en: 'Dinner',    emoji: '🌙' },
 ]
 
 function fmtTime(iso: string) {
-  // "2024-12-20T18:34:21" → "18:34"
-  return iso.slice(11, 16)
+  return iso.slice(11, 16)  // "2024-12-20T18:34:21" → "18:34"
 }
 
-function scanKey(day: number | string, slot: string) {
-  return `${day}:${slot}`
+function memberDisplayName(m: FamilyMember) {
+  return m.chineseName || `${m.firstName} ${m.lastName}`
 }
 
 // ── Full-screen badge overlay ─────────────────────────────────────────────────
@@ -54,11 +53,8 @@ function BadgeOverlay({ uid, displayName, onClose }: {
   }, [onClose])
 
   return (
-    <div
-      className="fixed inset-0 z-[9999] flex flex-col items-center justify-center gap-6"
-      style={{ background: '#FFFFFF' }}
-      onClick={onClose}
-    >
+    <div className="fixed inset-0 z-[9999] flex flex-col items-center justify-center gap-6"
+      style={{ background: '#FFFFFF' }} onClick={onClose}>
       <button onClick={onClose} className="absolute top-5 right-5 p-2 rounded-full"
         style={{ background: 'rgba(0,0,0,0.07)', color: '#1A1A1A' }} aria-label="Close">
         <X size={20} />
@@ -77,64 +73,59 @@ function BadgeOverlay({ uid, displayName, onClose }: {
   )
 }
 
-// ── Meal slot row ─────────────────────────────────────────────────────────────
+// ── Family meal slot block ────────────────────────────────────────────────────
 
-function MealSlotRow({
-  emoji, zh, entitled, scan,
+function FamilyMealSlot({
+  emoji, zh, en, entitled, scans,
 }: {
   emoji: string
   zh: string
-  entitled: boolean | null
-  scan: MealScanRecord | undefined
+  en: string
+  entitled: FamilyMember[]
+  scans: MealScanRecord[]
 }) {
-  if (!entitled) {
-    // Not on meal plan
-    return (
-      <div className="flex items-center justify-between py-2.5 border-b" style={{ borderColor: 'var(--border2)' }}>
-        <span className="flex items-center gap-2 text-sm" style={{ color: 'var(--text-dim)' }}>
-          <span>{emoji}</span>{zh}
-        </span>
-        <span className="flex items-center gap-1.5 text-xs" style={{ color: 'var(--text-dim)' }}>
-          <Minus size={13} />
-          無此餐
-        </span>
-      </div>
-    )
-  }
+  if (entitled.length === 0) return null
 
-  if (scan) {
-    // Entitled + scanned — show time and who
-    return (
-      <div className="flex items-start justify-between py-2.5 border-b" style={{ borderColor: 'var(--border2)' }}>
-        <span className="flex items-center gap-2 text-sm font-semibold" style={{ color: 'var(--text)' }}>
-          <span>{emoji}</span>{zh}
-        </span>
-        <div className="flex flex-col items-end gap-0.5 ml-3">
-          <span className="flex items-center gap-1 text-xs font-bold px-2 py-0.5 rounded-full"
-            style={{ background: 'var(--green-dim)', color: 'var(--green)' }}>
-            <CheckCircle2 size={11} />
-            已取餐 · {fmtTime(scan.scannedAt)}
-          </span>
-          {scan.scannedBy && (
-            <span className="text-[11px]" style={{ color: 'var(--text-dim)' }}>
-              by {scan.scannedBy}
-            </span>
-          )}
-        </div>
-      </div>
-    )
-  }
+  // Sort taken scans by time for display order
+  const taken = [...scans]
+    .sort((a, b) => a.scannedAt.localeCompare(b.scannedAt))
+    .map(s => {
+      const member = entitled.find(m => m.id === s.personId)
+      return { scan: s, member }
+    })
+    .filter(r => r.member)
 
-  // Entitled but not yet scanned
+  const allTaken = taken.length === entitled.length
+
   return (
-    <div className="flex items-center justify-between py-2.5 border-b" style={{ borderColor: 'var(--border2)' }}>
-      <span className="flex items-center gap-2 text-sm font-semibold" style={{ color: 'var(--text)' }}>
-        <span>{emoji}</span>{zh}
-      </span>
-      <span className="flex items-center gap-1.5 text-xs font-semibold px-2 py-0.5 rounded-full"
-        style={{ background: 'var(--gold-dim)', color: 'var(--gold)' }}>
-        <Clock size={11} />
-        未取餐
+    <div className="flex items-start gap-3 py-2.5 border-b last:border-0" style={{ borderColor: 'var(--border2)' }}>
+      {/* Left: emoji + name */}
+      <span className="text-base w-6 shrink-0">{emoji}</span>
+      <div className="flex-1 min-w-0">
+        <span className="text-sm font-semibold" style={{ color: 'var(--text)' }}>
+          {zh} <span className="font-normal text-xs" style={{ color: 'var(--text-dim)' }}>{en}</span>
+        </span>
+        {/* Taken names */}
+        {taken.length > 0 && (
+          <div className="mt-1 space-y-0.5">
+            {taken.map(({ scan, member }) => (
+              <div key={scan.personId} className="flex items-center gap-1.5 text-xs" style={{ color: 'var(--text-mid)' }}>
+                <span className="font-semibold" style={{ color: 'var(--green)' }}>
+                  {memberDisplayName(member!)}
+                </span>
+                <span style={{ color: 'var(--text-dim)' }}>· {fmtTime(scan.scannedAt)}</span>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+      {/* Right: count badge */}
+      <span className="text-xs font-bold px-2 py-0.5 rounded-full shrink-0 mt-0.5"
+        style={{
+          background: allTaken ? 'var(--green-dim)' : taken.length > 0 ? 'var(--gold-dim)' : 'var(--border)',
+          color:      allTaken ? 'var(--green)'     : taken.length > 0 ? 'var(--gold)'     : 'var(--text-dim)',
+        }}>
+        {taken.length}/{entitled.length}
       </span>
     </div>
   )
@@ -168,22 +159,25 @@ export default function MyQR() {
     queryKey: ['my-meal-scans', personId],
     queryFn: myApi.mealScans,
     staleTime: 30_000,
-    retry: false, // gracefully degrade if endpoint not yet deployed
+    retry: false,
   })
 
-  // Build lookup: "day:slot" → MealScanRecord
-  const scanMap = new Map<string, MealScanRecord>()
+  const members = family?.members ?? []
+
+  // Group scans by "day:slot"
+  const scansBySlot = new Map<string, MealScanRecord[]>()
   for (const s of scanRecords) {
-    scanMap.set(scanKey(s.day, s.slot), s)
+    const k = `${s.day}:${s.slot}`
+    const arr = scansBySlot.get(k) ?? []
+    arr.push(s)
+    scansBySlot.set(k, arr)
   }
 
-  const me = family?.members.find(m => m.isMe)
-  const meals = me?.meals ?? {}
+  // Collect all days from all members' meal plans
+  const allDays = [...new Set(
+    members.flatMap(m => Object.keys(m.meals ?? {})).map(Number)
+  )].sort((a, b) => a - b)
 
-  // Stats for header badge
-  const totalEntitled = Object.values(meals).flatMap(d =>
-    MEAL_SLOTS.map(s => d[s.key] ? 1 : 0 as number)
-  ).reduce((a, b) => a + b, 0)
   const totalTaken = scanRecords.length
 
   return (
@@ -217,11 +211,9 @@ export default function MyQR() {
           </div>
 
           {uid && (
-            <button
-              onClick={openBadge}
+            <button onClick={openBadge}
               className="flex items-center gap-2 px-4 py-2.5 rounded-2xl text-sm font-bold w-full justify-center"
-              style={{ background: 'var(--accent)', color: '#fff' }}
-            >
+              style={{ background: 'var(--accent)', color: '#fff' }}>
               <Maximize2 size={15} />
               顯示大碼 · Show Full Badge
             </button>
@@ -230,48 +222,47 @@ export default function MyQR() {
 
         {/* Meal plan card */}
         <div className="w-full rounded-3xl p-5 border" style={{ background: 'var(--surface)', borderColor: 'var(--border)' }}>
-          {/* Header row */}
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-2 text-xs font-semibold tracking-wide uppercase" style={{ color: 'var(--text-dim)' }}>
               <Utensils size={13} />
-              餐食計劃 · Meal Plan
+              家庭餐食 · Family Meal Pickup
             </div>
-            {totalEntitled > 0 && (
+            {scanRecords.length > 0 && (
               <span className="text-xs font-bold px-2 py-0.5 rounded-full"
-                style={{
-                  background: totalTaken === totalEntitled ? 'var(--green-dim)' : 'var(--surface2)',
-                  color: totalTaken === totalEntitled ? 'var(--green)' : 'var(--text-dim)',
-                }}>
-                {totalTaken} / {totalEntitled} 已取
+                style={{ background: 'var(--green-dim)', color: 'var(--green)' }}>
+                {totalTaken} 筆已取
               </span>
             )}
           </div>
 
-          {Object.keys(meals).length === 0 ? (
+          {allDays.length === 0 ? (
             <p className="text-sm text-center py-2" style={{ color: 'var(--text-dim)' }}>無餐食資料 No meal data</p>
           ) : (
-            <div className="space-y-4">
-              {Object.entries(meals)
-                .sort(([a], [b]) => Number(a) - Number(b))
-                .map(([day, mealDay]) => (
-                  <div key={day}>
-                    <p className="text-xs font-bold uppercase tracking-widest mb-1" style={{ color: 'var(--text-dim)' }}>
-                      第 {day} 天 · Day {day}
-                    </p>
-                    <div>
-                      {MEAL_SLOTS.map(({ key, zh, emoji }, i) => (
-                        <div key={key} style={i === MEAL_SLOTS.length - 1 ? { borderBottom: 'none' } : {}}>
-                          <MealSlotRow
-                            emoji={emoji}
-                            zh={zh}
-                            entitled={mealDay[key]}
-                            scan={scanMap.get(scanKey(day, key))}
-                          />
-                        </div>
-                      ))}
-                    </div>
+            <div className="space-y-5">
+              {allDays.map(day => (
+                <div key={day}>
+                  <p className="text-xs font-bold uppercase tracking-widest mb-1" style={{ color: 'var(--text-dim)' }}>
+                    第 {day} 天 · Day {day}
+                  </p>
+                  <div className="space-y-2">
+                    {MEAL_SLOTS.map(({ key, zh, en, emoji }) => {
+                      // Members entitled for this slot on this day
+                      const entitled = members.filter(m => m.meals?.[String(day)]?.[key] === true)
+                      const scans = scansBySlot.get(`${day}:${key}`) ?? []
+                      return (
+                        <FamilyMealSlot
+                          key={key}
+                          emoji={emoji}
+                          zh={zh}
+                          en={en}
+                          entitled={entitled}
+                          scans={scans}
+                        />
+                      )
+                    })}
                   </div>
-                ))}
+                </div>
+              ))}
             </div>
           )}
         </div>

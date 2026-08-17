@@ -102,10 +102,10 @@ export interface FamilyInfo {
 }
 
 export interface MealScanRecord {
+  personId: number
   day: number
   slot: 'breakfast' | 'lunch' | 'dinner'
   scannedAt: string        // ISO local datetime, e.g. "2024-12-20T18:34:21"
-  scannedBy: string | null // volunteer username, or null if not recorded
 }
 
 export const myApi = {
