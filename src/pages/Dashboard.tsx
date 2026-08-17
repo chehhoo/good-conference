@@ -138,13 +138,18 @@ export default function Dashboard() {
     ? sessions.filter(s => s.day === todayDayNum)
     : sessions.filter(s => s.day === Math.min(...sessions.map(s => s.day ?? 999).filter(d => d < 999)))
 
-  // My meals for today
   const me = family?.members.find(m => m.isMe)
-  const todayMeals = todayDayNum != null && me?.meals
-    ? me.meals[String(todayDayNum)] ?? null
-    : me?.meals
-      ? Object.values(me.meals)[0] ?? null
-      : null
+
+  // All meal days available across family members
+  const allMealDays = [...new Set(
+    (family?.members ?? []).flatMap(m => Object.keys(m.meals ?? {}).map(Number))
+  )].sort((a, b) => a - b)
+
+  const defaultMealDay = todayDayNum ?? allMealDays[0] ?? null
+  const [selectedMealDay, setSelectedMealDay] = useState<number | null>(null)
+  const mealDay = selectedMealDay ?? defaultMealDay
+
+  const mealDayMeals = mealDay != null && me?.meals ? me.meals[String(mealDay)] ?? null : null
 
   const todayLabel = todayDayNum != null ? `第 ${todayDayNum} 天` : ''
 
@@ -250,15 +255,40 @@ export default function Dashboard() {
         </div>
       )}
 
-      {/* ── Today meals ── */}
-      {todayMeals && (
+      {/* ── Meals ── */}
+      {allMealDays.length > 0 && (
         <div>
-          <div className="text-xs font-bold tracking-widest uppercase mb-3" style={{ color: 'var(--text-dim)' }}>
-            今日餐食 · {todayLabel}
+          {/* Header + day pills */}
+          <div className="flex items-center gap-2 mb-3 flex-wrap">
+            <div className="text-xs font-bold tracking-widest uppercase" style={{ color: 'var(--text-dim)' }}>
+              餐食
+            </div>
+            <div className="flex gap-1.5 flex-wrap">
+              {allMealDays.map(d => {
+                const isToday = d === todayDayNum
+                const isSelected = d === mealDay
+                return (
+                  <button
+                    key={d}
+                    onClick={() => setSelectedMealDay(d)}
+                    className="text-[10px] font-bold px-2.5 py-1 rounded-full transition-all"
+                    style={{
+                      background: isSelected ? 'var(--accent)' : 'var(--surface)',
+                      color: isSelected ? '#fff' : 'var(--text-dim)',
+                      border: `1px solid ${isSelected ? 'transparent' : 'var(--border)'}`,
+                    }}
+                  >
+                    第 {d} 天{isToday ? ' · 今日' : ''}
+                  </button>
+                )
+              })}
+            </div>
           </div>
+
+          {/* Meal slots grid */}
           <div className="grid grid-cols-3 gap-2">
             {MEAL_SLOTS.map(({ key, zh, emoji }) => {
-              const has = todayMeals[key]
+              const has = mealDayMeals?.[key]
               if (!has) return (
                 <div key={key} className="rounded-2xl p-3 flex flex-col items-center gap-1.5 border opacity-40"
                   style={{ background: 'var(--surface)', borderColor: 'var(--border)' }}>
@@ -268,8 +298,8 @@ export default function Dashboard() {
                 </div>
               )
               const members = family?.members ?? []
-              const ordered = members.filter(m => todayDayNum != null && m.meals?.[String(todayDayNum)]?.[key] === true).length
-              const picked = scanRecords.filter(s => s.day === todayDayNum && s.slot === key).length
+              const ordered = members.filter(m => mealDay != null && m.meals?.[String(mealDay)]?.[key] === true).length
+              const picked = scanRecords.filter(s => s.day === mealDay && s.slot === key).length
               const allPicked = ordered > 0 && picked >= ordered
               return (
                 <div key={key} className="rounded-2xl p-3 flex flex-col items-center gap-1.5 border"
