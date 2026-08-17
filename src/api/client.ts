@@ -101,11 +101,20 @@ export interface FamilyInfo {
   members: FamilyMember[]
 }
 
+export interface MealScanRecord {
+  day: number
+  slot: 'breakfast' | 'lunch' | 'dinner'
+  scannedAt: string        // ISO local datetime, e.g. "2024-12-20T18:34:21"
+  scannedBy: string | null // volunteer username, or null if not recorded
+}
+
 export const myApi = {
   family: () =>
     api.get<FamilyInfo>('/conference/my/family').then(r => r.data),
 
+  mealScans: () =>
+    api.get<MealScanRecord[]>('/conference/my/meal-scans').then(r => r.data),
+
   mySignups: () =>
     api.get<CampSession[]>('/schedule/my-signups').then(r => r.data),
-
 }
