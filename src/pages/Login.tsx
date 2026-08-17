@@ -15,13 +15,11 @@ export default function Login() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
 
-  // OTP flow state
   const [contact, setContact] = useState('')
   const [channel, setChannel] = useState<'EMAIL' | 'SMS'>('EMAIL')
   const [masked, setMasked] = useState('')
   const [code, setCode] = useState('')
 
-  // Registration-code flow state
   const [regCode, setRegCode] = useState('')
   const [lastName, setLastName] = useState('')
 
@@ -80,23 +78,29 @@ export default function Login() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center px-4">
+    <div className="min-h-screen flex flex-col items-center justify-center px-4"
+      style={{ background: 'var(--bg)' }}>
       <div className="w-full max-w-sm">
 
-        {/* Logo */}
+        {/* Logo + title */}
         <div className="text-center mb-8">
           <img src="/logo.svg" alt="Good Vessel" className="w-16 h-16 rounded-2xl mx-auto mb-4" />
-          <h1 className="text-2xl font-bold text-gray-900">大會入口</h1>
-          <p className="text-gray-500 text-sm mt-1">Conference Portal</p>
+          <h1 className="text-2xl font-black tracking-tight" style={{ color: 'var(--text)' }}>大會入口</h1>
+          <p className="text-sm mt-1" style={{ color: 'var(--text-dim)' }}>Conference Portal</p>
+          <p className="text-xs font-semibold mt-1 tracking-wide" style={{ color: 'var(--text-dim)' }}>
+            {import.meta.env.VITE_CONFERENCE_NAME ?? '中國福音大會 2026'}
+          </p>
         </div>
 
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 space-y-4">
+        {/* Card */}
+        <div className="rounded-3xl p-6 space-y-4 border"
+          style={{ background: 'var(--surface)', borderColor: 'var(--border)' }}>
 
-          {/* ── Step 1: enter phone or email ─────────────────────── */}
+          {/* ── OTP: enter contact ── */}
           {mode === 'otp-contact' && (
             <form onSubmit={handleSendOtp} className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-semibold mb-2" style={{ color: 'var(--text-mid)' }}>
                   電話或電子郵件 Phone or Email
                 </label>
                 <input
@@ -107,16 +111,27 @@ export default function Login() {
                   placeholder="例如：(555) 123-4567 或 you@email.com"
                   required
                   autoFocus
-                  className="w-full px-3 py-2.5 rounded-lg border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent"
+                  className="w-full px-4 py-3 rounded-2xl text-sm focus:outline-none"
+                  style={{
+                    background: 'var(--surface2)',
+                    border: '1px solid var(--border)',
+                    color: 'var(--text)',
+                  }}
                 />
               </div>
 
-              {error && <p className="text-sm text-red-600 bg-red-50 rounded-lg px-3 py-2">{error}</p>}
+              {error && (
+                <p className="text-sm rounded-xl px-3 py-2"
+                  style={{ background: 'var(--accent-dim)', color: 'var(--accent)' }}>
+                  {error}
+                </p>
+              )}
 
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full py-2.5 px-4 rounded-lg bg-brand-900 text-white font-medium text-sm hover:bg-brand-800 disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2 transition-colors"
+                className="w-full py-3 px-4 rounded-2xl text-sm font-bold flex items-center justify-center gap-2 transition-opacity disabled:opacity-60"
+                style={{ background: 'var(--accent)', color: '#fff' }}
               >
                 {loading ? <Loader2 size={16} className="animate-spin" /> : <Mail size={16} />}
                 發送驗證碼 Send Code
@@ -124,19 +139,20 @@ export default function Login() {
             </form>
           )}
 
-          {/* ── Step 2: enter OTP ────────────────────────────────── */}
+          {/* ── OTP: enter code ── */}
           {mode === 'otp-code' && (
             <form onSubmit={handleVerifyOtp} className="space-y-4">
-              <div className="text-center text-sm text-gray-600 bg-blue-50 rounded-lg px-3 py-3">
+              <div className="text-center text-sm rounded-2xl px-3 py-3"
+                style={{ background: 'var(--surface2)', color: 'var(--text-mid)' }}>
                 {channel === 'SMS'
                   ? <span className="flex items-center justify-center gap-1.5"><Phone size={14} /> 驗證碼已發送至 {masked}</span>
                   : <span className="flex items-center justify-center gap-1.5"><Mail size={14} /> 驗證碼已發送至 {masked}</span>
                 }
-                <p className="text-xs text-gray-400 mt-1">Code sent to {masked}</p>
+                <p className="text-xs mt-1" style={{ color: 'var(--text-dim)' }}>Code sent to {masked}</p>
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-semibold mb-2" style={{ color: 'var(--text-mid)' }}>
                   驗證碼 Verification Code
                 </label>
                 <input
@@ -148,16 +164,27 @@ export default function Login() {
                   placeholder="6 位數字"
                   required
                   autoFocus
-                  className="w-full px-3 py-2.5 rounded-lg border border-gray-300 text-sm text-center tracking-widest text-lg font-mono focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent"
+                  className="w-full px-4 py-3 rounded-2xl text-xl font-mono text-center tracking-[0.4em] focus:outline-none"
+                  style={{
+                    background: 'var(--surface2)',
+                    border: '1px solid var(--border)',
+                    color: 'var(--text)',
+                  }}
                 />
               </div>
 
-              {error && <p className="text-sm text-red-600 bg-red-50 rounded-lg px-3 py-2">{error}</p>}
+              {error && (
+                <p className="text-sm rounded-xl px-3 py-2"
+                  style={{ background: 'var(--accent-dim)', color: 'var(--accent)' }}>
+                  {error}
+                </p>
+              )}
 
               <button
                 type="submit"
                 disabled={loading || code.length !== 6}
-                className="w-full py-2.5 px-4 rounded-lg bg-brand-900 text-white font-medium text-sm hover:bg-brand-800 disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2 transition-colors"
+                className="w-full py-3 px-4 rounded-2xl text-sm font-bold flex items-center justify-center gap-2 transition-opacity disabled:opacity-60"
+                style={{ background: 'var(--accent)', color: '#fff' }}
               >
                 {loading && <Loader2 size={16} className="animate-spin" />}
                 驗證 Verify
@@ -180,18 +207,19 @@ export default function Login() {
                     setLoading(false)
                   }
                 }}
-                className="w-full text-sm text-gray-500 hover:text-gray-700 text-center disabled:opacity-50"
+                className="w-full text-sm text-center py-2 rounded-xl transition-colors"
+                style={{ color: 'var(--text-dim)' }}
               >
                 重新發送 Resend code
               </button>
             </form>
           )}
 
-          {/* ── Registration code fallback ───────────────────────── */}
+          {/* ── Registration code ── */}
           {mode === 'reg-code' && (
             <form onSubmit={handleRegLogin} className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-semibold mb-2" style={{ color: 'var(--text-mid)' }}>
                   報名號碼 Registration Code
                 </label>
                 <input
@@ -202,11 +230,16 @@ export default function Login() {
                   placeholder="例如：10001"
                   required
                   autoFocus
-                  className="w-full px-3 py-2.5 rounded-lg border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent"
+                  className="w-full px-4 py-3 rounded-2xl text-sm focus:outline-none"
+                  style={{
+                    background: 'var(--surface2)',
+                    border: '1px solid var(--border)',
+                    color: 'var(--text)',
+                  }}
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-semibold mb-2" style={{ color: 'var(--text-mid)' }}>
                   姓氏 Last Name
                 </label>
                 <input
@@ -215,16 +248,27 @@ export default function Login() {
                   onChange={e => setLastName(e.target.value)}
                   placeholder="例如：Chen"
                   required
-                  className="w-full px-3 py-2.5 rounded-lg border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent"
+                  className="w-full px-4 py-3 rounded-2xl text-sm focus:outline-none"
+                  style={{
+                    background: 'var(--surface2)',
+                    border: '1px solid var(--border)',
+                    color: 'var(--text)',
+                  }}
                 />
               </div>
 
-              {error && <p className="text-sm text-red-600 bg-red-50 rounded-lg px-3 py-2">{error}</p>}
+              {error && (
+                <p className="text-sm rounded-xl px-3 py-2"
+                  style={{ background: 'var(--accent-dim)', color: 'var(--accent)' }}>
+                  {error}
+                </p>
+              )}
 
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full py-2.5 px-4 rounded-lg bg-brand-900 text-white font-medium text-sm hover:bg-brand-800 disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2 transition-colors"
+                className="w-full py-3 px-4 rounded-2xl text-sm font-bold flex items-center justify-center gap-2 transition-opacity disabled:opacity-60"
+                style={{ background: 'var(--accent)', color: '#fff' }}
               >
                 {loading ? <Loader2 size={16} className="animate-spin" /> : <KeyRound size={16} />}
                 登入 Sign In
@@ -233,18 +277,22 @@ export default function Login() {
           )}
         </div>
 
-        {/* Mode toggle */}
-        <div className="text-center mt-4 text-xs text-gray-400 space-y-1">
+        {/* Mode toggles */}
+        <div className="text-center mt-5 space-y-2">
           {mode !== 'otp-contact' && mode !== 'otp-code' && (
             <p>
-              <button onClick={() => switchMode('otp-contact')} className="text-brand-700 hover:underline">
+              <button onClick={() => switchMode('otp-contact')}
+                className="text-sm font-semibold"
+                style={{ color: 'var(--accent)' }}>
                 用電話或電子郵件登入 Sign in with phone or email
               </button>
             </p>
           )}
           {mode !== 'reg-code' && (
             <p>
-              <button onClick={() => switchMode('reg-code')} className="hover:underline">
+              <button onClick={() => switchMode('reg-code')}
+                className="text-sm"
+                style={{ color: 'var(--text-dim)' }}>
                 用報名號碼登入 Use registration code
               </button>
             </p>

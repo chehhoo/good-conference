@@ -6,6 +6,8 @@ import { useAuth } from '../auth-context'
 import SessionCard from '../components/SessionCard'
 import ShareModal from '../components/ShareModal'
 
+type ViewMode = 'all' | 'mine'
+
 function groupByTime(sessions: CampSession[]): [string, CampSession[]][] {
   const map = new Map<string, CampSession[]>()
   for (const s of sessions) {
@@ -31,6 +33,7 @@ export default function Schedule() {
   const personId = person?.id ?? null
 
   const [selectedDay, setSelectedDay] = useState<number | null>(null)
+  const [viewMode, setViewMode] = useState<ViewMode>('all')
   const [pendingId, setPendingId] = useState<number | null>(null)
   const [mutationError, setMutationError] = useState<string | null>(null)
   const [showShare, setShowShare] = useState(false)
@@ -71,21 +74,49 @@ export default function Schedule() {
     if (s.day != null && !firstByDay.has(s.day)) firstByDay.set(s.day, s)
   }
 
-  const visible = selectedDay != null
+  const byDay = selectedDay != null
     ? sessions.filter(s => s.day === selectedDay)
     : sessions
+  const visible = viewMode === 'mine' ? byDay.filter(s => s.signedUp) : byDay
 
   const grouped = groupByTime(visible)
 
   return (
     <div className="min-h-screen" style={{ background: 'var(--bg)' }}>
-      {/* Day tab bar */}
+      {/* Day tab bar + view toggle */}
       {days.length > 0 && (
         <div className="sticky top-0 z-10 border-b" style={{ background: 'var(--nav)', borderColor: 'var(--border)' }}>
-          <div className="max-w-4xl mx-auto px-4 flex gap-0.5 overflow-x-auto scrollbar-hide items-center">
+          {/* View mode toggle */}
+          <div className="max-w-4xl mx-auto px-4 pt-3 pb-2 flex gap-2 items-center">
+            <div className="flex rounded-xl overflow-hidden border" style={{ borderColor: 'var(--border)' }}>
+              {(['all', 'mine'] as ViewMode[]).map(m => (
+                <button
+                  key={m}
+                  onClick={() => setViewMode(m)}
+                  className="px-4 py-1.5 text-xs font-bold transition-colors"
+                  style={{
+                    background: viewMode === m ? 'var(--accent)' : 'var(--surface)',
+                    color: viewMode === m ? '#fff' : 'var(--text-dim)',
+                  }}
+                >
+                  {m === 'all' ? '全部場次' : '我的報名 ✓'}
+                </button>
+              ))}
+            </div>
+            <button
+              onClick={() => setShowShare(true)}
+              className="ml-auto p-2 rounded-lg transition-colors"
+              style={{ color: 'var(--text-dim)' }}
+              aria-label="分享 Share"
+            >
+              <Share2 size={16} />
+            </button>
+          </div>
+          {/* Day tabs */}
+          <div className="max-w-4xl mx-auto px-4 flex gap-0.5 overflow-x-auto scrollbar-hide">
             <button
               onClick={() => setSelectedDay(null)}
-              className="shrink-0 px-4 py-3 text-sm font-semibold transition-colors whitespace-nowrap relative"
+              className="shrink-0 px-4 py-2.5 text-sm font-semibold transition-colors whitespace-nowrap relative"
               style={{ color: selectedDay === null ? 'var(--accent)' : 'var(--text-dim)' }}
             >
               全部
@@ -98,7 +129,7 @@ export default function Schedule() {
                 <button
                   key={d}
                   onClick={() => setSelectedDay(d)}
-                  className="shrink-0 px-4 py-3 text-sm font-semibold transition-colors whitespace-nowrap relative"
+                  className="shrink-0 px-4 py-2.5 text-sm font-semibold transition-colors whitespace-nowrap relative"
                   style={{ color: isActive ? 'var(--accent)' : 'var(--text-dim)' }}
                 >
                   第 {d} 天
@@ -111,14 +142,6 @@ export default function Schedule() {
                 </button>
               )
             })}
-            <button
-              onClick={() => setShowShare(true)}
-              className="ml-auto shrink-0 p-2 rounded-lg transition-colors"
-              style={{ color: 'var(--text-dim)' }}
-              aria-label="分享 Share"
-            >
-              <Share2 size={16} />
-            </button>
           </div>
         </div>
       )}
@@ -148,7 +171,10 @@ export default function Schedule() {
 
         {!isLoading && !isError && visible.length === 0 && (
           <div className="text-center py-20 text-sm" style={{ color: 'var(--text-dim)' }}>
-            <p>尚未排定行程。No sessions scheduled yet.</p>
+            {viewMode === 'mine'
+              ? <p>尚未報名任何場次。No sign-ups yet.</p>
+              : <p>尚未排定行程。No sessions scheduled yet.</p>
+            }
           </div>
         )}
 

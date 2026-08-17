@@ -3,9 +3,10 @@ import { useAuth } from './auth-context'
 import Layout from './components/Layout'
 import Dashboard from './pages/Dashboard'
 import Schedule from './pages/Schedule'
-import MySchedule from './pages/MySchedule'
 import MyInfo from './pages/MyInfo'
 import MyQR from './pages/MyQR'
+import Meals from './pages/Meals'
+import Map from './pages/Map'
 import Login from './pages/Login'
 
 function RequireAuth({ children }: { children: React.ReactNode }) {
@@ -26,9 +27,12 @@ export default function App() {
                 <Routes>
                   <Route path="/" element={<Dashboard />} />
                   <Route path="/schedule" element={<Schedule />} />
-                  <Route path="/my-schedule" element={<MySchedule />} />
-                  <Route path="/my-info" element={<MyInfo />} />
                   <Route path="/my-qr" element={<MyQR />} />
+                  <Route path="/meals" element={<Meals />} />
+                  <Route path="/map" element={<Map />} />
+                  <Route path="/my-info" element={<MyInfo />} />
+                  {/* legacy redirect */}
+                  <Route path="/my-schedule" element={<Navigate to="/schedule" replace />} />
                 </Routes>
               </Layout>
             </RequireAuth>

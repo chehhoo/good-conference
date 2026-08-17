@@ -1,6 +1,6 @@
 import { useState, useCallback, useEffect, useRef } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { Loader2, MapPin, QrCode, Maximize2, X } from 'lucide-react'
+import { Loader2, MapPin, QrCode, Maximize2, X, Clock } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import QRCode from 'react-qr-code'
 import { scheduleApi, myApi, type CampSession, type MealDay, type MealScanRecord } from '../api/client'
@@ -148,6 +148,16 @@ export default function Dashboard() {
 
   const todayLabel = todayDayNum != null ? `第 ${todayDayNum} 天` : ''
 
+  // Next signed-up session (future only)
+  const now = Date.now()
+  const nextSession = sessions
+    .filter(s => s.signedUp && new Date(s.startTime).getTime() > now)
+    .sort((a, b) => a.startTime.localeCompare(b.startTime))[0] ?? null
+
+  function minsUntil(iso: string) {
+    return Math.max(0, Math.round((new Date(iso).getTime() - now) / 60000))
+  }
+
   return (
     <>
     {badgeOpen && uid && <BadgeOverlay uid={uid} displayName={displayName} onClose={closeBadge} />}
@@ -205,6 +215,40 @@ export default function Dashboard() {
           </div>
         </div>
       </div>
+
+      {/* ── Next Up ── */}
+      {nextSession && (
+        <div className="rounded-3xl p-4 border" style={{ background: 'var(--surface)', borderColor: 'var(--border)' }}>
+          <div className="flex items-center gap-2 mb-3">
+            <Clock size={13} style={{ color: 'var(--gold)' }} />
+            <span className="text-xs font-bold tracking-widest uppercase" style={{ color: 'var(--text-dim)' }}>
+              下一場 · Next Up
+            </span>
+            <span className="ml-auto text-xs font-bold px-2 py-0.5 rounded-full"
+              style={{ background: 'var(--gold-dim)', color: 'var(--gold)' }}>
+              {minsUntil(nextSession.startTime) < 60
+                ? `${minsUntil(nextSession.startTime)} 分鐘後`
+                : `${Math.floor(minsUntil(nextSession.startTime) / 60)}h ${minsUntil(nextSession.startTime) % 60}m`}
+            </span>
+          </div>
+          <div className="flex gap-3">
+            <div className="flex flex-col items-center min-w-[36px]">
+              <span className="text-sm font-black leading-none" style={{ color: 'var(--accent)' }}>{fmt(nextSession.startTime)}</span>
+              <div className="w-px flex-1 my-1" style={{ background: 'var(--border)', minHeight: 8 }} />
+              <span className="text-xs" style={{ color: 'var(--text-dim)' }}>{fmt(nextSession.endTime)}</span>
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="font-bold text-sm leading-snug mb-1" style={{ color: 'var(--text)' }}>{nextSession.title}</div>
+              {nextSession.speaker && <div className="text-xs mb-1" style={{ color: 'var(--text-mid)' }}>{nextSession.speaker}</div>}
+              {nextSession.location && (
+                <div className="flex items-center gap-1 text-xs" style={{ color: 'var(--text-dim)' }}>
+                  <MapPin size={10} />{nextSession.location}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* ── Today meals ── */}
       {todayMeals && (
