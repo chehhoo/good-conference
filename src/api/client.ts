@@ -101,10 +101,24 @@ export interface FamilyInfo {
   members: FamilyMember[]
 }
 
+export interface MealStatus {
+  day: number
+  date: string | null
+  breakfast: boolean | null
+  lunch: boolean | null
+  dinner: boolean | null
+}
+
 export const myApi = {
   family: () =>
     api.get<FamilyInfo>('/conference/my/family').then(r => r.data),
 
   mySignups: () =>
     api.get<CampSession[]>('/schedule/my-signups').then(r => r.data),
+
+  qr: () =>
+    api.get<{ qrValue: string }>('/persons/me/qr').then(r => r.data.qrValue),
+
+  meals: () =>
+    api.get<MealStatus[]>('/meals/my').then(r => r.data),
 }
