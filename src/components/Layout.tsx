@@ -1,10 +1,11 @@
 import { NavLink, useLocation, useNavigate } from 'react-router-dom'
-import { CalendarDays, BookMarked, User, LogOut } from 'lucide-react'
+import { CalendarDays, BookMarked, User, LogOut, QrCode } from 'lucide-react'
 import { useAuth } from '../auth-context'
 
 const NAV_ITEMS = [
   { to: '/',            label: '行程',    labelEng: 'Schedule',    Icon: CalendarDays },
   { to: '/my-schedule', label: '我的行程', labelEng: 'My Schedule', Icon: BookMarked  },
+  { to: '/my-qr',       label: '我的QR',  labelEng: 'My QR',       Icon: QrCode       },
   { to: '/my-info',     label: '我的資訊', labelEng: 'My Info',     Icon: User         },
 ]
 

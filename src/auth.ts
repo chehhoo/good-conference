@@ -6,6 +6,7 @@ export interface StoredPerson {
   firstName: string
   lastName: string
   chineseName: string
+  uid: string | null
 }
 
 export function getToken(): string | null {

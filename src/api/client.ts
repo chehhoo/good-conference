@@ -107,4 +107,5 @@ export const myApi = {
 
   mySignups: () =>
     api.get<CampSession[]>('/schedule/my-signups').then(r => r.data),
+
 }

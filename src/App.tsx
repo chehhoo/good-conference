@@ -4,6 +4,7 @@ import Layout from './components/Layout'
 import Schedule from './pages/Schedule'
 import MySchedule from './pages/MySchedule'
 import MyInfo from './pages/MyInfo'
+import MyQR from './pages/MyQR'
 import Login from './pages/Login'
 
 function RequireAuth({ children }: { children: React.ReactNode }) {
@@ -25,6 +26,7 @@ export default function App() {
                   <Route path="/" element={<Schedule />} />
                   <Route path="/my-schedule" element={<MySchedule />} />
                   <Route path="/my-info" element={<MyInfo />} />
+                  <Route path="/my-qr" element={<MyQR />} />
                 </Routes>
               </Layout>
             </RequireAuth>
