@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { useAuth } from './auth-context'
 import Layout from './components/Layout'
+import Dashboard from './pages/Dashboard'
 import Schedule from './pages/Schedule'
 import MySchedule from './pages/MySchedule'
 import MyInfo from './pages/MyInfo'
@@ -23,7 +24,8 @@ export default function App() {
             <RequireAuth>
               <Layout>
                 <Routes>
-                  <Route path="/" element={<Schedule />} />
+                  <Route path="/" element={<Dashboard />} />
+                  <Route path="/schedule" element={<Schedule />} />
                   <Route path="/my-schedule" element={<MySchedule />} />
                   <Route path="/my-info" element={<MyInfo />} />
                   <Route path="/my-qr" element={<MyQR />} />

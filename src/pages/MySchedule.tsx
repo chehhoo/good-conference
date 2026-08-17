@@ -38,17 +38,17 @@ export default function MySchedule() {
   if (isLoading) {
     return (
       <div className="flex justify-center py-20">
-        <Loader2 className="animate-spin text-blue-600" size={32} />
+        <Loader2 className="animate-spin" size={32} style={{ color: 'var(--text-dim)' }} />
       </div>
     )
   }
 
   if (isError) {
     return (
-      <div className="flex flex-col items-center justify-center py-20 gap-3 text-red-500">
+      <div className="flex flex-col items-center justify-center py-20 gap-3" style={{ color: 'var(--accent)' }}>
         <BookMarked size={40} strokeWidth={1.5} />
         <p className="text-lg font-medium">無法載入我的行程</p>
-        <p className="text-sm text-gray-400">Could not load your schedule. Please try again later.</p>
+        <p className="text-sm" style={{ color: 'var(--text-dim)' }}>Could not load your schedule. Please try again later.</p>
       </div>
     )
   }
@@ -57,7 +57,7 @@ export default function MySchedule() {
 
   if (sessions.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center py-20 gap-3 text-gray-500">
+      <div className="flex flex-col items-center justify-center py-20 gap-3" style={{ color: 'var(--text-dim)' }}>
         <BookMarked size={40} strokeWidth={1.5} />
         <p className="text-lg font-medium">尚未報名任何場次</p>
         <p className="text-sm">No sessions signed up yet</p>
@@ -68,15 +68,16 @@ export default function MySchedule() {
   const byDay = groupByDay(sessions)
 
   return (
-    <div className="max-w-2xl mx-auto px-4 py-6 space-y-6">
-      <h1 className="text-2xl font-bold text-gray-800">
-        我的行程 <span className="text-base font-normal text-gray-500">My Schedule</span>
-      </h1>
+    <div className="max-w-2xl mx-auto px-4 py-5 space-y-6">
+      <div className="flex items-baseline gap-2">
+        <h1 className="text-2xl font-black" style={{ color: 'var(--text)' }}>我的行程</h1>
+        <span className="text-sm" style={{ color: 'var(--text-dim)' }}>My Schedule</span>
+      </div>
 
       {byDay.map(([day, daySessions]) => (
         <section key={day}>
           {day > 0 && (
-            <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-3">
+            <h2 className="text-xs font-bold uppercase tracking-widest mb-3" style={{ color: 'var(--text-dim)' }}>
               第 {day} 天 · Day {day}
             </h2>
           )}
