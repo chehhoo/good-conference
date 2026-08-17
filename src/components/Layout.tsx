@@ -51,7 +51,7 @@ function PersonIcon() {
 }
 
 export default function Layout({ children }: { children: React.ReactNode }) {
-  const { token, person, logout } = useAuth()
+  const { token, logout } = useAuth()
   const location = useLocation()
   const navigate = useNavigate()
   const [theme, setTheme] = useState<'dark' | 'light'>(() => {
@@ -68,15 +68,26 @@ export default function Layout({ children }: { children: React.ReactNode }) {
     navigate('/login', { replace: true })
   }
 
-  const displayName = person?.chineseName || (person ? `${person.firstName} ${person.lastName}` : '')
 
   return (
     <div className="flex flex-col min-h-screen" style={{ background: 'var(--bg)' }}>
       {token && (
-        <header className="sticky top-0 z-40 flex items-center justify-between px-4 py-3 border-b" style={{ background: 'var(--nav)', borderColor: 'var(--border)' }}>
-          <div className="flex items-center gap-2.5">
-            <img src="/logo.svg" alt="Good Vessel" className="w-7 h-7 rounded-lg" />
-            <span className="text-sm font-semibold" style={{ color: 'var(--text-mid)' }}>{displayName}</span>
+        <header className="sticky top-0 z-40 flex items-center justify-between px-4 py-2.5 border-b" style={{ background: 'var(--nav)', borderColor: 'var(--border)' }}>
+          <div className="flex items-center gap-2.5 min-w-0">
+            <img src="/logo.svg" alt="Good Vessel" className="w-8 h-8 rounded-lg shrink-0" />
+            <div className="min-w-0">
+              <div className="text-[10px] font-bold tracking-widest uppercase leading-none mb-0.5" style={{ color: 'var(--text-dim)' }}>
+                GOOD VESSEL · 好器皿
+              </div>
+              <div className="flex items-baseline gap-1.5 leading-none">
+                <span className="text-sm font-black tracking-tight" style={{ color: 'var(--text)' }}>
+                  {import.meta.env.VITE_CONFERENCE_NAME ?? '中國福音大會 2026'}
+                </span>
+                <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-md" style={{ background: 'var(--accent-dim)', color: 'var(--accent)' }}>
+                  v{__APP_VERSION__}
+                </span>
+              </div>
+            </div>
           </div>
           <div className="flex items-center gap-1">
             <button
