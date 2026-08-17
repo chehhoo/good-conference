@@ -1,5 +1,10 @@
 import { useState } from 'react'
-import { MapPin } from 'lucide-react'
+import { MapPin, Navigation } from 'lucide-react'
+
+const HOTEL_NAME = 'Renaissance Schaumburg Convention Center Hotel'
+const HOTEL_ADDRESS = '1551 N Thoreau Dr, Schaumburg, IL 60173'
+const MAPS_EMBED_URL = 'https://maps.google.com/maps?q=Renaissance+Schaumburg+Convention+Center+Hotel,+1551+N+Thoreau+Dr,+Schaumburg,+IL+60173&output=embed&z=16'
+const DIRECTIONS_URL = 'https://maps.google.com/maps?daddr=1551+N+Thoreau+Dr,+Schaumburg,+IL+60173'
 
 type Floor = 1 | 2 | 3
 
@@ -77,6 +82,45 @@ export default function Map() {
           <h1 className="text-base font-black" style={{ color: 'var(--text)' }}>場地地圖</h1>
           <p className="text-xs" style={{ color: 'var(--text-dim)' }}>Venue Map</p>
         </div>
+      </div>
+
+      {/* Google Maps embed */}
+      <div className="rounded-3xl overflow-hidden border mb-3" style={{ borderColor: 'var(--border)' }}>
+        <iframe
+          title="Venue location"
+          src={MAPS_EMBED_URL}
+          width="100%"
+          height="220"
+          style={{ border: 0, display: 'block' }}
+          loading="lazy"
+          referrerPolicy="no-referrer-when-downgrade"
+        />
+        <div className="flex items-center justify-between px-4 py-3"
+          style={{ background: 'var(--surface)' }}>
+          <div className="min-w-0">
+            <p className="text-sm font-bold truncate" style={{ color: 'var(--text)' }}>{HOTEL_NAME}</p>
+            <p className="text-xs mt-0.5" style={{ color: 'var(--text-dim)' }}>{HOTEL_ADDRESS}</p>
+          </div>
+          <a
+            href={DIRECTIONS_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold ml-3 shrink-0"
+            style={{ background: 'var(--accent)', color: '#fff' }}
+          >
+            <Navigation size={12} />
+            導航 Directions
+          </a>
+        </div>
+      </div>
+
+      {/* Divider */}
+      <div className="flex items-center gap-3 mb-4">
+        <div className="flex-1 h-px" style={{ background: 'var(--border)' }} />
+        <span className="text-[10px] font-bold tracking-widest uppercase" style={{ color: 'var(--text-dim)' }}>
+          室內地圖 · Floor Plan
+        </span>
+        <div className="flex-1 h-px" style={{ background: 'var(--border)' }} />
       </div>
 
       {/* Floor selector */}
