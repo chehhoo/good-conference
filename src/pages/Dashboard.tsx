@@ -1,6 +1,6 @@
 import { useState, useCallback, useEffect, useRef } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { Loader2, MapPin, QrCode, Maximize2, X, Clock } from 'lucide-react'
+import { Loader2, MapPin, Maximize2, X, Clock } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import QRCode from 'react-qr-code'
 import { scheduleApi, myApi, type CampSession, type MealDay, type MealScanRecord } from '../api/client'
@@ -193,32 +193,16 @@ export default function Dashboard() {
         )}
         {!me?.church && <div className="mb-4" />}
 
-        <div className="flex items-center justify-between gap-2">
-          <div className="text-xs flex items-center gap-1.5" style={{ color: 'rgba(236,241,255,0.5)' }}>
-            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg>
-            {me?.lodging?.status === 'STAY' ? '住宿' : me?.lodging?.status === 'COMMUTE' ? '通勤' : ''}
-          </div>
-          <div className="flex items-center gap-2">
-            {uid && (
-              <button
-                onClick={openBadge}
-                className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-semibold text-white"
-                style={{ background: 'rgba(255,255,255,0.22)', border: '1px solid rgba(255,255,255,0.25)' }}
-              >
-                <Maximize2 size={13} />
-                顯示大碼
-              </button>
-            )}
-            <button
-              onClick={() => navigate('/my-qr')}
-              className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-semibold text-white"
-              style={{ background: 'rgba(255,255,255,0.15)', border: '1px solid rgba(255,255,255,0.2)' }}
-            >
-              <QrCode size={14} />
-              我的 QR
-            </button>
-          </div>
-        </div>
+        {uid && (
+          <button
+            onClick={openBadge}
+            className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-sm font-bold text-white w-full justify-center"
+            style={{ background: 'rgba(255,255,255,0.18)', border: '1px solid rgba(255,255,255,0.22)' }}
+          >
+            <Maximize2 size={14} />
+            顯示大碼 · Show Full Badge
+          </button>
+        )}
       </div>
 
       {/* ── Next Up ── */}
