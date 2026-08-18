@@ -344,23 +344,19 @@ export default function Dashboard() {
           <div className="flex justify-center py-8"><Loader2 size={24} className="animate-spin" style={{ color: 'var(--text-dim)' }} /></div>
         )}
 
-        <div className="space-y-3">
-          {todaySessions.slice(0, 4).map(s => (
-            <DashSessionCard
-              key={s.id} session={s}
-              loading={pendingId === s.id}
-              onSignup={() => signup.mutate(s.id)}
-              onUnsignup={() => unsignup.mutate(s.id)}
-            />
-          ))}
+        <div>
+          {[...todaySessions]
+            .sort((a, b) => a.startTime.localeCompare(b.startTime))
+            .map((s, i, arr) => (
+              <DashSessionRow
+                key={s.id} session={s}
+                loading={pendingId === s.id}
+                onSignup={() => signup.mutate(s.id)}
+                onUnsignup={() => unsignup.mutate(s.id)}
+                isLast={i === arr.length - 1}
+              />
+            ))}
         </div>
-
-        {todaySessions.length > 4 && (
-          <button onClick={() => navigate('/schedule')} className="mt-3 w-full py-3 rounded-2xl text-sm font-semibold border transition-colors"
-            style={{ borderColor: 'var(--border)', color: 'var(--text-mid)', background: 'var(--surface)' }}>
-            查看全部 {todaySessions.length} 場次
-          </button>
-        )}
 
         {!sessLoading && todaySessions.length === 0 && (
           <p className="text-sm text-center py-8" style={{ color: 'var(--text-dim)' }}>今日無安排場次</p>
@@ -371,57 +367,81 @@ export default function Dashboard() {
   )
 }
 
-function DashSessionCard({ session: s, onSignup, onUnsignup, loading }: {
-  session: CampSession; onSignup: () => void; onUnsignup: () => void; loading: boolean
+const GOING_TYPES = new Set(['WORKSHOP', 'GENERAL', 'PLENARY', 'WORSHIP'])
+
+function DashSessionRow({ session: s, onSignup, onUnsignup, loading, isLast }: {
+  session: CampSession; onSignup: () => void; onUnsignup: () => void; loading: boolean; isLast: boolean
 }) {
+  const isOther = s.sessionType === 'OTHER'
+  const canGo = GOING_TYPES.has(s.sessionType)
   const atCapacity = s.capacity != null && s.signupCount >= s.capacity
-  const pct = s.capacity ? Math.min(100, Math.round((s.signupCount / s.capacity) * 100)) : null
   const typeColor = TYPE_ACCENT[s.sessionType] ?? 'var(--text-dim)'
 
   return (
-    <div className="rounded-2xl p-4 border flex gap-3" style={{ background: 'var(--surface)', borderColor: 'var(--border)' }}>
-      {/* Time column */}
-      <div className="flex flex-col items-center min-w-[40px]">
-        <span className="text-sm font-black leading-none" style={{ color: 'var(--accent)' }}>{fmt(s.startTime)}</span>
-        <div className="w-px flex-1 my-1.5 rounded-full" style={{ background: 'var(--border)', minHeight: 12 }} />
-        <span className="text-xs" style={{ color: 'var(--text-dim)' }}>{fmt(s.endTime)}</span>
+    <div className="flex gap-0" style={{ opacity: isOther ? 0.65 : 1 }}>
+      {/* Time + line */}
+      <div className="flex flex-col items-center" style={{ width: 48, flexShrink: 0 }}>
+        <span className="text-xs font-bold tabular-nums leading-none pt-0.5"
+          style={{ color: isOther ? 'var(--text-dim)' : typeColor }}>
+          {fmt(s.startTime)}
+        </span>
+        {!isLast && (
+          <div className="flex-1 w-px mt-1.5" style={{ background: 'var(--border)', minHeight: 16 }} />
+        )}
+      </div>
+
+      {/* Dot */}
+      <div className="flex flex-col items-center mt-0.5" style={{ width: 18, flexShrink: 0 }}>
+        <div className="rounded-full" style={{
+          width: 7, height: 7,
+          background: isOther ? 'var(--border2)' : typeColor,
+        }} />
       </div>
 
       {/* Content */}
-      <div className="flex-1 min-w-0">
-        <div className="flex items-center gap-2 mb-1.5">
-          <span className="text-[10px] font-bold uppercase tracking-wide px-2 py-0.5 rounded-md"
-            style={{ background: `${typeColor}22`, color: typeColor }}>
-            {TYPE_LABELS[s.sessionType] ?? s.sessionType}
+      <div className="flex-1 min-w-0 pb-4">
+        {TYPE_LABELS[s.sessionType] && !isOther && (
+          <span className="text-[10px] font-bold tracking-wide px-1.5 py-0.5 rounded"
+            style={{ background: `color-mix(in srgb, ${typeColor} 18%, transparent)`, color: typeColor }}>
+            {TYPE_LABELS[s.sessionType]}
           </span>
+        )}
+        <div className="flex items-center gap-2 mt-0.5 flex-wrap">
+          <span className="font-semibold leading-snug"
+            style={{ color: isOther ? 'var(--text-dim)' : 'var(--text)', fontSize: 14 }}>
+            {s.title}
+          </span>
+          {canGo && !atCapacity && (
+            s.signedUp ? (
+              <button disabled={loading} onClick={onUnsignup}
+                className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-bold transition-all shrink-0"
+                style={{ background: 'var(--green)', color: '#fff' }}>
+                🙋 我去！
+              </button>
+            ) : (
+              <button disabled={loading} onClick={onSignup}
+                className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-bold transition-all shrink-0"
+                style={{ background: 'var(--accent-dim)', color: 'var(--accent)', border: '1px solid var(--accent)' }}>
+                想去？
+              </button>
+            )
+          )}
+          {canGo && atCapacity && (
+            <span className="text-[11px] px-2 py-0.5 rounded-full shrink-0"
+              style={{ background: 'var(--border)', color: 'var(--text-dim)' }}>額滿</span>
+          )}
         </div>
-        <div className="font-bold leading-snug mb-1" style={{ color: 'var(--text)', fontSize: 15 }}>{s.title}</div>
-        {s.speaker && <div className="text-xs mb-1.5" style={{ color: 'var(--text-mid)' }}>{s.speaker}</div>}
-        {s.location && (
-          <div className="flex items-center gap-1 text-xs mb-2" style={{ color: 'var(--text-dim)' }}>
-            <MapPin size={11} />{s.location}
+        {(s.speaker || s.location) && (
+          <div className="flex flex-wrap gap-x-3 mt-0.5">
+            {s.speaker && (
+              <span className="text-xs" style={{ color: 'var(--text-dim)' }}>{s.speaker}</span>
+            )}
+            {s.location && (
+              <span className="flex items-center gap-1 text-xs" style={{ color: 'var(--text-dim)' }}>
+                <MapPin size={10} className="shrink-0" />{s.location}
+              </span>
+            )}
           </div>
-        )}
-        {pct != null && (
-          <div className="h-1 rounded-full overflow-hidden mb-2" style={{ background: 'var(--border)' }}>
-            <div className="h-full rounded-full" style={{
-              width: `${pct}%`,
-              background: pct >= 100 ? 'var(--accent)' : pct >= 75 ? 'var(--amber)' : 'var(--green)'
-            }} />
-          </div>
-        )}
-        {s.signedUp ? (
-          <button disabled={loading} onClick={onUnsignup}
-            className="text-xs font-bold px-3 py-1.5 rounded-xl border transition-colors"
-            style={{ background: 'var(--green-dim)', color: 'var(--green)', borderColor: 'transparent' }}>
-            ✓ 已報名 · 取消
-          </button>
-        ) : (
-          <button disabled={loading || atCapacity} onClick={onSignup}
-            className="text-xs font-bold px-3 py-1.5 rounded-xl transition-colors"
-            style={{ background: atCapacity ? 'var(--border)' : 'var(--accent)', color: atCapacity ? 'var(--text-dim)' : '#fff' }}>
-            {atCapacity ? '額滿' : '報名'}
-          </button>
         )}
       </div>
     </div>
