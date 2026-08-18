@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { MapPin, Navigation } from 'lucide-react'
+import { usePageTitle } from '../hooks/usePageTitle'
 
 const HOTEL_NAME = 'Renaissance Schaumburg Convention Center Hotel'
 const HOTEL_ADDRESS = '1551 N Thoreau Dr, Schaumburg, IL 60173'
@@ -34,6 +35,7 @@ const FLOOR_PLANS = [
 ]
 
 export default function Map() {
+  usePageTitle('場地地圖', 'Venue Map')
   const [planId, setPlanId] = useState('floor1')
 
   const activePlan = FLOOR_PLANS.find(p => p.id === planId)!

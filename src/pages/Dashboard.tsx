@@ -1,4 +1,5 @@
 import { useState, useCallback, useEffect, useRef } from 'react'
+import { usePageTitle } from '../hooks/usePageTitle'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { Loader2, MapPin, Maximize2, X, Clock } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
@@ -99,6 +100,7 @@ function BadgeOverlay({ uid, displayName, onClose }: {
 }
 
 export default function Dashboard() {
+  usePageTitle('今日總覽', 'Dashboard')
   const { person } = useAuth()
   const qc = useQueryClient()
   const navigate = useNavigate()

@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
 import { Utensils } from 'lucide-react'
+import { usePageTitle } from '../hooks/usePageTitle'
 import { myApi, type MealDay, type MealScanRecord, type FamilyMember } from '../api/client'
 import { useAuth } from '../auth-context'
 
@@ -75,6 +76,7 @@ function FamilyMealSlot({
 }
 
 export default function Meals() {
+  usePageTitle('餐食狀態', 'Meal Status')
   const { person } = useAuth()
   const personId = person?.id ?? null
 
