@@ -171,8 +171,13 @@ export default function Dashboard() {
 
   const todayLabel = todayDayNum != null ? `第 ${todayDayNum} 天` : ''
 
-  // Next signed-up session (future only)
-  const now = Date.now()
+  // Live clock for "Next Up" countdown
+  const [now, setNow] = useState(Date.now())
+  useEffect(() => {
+    const id = setInterval(() => setNow(Date.now()), 30_000)
+    return () => clearInterval(id)
+  }, [])
+
   const nextSession = sessions
     .filter(s => s.signedUp && new Date(s.startTime).getTime() > now)
     .sort((a, b) => a.startTime.localeCompare(b.startTime))[0] ?? null
