@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
 import { Loader2, User } from 'lucide-react'
+import { usePageTitle } from '../hooks/usePageTitle'
 import { myApi, type FamilyMember, type MealDay } from '../api/client'
 import { useAuth } from '../auth-context'
 
@@ -131,6 +132,7 @@ function MemberCard({ member }: { member: FamilyMember }) {
 }
 
 export default function MyInfo() {
+  usePageTitle('我的資訊', 'My Info')
   const { person, token } = useAuth()
   const personId = person?.id ?? null
 

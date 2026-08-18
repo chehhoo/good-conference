@@ -27,7 +27,10 @@ function fmtDayDate(iso: string) {
   return new Date(iso).toLocaleDateString('zh-TW', { month: 'short', day: 'numeric', weekday: 'short' })
 }
 
+import { usePageTitle } from '../hooks/usePageTitle'
+
 export default function Schedule() {
+  usePageTitle('大會行程', 'Conference Schedule')
   const qc = useQueryClient()
   const { person } = useAuth()
   const personId = person?.id ?? null

@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
+import { usePageTitle } from '../hooks/usePageTitle'
 import QRCode from 'react-qr-code'
 import { QrCode, Maximize2, X } from 'lucide-react'
 import { useAuth } from '../auth-context'
@@ -58,6 +59,7 @@ function BadgeOverlay({ uid, displayName, onClose }: {
 // ── Page ─────────────────────────────────────────────────────────────────────
 
 export default function MyQR() {
+  usePageTitle('我的 QR 碼', 'My QR Code')
   const { person } = useAuth()
   const displayName = person?.chineseName || (person ? `${person.firstName} ${person.lastName}` : '')
   const uid = person?.uid || (person ? String(person.id) : null)
