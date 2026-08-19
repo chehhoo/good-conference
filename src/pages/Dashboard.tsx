@@ -351,6 +351,7 @@ export default function Dashboard() {
 
         <div>
           {[...todaySessions]
+            .filter(s => s.sessionType !== 'OTHER')
             .sort((a, b) => a.startTime.localeCompare(b.startTime))
             .map((s, i, arr) => (
               <DashSessionRow
