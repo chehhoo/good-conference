@@ -171,8 +171,13 @@ export default function Dashboard() {
 
   const todayLabel = todayDayNum != null ? `第 ${todayDayNum} 天` : ''
 
-  // Next signed-up session (future only)
-  const now = Date.now()
+  // Live clock for "Next Up" countdown
+  const [now, setNow] = useState(Date.now())
+  useEffect(() => {
+    const id = setInterval(() => setNow(Date.now()), 30_000)
+    return () => clearInterval(id)
+  }, [])
+
   const nextSession = sessions
     .filter(s => s.signedUp && new Date(s.startTime).getTime() > now)
     .sort((a, b) => a.startTime.localeCompare(b.startTime))[0] ?? null
@@ -268,7 +273,10 @@ export default function Dashboard() {
           {/* Header + day pills */}
           <div className="flex items-center gap-2 mb-3 flex-wrap">
             <div className="text-xs font-bold tracking-widest uppercase" style={{ color: 'var(--text-dim)' }}>
-              餐食
+              {mealDay === todayDayNum ? '今日餐食' : (() => {
+                const dateIso = dayDateMap.get(mealDay!)
+                return dateIso ? `${fmtDate(dateIso)} 餐食` : '餐食'
+              })()}
             </div>
             <div className="flex gap-1.5 flex-wrap">
               {allMealDays.map(d => {
@@ -333,7 +341,9 @@ export default function Dashboard() {
       <div>
         <div className="flex items-center justify-between mb-3">
           <div className="text-xs font-bold tracking-widest uppercase" style={{ color: 'var(--text-dim)' }}>
-            今日場次 · {todayLabel}
+            今日場次 · {todayDayNum != null && dayDateMap.get(todayDayNum)
+              ? fmtDate(dayDateMap.get(todayDayNum)!)
+              : todayLabel}
           </div>
           <button onClick={() => navigate('/schedule')} className="text-xs font-semibold" style={{ color: 'var(--accent)' }}>
             全部 →
@@ -346,6 +356,7 @@ export default function Dashboard() {
 
         <div>
           {[...todaySessions]
+            .filter(s => s.sessionType !== 'OTHER')
             .sort((a, b) => a.startTime.localeCompare(b.startTime))
             .map((s, i, arr) => (
               <DashSessionRow
