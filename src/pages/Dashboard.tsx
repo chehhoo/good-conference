@@ -273,7 +273,10 @@ export default function Dashboard() {
           {/* Header + day pills */}
           <div className="flex items-center gap-2 mb-3 flex-wrap">
             <div className="text-xs font-bold tracking-widest uppercase" style={{ color: 'var(--text-dim)' }}>
-              餐食
+              {mealDay === todayDayNum ? '今日餐食' : (() => {
+                const dateIso = dayDateMap.get(mealDay!)
+                return dateIso ? `${fmtDate(dateIso)} 餐食` : '餐食'
+              })()}
             </div>
             <div className="flex gap-1.5 flex-wrap">
               {allMealDays.map(d => {
@@ -338,7 +341,9 @@ export default function Dashboard() {
       <div>
         <div className="flex items-center justify-between mb-3">
           <div className="text-xs font-bold tracking-widest uppercase" style={{ color: 'var(--text-dim)' }}>
-            今日場次 · {todayLabel}
+            今日場次 · {todayDayNum != null && dayDateMap.get(todayDayNum)
+              ? fmtDate(dayDateMap.get(todayDayNum)!)
+              : todayLabel}
           </div>
           <button onClick={() => navigate('/schedule')} className="text-xs font-semibold" style={{ color: 'var(--accent)' }}>
             全部 →
