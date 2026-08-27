@@ -44,17 +44,28 @@ interface RowProps {
   isLast: boolean
 }
 
-function SessionDetailSheet({ session: s, onClose, onSignup, onUnsignup, loading }: {
+function overlaps(a: CampSession, b: CampSession) {
+  return a.id !== b.id &&
+    new Date(a.startTime) < new Date(b.endTime) &&
+    new Date(a.endTime) > new Date(b.startTime)
+}
+
+function SessionDetailSheet({ session: s, onClose, onSignup, onUnsignup, loading, allSessions }: {
   session: CampSession
   onClose: () => void
   onSignup: (id: number) => void
   onUnsignup: (id: number) => void
   loading: boolean
+  allSessions: CampSession[]
 }) {
   const canGo = GOING_TYPES.has(s.sessionType)
   const atCapacity = s.capacity != null && s.signupCount >= s.capacity
   const typeColor = TYPE_COLOR[s.sessionType] ?? 'var(--text-dim)'
   const pct = s.capacity ? Math.min(100, Math.round((s.signupCount / s.capacity) * 100)) : null
+
+  const conflictingSessions = !s.signedUp
+    ? allSessions.filter(other => other.signedUp && overlaps(s, other))
+    : []
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose() }
@@ -145,6 +156,18 @@ function SessionDetailSheet({ session: s, onClose, onSignup, onUnsignup, loading
           {s.description && (
             <div className="mt-4 p-3 rounded-2xl" style={{ background: 'var(--surface2)' }}>
               <p className="text-sm leading-relaxed whitespace-pre-line" style={{ color: 'var(--text-mid)' }}>{s.description}</p>
+            </div>
+          )}
+
+          {/* Conflict warning */}
+          {conflictingSessions.length > 0 && (
+            <div className="mt-4 p-3 rounded-2xl" style={{ background: 'color-mix(in srgb, var(--amber) 15%, transparent)', border: '1px solid var(--amber)' }}>
+              <p className="text-xs font-bold mb-1" style={{ color: 'var(--amber)' }}>⚠️ 時間衝突 · Schedule Conflict</p>
+              {conflictingSessions.map(c => (
+                <p key={c.id} className="text-xs" style={{ color: 'var(--text-mid)' }}>
+                  與「{c.title}」時間重疊 ({fmtTime(c.startTime)}–{fmtTime(c.endTime)})
+                </p>
+              ))}
             </div>
           )}
 
@@ -525,6 +548,7 @@ export default function Schedule() {
           onSignup={id => { signup.mutate(id); setDetailSession(s => s?.id === id ? { ...s, signedUp: true } : s) }}
           onUnsignup={id => { unsignup.mutate(id); setDetailSession(s => s?.id === id ? { ...s, signedUp: false } : s) }}
           loading={pendingId === detailSession.id}
+          allSessions={sessions}
         />
       )}
     </div>
