@@ -101,14 +101,14 @@ export default function Login() {
             <form onSubmit={handleSendOtp} className="space-y-4">
               <div>
                 <label className="block text-sm font-semibold mb-2" style={{ color: 'var(--text-mid)' }}>
-                  電話或電子郵件 Phone or Email
+                  電子郵件 Email
                 </label>
                 <input
                   type="text"
                   inputMode="email"
                   value={contact}
                   onChange={e => setContact(e.target.value)}
-                  placeholder="例如：(555) 123-4567 或 you@email.com"
+                  placeholder="例如：you@email.com"
                   required
                   autoFocus
                   className="w-full px-4 py-3 rounded-2xl text-sm focus:outline-none"
@@ -284,7 +284,7 @@ export default function Login() {
               <button onClick={() => switchMode('otp-contact')}
                 className="text-sm font-semibold"
                 style={{ color: 'var(--accent)' }}>
-                用電話或電子郵件登入 Sign in with phone or email
+                用電子郵件登入 Sign in with email
               </button>
             </p>
           )}
