@@ -141,7 +141,10 @@ function SessionDetailSheet({ session: s, onClose, onSignup, onUnsignup, loading
               <div className="flex items-center justify-between text-xs mb-1" style={{ color: 'var(--text-dim)' }}>
                 <span className="flex items-center gap-1"><Users size={11} />{s.signupCount} / {s.capacity} 人</span>
                 {atCapacity && <span style={{ color: 'var(--accent)' }} className="font-semibold">額滿</span>}
-                {(pct ?? 0) >= 75 && !atCapacity && <span style={{ color: 'var(--amber)' }} className="font-semibold">剩餘少量</span>}
+                {s.sessionType === 'WORKSHOP' && !atCapacity && (pct ?? 0) >= 80 && (
+                  <span style={{ color: 'var(--amber)' }} className="font-semibold">剩 {s.capacity! - s.signupCount} 位</span>
+                )}
+                {s.sessionType !== 'WORKSHOP' && (pct ?? 0) >= 75 && !atCapacity && <span style={{ color: 'var(--amber)' }} className="font-semibold">剩餘少量</span>}
               </div>
               <div className="h-1.5 rounded-full overflow-hidden" style={{ background: 'var(--border)' }}>
                 <div className="h-full rounded-full" style={{
@@ -321,6 +324,14 @@ function SessionRow({ session: s, onSignup, onUnsignup, onSelect, loading, isLas
             <span className="text-[10px] flex items-center gap-0.5" style={{ color: 'var(--text-dim)' }}>
               <Users size={9} />{s.signupCount}/{s.capacity}
             </span>
+            {s.sessionType === 'WORKSHOP' && !atCapacity && (pct ?? 0) >= 80 && (
+              <span className="text-[10px] font-bold shrink-0" style={{ color: 'var(--amber)' }}>
+                剩 {s.capacity - s.signupCount} 位
+              </span>
+            )}
+            {s.sessionType === 'WORKSHOP' && atCapacity && (
+              <span className="text-[10px] font-bold shrink-0" style={{ color: 'var(--accent)' }}>額滿</span>
+            )}
           </div>
         )}
       </div>

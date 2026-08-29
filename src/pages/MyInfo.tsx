@@ -3,6 +3,7 @@ import { Loader2, User } from 'lucide-react'
 import { usePageTitle } from '../hooks/usePageTitle'
 import { myApi, type FamilyMember, type MealDay } from '../api/client'
 import { useAuth } from '../auth-context'
+import { SmsOptIn } from '../components/SmsOptIn'
 
 const MEAL_LABELS = ['早餐', '午餐', '晚餐'] as const
 const MEAL_KEYS: (keyof MealDay)[] = ['breakfast', 'lunch', 'dinner']
@@ -170,6 +171,15 @@ export default function MyInfo() {
       {data.members.map(m => (
         <MemberCard key={m.id} member={m} />
       ))}
+
+      {/* Sign-in preferences. Placed after the family cards so it reads as a
+          setting rather than something required to see your information. */}
+      <div className="space-y-1.5 pt-2">
+        <p className="text-xs font-bold uppercase tracking-widest" style={{ color: 'var(--text-dim)' }}>
+          登入方式 Sign-in
+        </p>
+        <SmsOptIn />
+      </div>
     </div>
   )
 }
