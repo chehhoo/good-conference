@@ -109,6 +109,12 @@ export interface MealScanRecord {
   scannedAt: string        // ISO local datetime, e.g. "2024-12-20T18:34:21"
 }
 
+export interface SmsConsent {
+  smsConsent: boolean
+  smsConsentAt: string | null
+  mobilePhoneMasked: string | null
+}
+
 export const myApi = {
   family: () =>
     api.get<FamilyInfo>('/conference/my/family').then(r => r.data),
@@ -118,4 +124,11 @@ export const myApi = {
 
   mySignups: () =>
     api.get<CampSession[]>('/schedule/my-signups').then(r => r.data),
+
+  smsConsent: () =>
+    api.get<SmsConsent>('/conference/my/sms-consent').then(r => r.data),
+
+  setSmsConsent: (consent: boolean, mobilePhone?: string) =>
+    api.post<SmsConsent>('/conference/my/sms-consent', { consent, mobilePhone })
+      .then(r => r.data),
 }
