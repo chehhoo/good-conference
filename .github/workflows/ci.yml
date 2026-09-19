@@ -72,6 +72,18 @@ jobs:
             --distribution-id ${{ vars.CONFERENCE_CF_ID }} \
             --paths "/*"
 
+      - name: Health check
+        run: |
+          echo "Waiting 15s for CloudFront to propagate..."
+          sleep 15
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" https://conference.goodvessel.org)
+          echo "HTTP status: $STATUS"
+          if [ "$STATUS" != "200" ]; then
+            echo "::error::Health check failed — https://conference.goodvessel.org returned HTTP $STATUS"
+            exit 1
+          fi
+          echo "✓ Site is up"
+
       - name: Deployment summary
         run: |
           echo "## Deployed ${{ github.ref_name }}" >> $GITHUB_STEP_SUMMARY
