@@ -37,6 +37,12 @@ npm run build      # tsc + vite build → dist/
 
 # Preview production build locally
 npm run preview
+
+# Run E2E tests (starts dev server automatically)
+npm run test:e2e
+
+# Run E2E tests with Playwright UI
+npm run test:e2e:ui
 ```
 
 The good-api backend must be running for API calls to work:
@@ -69,6 +75,7 @@ src/
 ├── auth.ts                StoredPerson type, getToken/clearAuth helpers
 ├── auth-context.tsx        AuthContext + useAuth hook
 ├── components/
+│   ├── BadgeOverlay.tsx    Full-screen QR badge overlay (shared by Dashboard + MyQR)
 │   ├── Layout.tsx          5-tab bottom nav, header, theme toggle
 │   ├── SessionCard.tsx     Reusable session card (time column layout)
 │   └── ShareModal.tsx      Share URL modal
@@ -82,6 +89,18 @@ src/
 ├── App.tsx                Root component + route definitions
 ├── main.tsx               React entry point + QueryClientProvider
 └── index.css              Tailwind base + CSS custom property theme tokens
+e2e/
+├── fixtures/
+│   ├── auth.setup.ts       Playwright auth setup project (saves storageState)
+│   ├── mock-api.ts         mockAll(page) — intercepts all API routes with test data
+│   └── test-data.ts        TEST_PERSON, TEST_FAMILY, TEST_SESSIONS constants
+└── tests/
+    ├── login.spec.ts       OTP flow, reg-code flow, unauthenticated redirect
+    ├── dashboard.spec.ts   Badge card, badge overlay, meals, sessions
+    ├── schedule.spec.ts    Day tabs, signup, capacity, conflict warning
+    ├── meals.spec.ts       Meal slots, day headers, scan status
+    ├── my-qr.spec.ts       QR card, full-screen badge overlay
+    └── my-info.spec.ts     Family cards, meal grid, lodging, SMS opt-in
 ```
 
 ### Routes
@@ -146,10 +165,12 @@ The app uses a **dark-first CSS custom property** theming system.
 | Schedule with day tabs + signup | ✅ Done | `/schedule` |
 | Personal agenda | ✅ Done | `/my-schedule` |
 | Personal QR code | ✅ Done | `/my-qr`, uses `uid` fallback to `id` |
-| Full-screen badge mode | ✅ Done | Overlay in MyQR + Dashboard, Screen Wake Lock API |
+| Full-screen badge mode | ✅ Done | `BadgeOverlay` component, Screen Wake Lock API |
 | Meal status view | ✅ Done | Via `GET /api/conference/my/family` |
 | Family + lodging info | ✅ Done | `/my-info` |
 | Bold & festive redesign | ✅ Done | Dark-first, CSS custom properties, 5-tab nav |
+| Playwright E2E test suite | ✅ Done | 33 tests across 6 spec files, all API routes mocked |
+| Post-deploy health check | ✅ Done | CI curls production URL after CloudFront invalidation |
 
 ---
 
