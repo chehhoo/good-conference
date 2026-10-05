@@ -1,5 +1,6 @@
 import { test, expect } from '@playwright/test'
 import { mockAll } from '../fixtures/mock-api'
+import { TEST_FAMILY } from '../fixtures/test-data'
 
 test.describe('Meals page', () => {
   test.beforeEach(async ({ page }) => {
@@ -30,5 +31,24 @@ test.describe('Meals page', () => {
     // The slot component returns null when entitled.length === 0
     const day2Card = page.locator('div', { hasText: '第 2 天 · Day 2' }).last()
     await expect(day2Card.getByText('🌙')).toBeHidden()
+  })
+})
+
+test.describe('Meals page — family with no meals ordered', () => {
+  test('shows "未訂餐 No meals ordered" instead of empty day cards', async ({ page }) => {
+    await mockAll(page)
+    // Same family, every day listed but nothing ordered (how the API returns it)
+    const noMeals = {
+      ...TEST_FAMILY,
+      members: TEST_FAMILY.members.map(m => ({
+        ...m,
+        meals: { '1': { breakfast: false, lunch: false, dinner: false }, '2': { breakfast: false, lunch: false, dinner: false } },
+      })),
+    }
+    await page.route('**/api/conference/my/family', r => r.fulfill({ json: noMeals }))
+    await page.goto('/meals')
+
+    await expect(page.getByText('未訂餐 No meals ordered')).toBeVisible()
+    await expect(page.getByText('第 1 天 · Day 1')).toBeHidden()
   })
 })
