@@ -103,8 +103,13 @@ export default function Meals() {
     scansBySlot.set(k, arr)
   }
 
+  // Members come back with every event day listed, ordered or not — keep only days
+  // where someone in the family actually has a meal, so a family that ordered nothing
+  // sees a clear message instead of empty day cards.
   const allDays = [...new Set(
-    members.flatMap(m => Object.keys(m.meals ?? {})).map(Number)
+    members.flatMap(m => Object.entries(m.meals ?? {})
+      .filter(([, slots]) => Object.values(slots ?? {}).some(v => v === true))
+      .map(([day]) => day)).map(Number)
   )].sort((a, b) => a - b)
 
   return (
@@ -127,8 +132,12 @@ export default function Meals() {
       </div>
 
       {allDays.length === 0 ? (
-        <div className="text-center py-16">
-          <p className="text-sm" style={{ color: 'var(--text-dim)' }}>無餐食資料 No meal data</p>
+        <div className="text-center py-16 px-4">
+          <p className="text-sm font-bold" style={{ color: 'var(--text)' }}>未訂餐 No meals ordered</p>
+          <p className="text-xs mt-2" style={{ color: 'var(--text-dim)' }}>
+            如需用餐，請洽報到處工作人員。<br />
+            To add meals, please ask at the registration desk.
+          </p>
         </div>
       ) : (
         <div className="space-y-4">

@@ -134,6 +134,14 @@ export default function Dashboard() {
     return Math.max(0, Math.round((new Date(iso).getTime() - now) / 60000))
   }
 
+  /** "45 分鐘後" under an hour, "3h 20m" under a day, "88 天後" beyond — never "2108h 49m". */
+  function untilLabel(iso: string) {
+    const mins = minsUntil(iso)
+    if (mins < 60) return `${mins} 分鐘後`
+    if (mins < 24 * 60) return `${Math.floor(mins / 60)}h ${mins % 60}m`
+    return `${Math.floor(mins / (24 * 60))} 天後`
+  }
+
   return (
     <>
     {badgeOpen && uid && <BadgeOverlay uid={uid} displayName={displayName} onClose={closeBadge} />}
@@ -191,9 +199,7 @@ export default function Dashboard() {
             </span>
             <span className="ml-auto text-xs font-bold px-2 py-0.5 rounded-full"
               style={{ background: 'var(--gold-dim)', color: 'var(--gold)' }}>
-              {minsUntil(nextSession.startTime) < 60
-                ? `${minsUntil(nextSession.startTime)} 分鐘後`
-                : `${Math.floor(minsUntil(nextSession.startTime) / 60)}h ${minsUntil(nextSession.startTime) % 60}m`}
+              {untilLabel(nextSession.startTime)}
             </span>
           </div>
           <div className="flex gap-3">
