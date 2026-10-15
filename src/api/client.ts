@@ -60,6 +60,10 @@ export const conferenceApi = {
   login: (registrationCode: string, lastName: string) =>
     api.post<{ token: string; person: StoredPerson }>('/conference/login', { registrationCode, lastName })
       .then(r => r.data),
+
+  switchMember: (personId: number) =>
+    api.post<{ token: string; person: StoredPerson }>('/conference/switch-member', { personId })
+      .then(r => r.data),
 }
 
 export const otpApi = {
