@@ -1,7 +1,8 @@
-import { useQuery } from '@tanstack/react-query'
-import { Loader2, User } from 'lucide-react'
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { Loader2, User, LogIn } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
 import { usePageTitle } from '../hooks/usePageTitle'
-import { myApi, type FamilyMember, type MealDay } from '../api/client'
+import { myApi, conferenceApi, type FamilyMember, type MealDay } from '../api/client'
 import { useAuth } from '../auth-context'
 import { SmsOptIn } from '../components/SmsOptIn'
 
@@ -87,7 +88,11 @@ function LodgingInfo({ lodging }: { lodging: FamilyMember['lodging'] }) {
   )
 }
 
-function MemberCard({ member }: { member: FamilyMember }) {
+function MemberCard({ member, onSwitch, switching }: {
+  member: FamilyMember
+  onSwitch?: (id: number) => void
+  switching?: boolean
+}) {
   const displayName = member.chineseName || `${member.firstName} ${member.lastName}`
   const engName = member.chineseName ? `${member.firstName} ${member.lastName}` : null
 
@@ -103,8 +108,8 @@ function MemberCard({ member }: { member: FamilyMember }) {
         <div className="rounded-full p-2" style={{ background: member.isMe ? 'var(--accent-dim)' : 'var(--surface2)' }}>
           <User size={18} style={{ color: member.isMe ? 'var(--accent)' : 'var(--text-dim)' }} />
         </div>
-        <div>
-          <div className="flex items-center gap-2">
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2 flex-wrap">
             <span className="font-bold" style={{ color: 'var(--text)' }}>{displayName}</span>
             {member.isMe && (
               <span className="text-[10px] px-1.5 py-0.5 rounded-full font-bold"
@@ -117,6 +122,17 @@ function MemberCard({ member }: { member: FamilyMember }) {
             {member.ageCode && <span className="text-[11px]" style={{ color: 'var(--text-dim)' }}>· {AGE_LABELS[member.ageCode] ?? member.ageCode}</span>}
           </div>
         </div>
+        {!member.isMe && onSwitch && (
+          <button
+            disabled={switching}
+            onClick={() => onSwitch(member.id)}
+            className="shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-opacity disabled:opacity-50"
+            style={{ background: 'var(--surface2)', color: 'var(--text-mid)', border: '1px solid var(--border)' }}
+          >
+            {switching ? <Loader2 size={12} className="animate-spin" /> : <LogIn size={12} />}
+            切換 Switch
+          </button>
+        )}
       </div>
 
       <div className="space-y-1.5">
@@ -134,14 +150,25 @@ function MemberCard({ member }: { member: FamilyMember }) {
 
 export default function MyInfo() {
   usePageTitle('我的資訊', 'My Info')
-  const { person, token } = useAuth()
+  const { person, token, login } = useAuth()
   const personId = person?.id ?? null
+  const navigate = useNavigate()
+  const qc = useQueryClient()
 
   const { data, isLoading, error } = useQuery({
     queryKey: ['my-family', personId],
     queryFn: myApi.family,
     staleTime: 60_000,
     enabled: !!token,
+  })
+
+  const switchMutation = useMutation({
+    mutationFn: (id: number) => conferenceApi.switchMember(id),
+    onSuccess: ({ token: newToken, person: newPerson }) => {
+      login(newToken, newPerson)
+      qc.clear()
+      navigate('/', { replace: true })
+    },
   })
 
   if (isLoading) {
@@ -169,7 +196,12 @@ export default function MyInfo() {
       </div>
 
       {data.members.map(m => (
-        <MemberCard key={m.id} member={m} />
+        <MemberCard
+          key={m.id}
+          member={m}
+          onSwitch={id => switchMutation.mutate(id)}
+          switching={switchMutation.isPending && switchMutation.variables === m.id}
+        />
       ))}
 
       {/* Sign-in preferences. Placed after the family cards so it reads as a
