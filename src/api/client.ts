@@ -119,6 +119,18 @@ export interface SmsConsent {
   mobilePhoneMasked: string | null
 }
 
+export interface Announcement {
+  id: number
+  message: string
+  messageEng: string | null
+  createdAt: string   // ISO local datetime
+}
+
+export const announcementsApi = {
+  getAll: () =>
+    api.get<Announcement[]>('/conference/announcements').then(r => r.data),
+}
+
 export const myApi = {
   family: () =>
     api.get<FamilyInfo>('/conference/my/family').then(r => r.data),
