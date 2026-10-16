@@ -2,6 +2,7 @@ import { NavLink, useLocation, useNavigate } from 'react-router-dom'
 import { useEffect, useState } from 'react'
 import { LogOut, Sun, Moon, User } from 'lucide-react'
 import { useAuth } from '../auth-context'
+import { NotificationBell } from './NotificationBell'
 
 // ── Nav icons ─────────────────────────────────────────────────────────────────
 
@@ -103,6 +104,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           </div>
 
           <div className="flex items-center gap-1">
+            <NotificationBell />
             <button
               onClick={() => setTheme(t => t === 'dark' ? 'light' : 'dark')}
               className="p-2 rounded-lg transition-colors"
