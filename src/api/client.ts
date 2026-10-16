@@ -14,7 +14,9 @@ api.interceptors.request.use(config => {
 api.interceptors.response.use(
   r => r,
   err => {
-    if (err.response?.status === 401) {
+    const url: string = err.config?.url ?? ''
+    const isAuthEndpoint = url.includes('/login') || url.includes('/otp/')
+    if (err.response?.status === 401 && !isAuthEndpoint) {
       clearAuth()
       window.location.replace('/login')
     }

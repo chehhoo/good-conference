@@ -1,9 +1,43 @@
-import { useState, type FormEvent } from 'react'
+import { useState, useRef, useEffect, type FormEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { isAxiosError } from 'axios'
 import { Loader2, Mail, Phone, KeyRound } from 'lucide-react'
 import { conferenceApi, otpApi } from '../api/client'
 import { useAuth } from '../auth-context'
+
+function TitleImage() {
+  const canvasRef = useRef<HTMLCanvasElement>(null)
+  useEffect(() => {
+    const canvas = canvasRef.current
+    if (!canvas) return
+    const img = new Image()
+    img.onload = () => {
+      canvas.width = img.width
+      canvas.height = img.height
+      const ctx = canvas.getContext('2d')!
+      ctx.drawImage(img, 0, 0)
+      const imageData = ctx.getImageData(0, 0, img.width, img.height)
+      const d = imageData.data
+      for (let i = 0; i < d.length; i += 4) {
+        const r = d[i], g = d[i + 1], b = d[i + 2]
+        if (r > 230 && g > 230 && b > 230) {
+          // Fade edge pixels proportionally; pure white → fully transparent
+          const whiteness = Math.min(r, g, b)
+          d[i + 3] = Math.round(255 * (255 - whiteness) / 25)
+        }
+      }
+      ctx.putImageData(imageData, 0, 0)
+    }
+    img.src = '/conference-title.png'
+  }, [])
+  return (
+    <canvas
+      ref={canvasRef}
+      style={{ width: '100%', display: 'block' }}
+      aria-label="中國福音大會2026 Gospel for China Conference 2026 耶穌基督並祂釘十字架"
+    />
+  )
+}
 
 type Mode = 'otp-contact' | 'otp-code' | 'reg-code'
 
@@ -78,17 +112,49 @@ export default function Login() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center px-4"
+    <div className="min-h-screen flex flex-col items-center justify-center px-4 relative overflow-hidden"
       style={{ background: 'var(--bg)' }}>
-      <div className="w-full max-w-sm">
 
-        {/* Logo + title */}
-        <div className="text-center mb-8">
-          <img src="/logo.svg" alt="Good Vessel" className="w-16 h-16 rounded-2xl mx-auto mb-4" />
-          <h1 className="text-2xl font-black tracking-tight" style={{ color: 'var(--text)' }}>大會入口</h1>
-          <p className="text-sm mt-1" style={{ color: 'var(--text-dim)' }}>Conference Portal</p>
-          <p className="text-xs font-semibold mt-1 tracking-wide" style={{ color: 'var(--text-dim)' }}>
-            {import.meta.env.VITE_CONFERENCE_NAME ?? '中國福音大會 2026'}
+      {/* Church steeple background photo */}
+      <div className="absolute inset-0 pointer-events-none overflow-hidden" aria-hidden>
+        <img
+          src="/login-bg.webp"
+          alt=""
+          style={{
+            position: 'absolute', inset: 0,
+            width: '100%', height: '100%',
+            objectFit: 'cover',
+            objectPosition: 'center top',
+          }}
+        />
+        {/* Overlay — light at top so title reads over sky, darker at bottom for form */}
+        <div style={{
+          position: 'absolute', inset: 0,
+          background: 'linear-gradient(to bottom, rgba(9,15,30,0.0) 0%, rgba(9,15,30,0.05) 40%, rgba(9,15,30,0.45) 60%, rgba(9,15,30,0.72) 100%)',
+        }} />
+      </div>
+
+      <div className="w-full max-w-sm relative z-10">
+
+        {/* CCLife logo + conference title side by side */}
+        <div className="flex items-center gap-3 mb-4">
+          <img
+            src="/cclife-logo.webp"
+            alt="CCLife 生命季刊"
+            style={{ width: 72, height: 72, flexShrink: 0, borderRadius: '50%',
+              filter: 'drop-shadow(0 2px 8px rgba(0,0,0,0.5))' }}
+          />
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <TitleImage />
+          </div>
+        </div>
+
+        {/* Good Vessel attribution — subtle */}
+        <div className="flex items-center justify-center gap-2 mb-5">
+          <img src="/logo.svg" alt="Good Vessel" className="w-4 h-4 rounded opacity-50" />
+          <p className="text-[10px] tracking-widest uppercase"
+            style={{ color: 'rgba(255,255,255,0.45)' }}>
+            Good Vessel · 好器皿 · 大會入口
           </p>
         </div>
 
@@ -240,13 +306,13 @@ export default function Login() {
               </div>
               <div>
                 <label className="block text-sm font-semibold mb-2" style={{ color: 'var(--text-mid)' }}>
-                  姓氏 Last Name
+                  名字 First name
                 </label>
                 <input
                   type="text"
                   value={lastName}
                   onChange={e => setLastName(e.target.value)}
-                  placeholder="例如：Chen"
+                  placeholder="例如：Jason"
                   required
                   className="w-full px-4 py-3 rounded-2xl text-sm focus:outline-none"
                   style={{
