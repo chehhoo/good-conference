@@ -16,12 +16,16 @@ export default {
           700: '#1E3060',
         },
         vermillion: {
-          DEFAULT: '#C8341A',
-          dim: 'rgba(200,52,26,0.18)',
+          DEFAULT: '#CC1C1C',
+          dim: 'rgba(204,28,28,0.18)',
         },
         gold: {
-          DEFAULT: '#EFA020',
-          dim: 'rgba(239,160,32,0.15)',
+          DEFAULT: '#D4A018',
+          dim: 'rgba(212,160,24,0.15)',
+        },
+        sky: {
+          DEFAULT: '#4A7FA8',
+          dim: 'rgba(74,127,168,0.15)',
         },
       },
     },

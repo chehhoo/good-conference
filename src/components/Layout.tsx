@@ -1,8 +1,51 @@
 import { NavLink, useLocation, useNavigate } from 'react-router-dom'
 import { useEffect, useState } from 'react'
-import { LogOut, Sun, Moon, User } from 'lucide-react'
+import { LogOut, Sun, Moon, Monitor, User } from 'lucide-react'
 import { useAuth } from '../auth-context'
 import { NotificationBell } from './NotificationBell'
+
+type ThemeChoice = 'dark' | 'light' | 'auto'
+
+function applyTheme(choice: ThemeChoice) {
+  if (choice === 'auto') {
+    document.documentElement.removeAttribute('data-theme')
+  } else {
+    document.documentElement.setAttribute('data-theme', choice)
+  }
+}
+
+function ThemePicker({ theme, setTheme }: { theme: ThemeChoice; setTheme: (t: ThemeChoice) => void }) {
+  const options: { value: ThemeChoice; icon: React.ReactNode; label: string }[] = [
+    { value: 'light', icon: <Sun size={13} />,     label: '亮' },
+    { value: 'auto',  icon: <Monitor size={13} />, label: '自動' },
+    { value: 'dark',  icon: <Moon size={13} />,    label: '暗' },
+  ]
+  return (
+    <div
+      className="flex items-center rounded-lg overflow-hidden"
+      style={{ border: '1px solid var(--border)', background: 'var(--surface2)' }}
+    >
+      {options.map(({ value, icon, label }) => {
+        const active = theme === value
+        return (
+          <button
+            key={value}
+            onClick={() => setTheme(value)}
+            aria-label={label}
+            className="flex items-center gap-1 px-2 py-1 text-[10px] font-semibold transition-colors"
+            style={{
+              background: active ? 'var(--accent)' : 'transparent',
+              color:      active ? '#fff'          : 'var(--text-dim)',
+            }}
+          >
+            {icon}
+            <span className="hidden sm:inline">{label}</span>
+          </button>
+        )
+      })}
+    </div>
+  )
+}
 
 // ── Nav icons ─────────────────────────────────────────────────────────────────
 
@@ -65,14 +108,19 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   const { token, logout } = useAuth()
   const location = useLocation()
   const navigate = useNavigate()
-  const [theme, setTheme] = useState<'dark' | 'light'>(() =>
-    (localStorage.getItem('gc_theme') as 'dark' | 'light') ?? 'dark'
+  const [theme, setThemeState] = useState<ThemeChoice>(() =>
+    (localStorage.getItem('gc_theme') as ThemeChoice) ?? 'auto'
   )
 
+  function setTheme(choice: ThemeChoice) {
+    setThemeState(choice)
+    localStorage.setItem('gc_theme', choice)
+    applyTheme(choice)
+  }
+
   useEffect(() => {
-    document.documentElement.setAttribute('data-theme', theme)
-    localStorage.setItem('gc_theme', theme)
-  }, [theme])
+    applyTheme(theme)
+  }, [])
 
   function handleLogout() {
     logout()
@@ -103,16 +151,9 @@ export default function Layout({ children }: { children: React.ReactNode }) {
             </div>
           </div>
 
-          <div className="flex items-center gap-1">
+          <div className="flex items-center gap-1.5">
             <NotificationBell />
-            <button
-              onClick={() => setTheme(t => t === 'dark' ? 'light' : 'dark')}
-              className="p-2 rounded-lg transition-colors"
-              style={{ color: 'var(--text-dim)' }}
-              aria-label="Toggle theme"
-            >
-              {theme === 'dark' ? <Sun size={16} /> : <Moon size={16} />}
-            </button>
+            <ThemePicker theme={theme} setTheme={setTheme} />
             <button
               onClick={() => navigate('/my-info')}
               className="p-2 rounded-lg transition-colors"

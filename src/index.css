@@ -3,62 +3,67 @@
 @tailwind utilities;
 
 /* ── Design tokens ───────────────────────────────────────────────────────── */
+/* Brand palette drawn from 中國福音大會 2026 poster:
+   crimson title red, warm gold subtitle, sky-blue background */
 :root {
-  --bg:          #0B1629;
-  --surface:     #16264A;
-  --surface2:    #1E3060;
-  --border:      rgba(255,255,255,0.08);
+  /* dark (default) */
+  --bg:          #090F1E;
+  --surface:     #121E38;
+  --surface2:    #1A2A4A;
+  --border:      rgba(255,255,255,0.09);
   --border2:     rgba(255,255,255,0.05);
-  --accent:      #C8341A;
-  --accent-dim:  rgba(200,52,26,0.18);
-  --gold:        #EFA020;
-  --gold-dim:    rgba(239,160,32,0.15);
+  --accent:      #CC1C1C;   /* poster crimson red */
+  --accent-dim:  rgba(204,28,28,0.18);
+  --gold:        #D4A018;   /* poster warm gold */
+  --gold-dim:    rgba(212,160,24,0.15);
+  --sky:         #4A7FA8;   /* poster sky blue */
+  --sky-dim:     rgba(74,127,168,0.15);
   --green:       #22C55E;
   --green-dim:   rgba(34,197,94,0.15);
   --amber:       #F59E0B;
-  --text:        #ECF1FF;
-  --text-mid:    #9AAED4;
-  --text-dim:    #4D6494;
-  --nav:         #060E1F;
+  --text:        #EDF2FF;
+  --text-mid:    #94AECF;
+  --text-dim:    #445A80;
+  --nav:         #050B18;
 }
 
 /* light mode — system preference */
 @media (prefers-color-scheme: light) {
   :root:not([data-theme="dark"]) {
-    --bg:       #F5F1E8;
+    --bg:       #E8EFF8;   /* poster sky tint */
     --surface:  #FFFFFF;
-    --surface2: #EDE9DF;
+    --surface2: #D8E4F2;
     --border:   rgba(0,0,0,0.08);
     --border2:  rgba(0,0,0,0.04);
-    --text:     #0B1629;
-    --text-mid: #4A5A78;
-    --text-dim: #9AAED4;
+    --text:     #090F1E;
+    --text-mid: #2E4A78;
+    --text-dim: #6A8AAE;
     --nav:      #FFFFFF;
   }
 }
 /* light — explicit toggle */
 :root[data-theme="light"] {
-  --bg:       #F5F1E8;
+  --bg:       #E8EFF8;
   --surface:  #FFFFFF;
-  --surface2: #EDE9DF;
+  --surface2: #D8E4F2;
   --border:   rgba(0,0,0,0.08);
   --border2:  rgba(0,0,0,0.04);
-  --text:     #0B1629;
-  --text-mid: #4A5A78;
-  --text-dim: #9AAED4;
+  --text:     #090F1E;
+  --text-mid: #2E4A78;
+  --text-dim: #6A8AAE;
   --nav:      #FFFFFF;
 }
 /* dark — explicit toggle */
 :root[data-theme="dark"] {
-  --bg:       #0B1629;
-  --surface:  #16264A;
-  --surface2: #1E3060;
-  --border:   rgba(255,255,255,0.08);
+  --bg:       #090F1E;
+  --surface:  #121E38;
+  --surface2: #1A2A4A;
+  --border:   rgba(255,255,255,0.09);
   --border2:  rgba(255,255,255,0.05);
-  --text:     #ECF1FF;
-  --text-mid: #9AAED4;
-  --text-dim: #4D6494;
-  --nav:      #060E1F;
+  --text:     #EDF2FF;
+  --text-mid: #94AECF;
+  --text-dim: #445A80;
+  --nav:      #050B18;
 }
 
 /* ── Global base ──────────────────────────────────────────────────────────── */
