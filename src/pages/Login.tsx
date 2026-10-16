@@ -285,9 +285,12 @@ export default function Login() {
           {mode === 'reg-code' && (
             <form onSubmit={handleRegLogin} className="space-y-4">
               <div>
-                <label className="block text-sm font-semibold mb-2" style={{ color: 'var(--text-mid)' }}>
+                <label className="block text-sm font-semibold mb-1" style={{ color: 'var(--text-mid)' }}>
                   報名號碼 Registration Code
                 </label>
+                <p className="text-xs mb-2" style={{ color: 'var(--text-dim)' }}>
+                  請查看報名確認電郵 · Check your registration confirmation email
+                </p>
                 <input
                   type="text"
                   inputMode="numeric"
@@ -348,8 +351,8 @@ export default function Login() {
           {mode !== 'otp-contact' && mode !== 'otp-code' && (
             <p>
               <button onClick={() => switchMode('otp-contact')}
-                className="text-sm font-semibold"
-                style={{ color: 'var(--accent)' }}>
+                className="text-sm font-semibold px-4 py-2 rounded-xl"
+                style={{ color: '#fff', background: 'rgba(255,255,255,0.15)', backdropFilter: 'blur(4px)' }}>
                 用電子郵件登入 Sign in with email
               </button>
             </p>
@@ -357,8 +360,8 @@ export default function Login() {
           {mode !== 'reg-code' && (
             <p>
               <button onClick={() => switchMode('reg-code')}
-                className="text-sm"
-                style={{ color: 'var(--text-dim)' }}>
+                className="text-sm font-semibold px-4 py-2 rounded-xl"
+                style={{ color: '#fff', background: 'rgba(255,255,255,0.15)', backdropFilter: 'blur(4px)' }}>
                 用報名號碼登入 Use registration code
               </button>
             </p>
