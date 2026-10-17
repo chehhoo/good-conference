@@ -291,11 +291,11 @@ export default function Dashboard() {
         </div>
       )}
 
-      {/* ── Today sessions ── */}
+      {/* ── Today sessions (signed-up only) ── */}
       <div>
         <div className="flex items-center justify-between mb-3">
           <div className="text-xs font-bold tracking-widest uppercase" style={{ color: 'var(--text-dim)' }}>
-            今日場次 · {todayDayNum != null && dayDateMap.get(todayDayNum)
+            我的今日行程 · {todayDayNum != null && dayDateMap.get(todayDayNum)
               ? fmtDate(dayDateMap.get(todayDayNum)!)
               : todayLabel}
           </div>
@@ -308,24 +308,50 @@ export default function Dashboard() {
           <div className="flex justify-center py-8"><Loader2 size={24} className="animate-spin" style={{ color: 'var(--text-dim)' }} /></div>
         )}
 
-        <div>
-          {[...todaySessions]
-            .filter(s => s.sessionType !== 'OTHER')
+        {!sessLoading && (() => {
+          const myToday = [...todaySessions]
+            .filter(s => s.sessionType !== 'OTHER' && (s.signedUp || s.sessionType === 'PLENARY'))
             .sort((a, b) => a.startTime.localeCompare(b.startTime))
-            .map((s, i, arr) => (
-              <DashSessionRow
-                key={s.id} session={s}
-                loading={pendingId === s.id}
-                onSignup={() => signup.mutate(s.id)}
-                onUnsignup={() => unsignup.mutate(s.id)}
-                isLast={i === arr.length - 1}
-              />
-            ))}
-        </div>
 
-        {!sessLoading && todaySessions.length === 0 && (
-          <p className="text-sm text-center py-8" style={{ color: 'var(--text-dim)' }}>今日無安排場次</p>
-        )}
+          if (myToday.length === 0) return (
+            <div className="rounded-3xl p-6 text-center border" style={{ background: 'var(--surface)', borderColor: 'var(--border)' }}>
+              <div className="text-3xl mb-3">🗓️</div>
+              <p className="text-sm font-semibold mb-1" style={{ color: 'var(--text)' }}>
+                尚未報名任何場次
+              </p>
+              <p className="text-xs mb-1" style={{ color: 'var(--text-dim)' }}>
+                You haven't signed up for any sessions yet.
+              </p>
+              <p className="text-xs mb-4" style={{ color: 'var(--text-dim)' }}>
+                報名場次後，您的個人行程將顯示在此，方便隨時查看今日安排。
+              </p>
+              <p className="text-[11px] mb-4" style={{ color: 'var(--text-dim)' }}>
+                Sign up for sessions to see your personal schedule here and never miss an event.
+              </p>
+              <button
+                onClick={() => navigate('/schedule')}
+                className="px-5 py-2.5 rounded-2xl text-sm font-bold"
+                style={{ background: 'var(--accent)', color: '#fff' }}
+              >
+                瀏覽並報名場次 Browse Sessions →
+              </button>
+            </div>
+          )
+
+          return (
+            <div>
+              {myToday.map((s, i, arr) => (
+                <DashSessionRow
+                  key={s.id} session={s}
+                  loading={pendingId === s.id}
+                  onSignup={() => signup.mutate(s.id)}
+                  onUnsignup={() => unsignup.mutate(s.id)}
+                  isLast={i === arr.length - 1}
+                />
+              ))}
+            </div>
+          )
+        })()}
       </div>
     </div>
     </>
