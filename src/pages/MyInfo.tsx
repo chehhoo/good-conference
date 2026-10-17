@@ -88,10 +88,11 @@ function LodgingInfo({ lodging }: { lodging: FamilyMember['lodging'] }) {
   )
 }
 
-function MemberCard({ member, onSwitch, switching }: {
+function MemberCard({ member, onSwitch, switching, canSwitch }: {
   member: FamilyMember
   onSwitch?: (id: number) => void
   switching?: boolean
+  canSwitch?: boolean
 }) {
   const displayName = member.chineseName || `${member.firstName} ${member.lastName}`
   const engName = member.chineseName ? `${member.firstName} ${member.lastName}` : null
@@ -122,7 +123,7 @@ function MemberCard({ member, onSwitch, switching }: {
             {member.ageCode && <span className="text-[11px]" style={{ color: 'var(--text-dim)' }}>· {AGE_LABELS[member.ageCode] ?? member.ageCode}</span>}
           </div>
         </div>
-        {!member.isMe && onSwitch && (
+        {!member.isMe && onSwitch && canSwitch && (
           <button
             disabled={switching}
             onClick={() => onSwitch(member.id)}
@@ -201,6 +202,7 @@ export default function MyInfo() {
           member={m}
           onSwitch={id => switchMutation.mutate(id)}
           switching={switchMutation.isPending && switchMutation.variables === m.id}
+          canSwitch={person?.canSwitch ?? false}
         />
       ))}
 
