@@ -7,6 +7,7 @@ export interface StoredPerson {
   lastName: string
   chineseName: string
   uid: string | null
+  canSwitch: boolean
 }
 
 export function getToken(): string | null {
