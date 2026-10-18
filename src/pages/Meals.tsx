@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query'
 import { Utensils } from 'lucide-react'
 import { usePageTitle } from '../hooks/usePageTitle'
-import { myApi, type MealDay, type MealScanRecord, type FamilyMember } from '../api/client'
+import { myApi, scheduleApi, type MealDay, type MealScanRecord, type FamilyMember } from '../api/client'
 import { useAuth } from '../auth-context'
 
 const MEAL_SLOTS: { key: keyof MealDay; zh: string; en: string; emoji: string }[] = [
@@ -10,67 +10,154 @@ const MEAL_SLOTS: { key: keyof MealDay; zh: string; en: string; emoji: string }[
   { key: 'dinner',   zh: '晚餐', en: 'Dinner',    emoji: '🌙' },
 ]
 
+function fmtDayHeader(iso: string, day: number) {
+  const date = new Date(iso)
+  const dateStr = date.toLocaleDateString('zh-TW', { month: 'numeric', day: 'numeric', weekday: 'short' })
+  return `${dateStr} · DAY ${day}`
+}
+
+function memberShortName(m: FamilyMember) {
+  if (m.chineseName) return m.chineseName
+  return m.firstName || `${m.firstName} ${m.lastName}`.trim()
+}
+
 function fmtTime(iso: string) {
   return iso.slice(11, 16)
 }
 
-function memberDisplayName(m: FamilyMember) {
-  const eng = `${m.firstName} ${m.lastName}`.trim()
-  if (m.chineseName && eng) return `${m.chineseName} ${eng}`
-  return m.chineseName || eng
+// For a given day, build the columns: only slots where at least one member has that meal
+function daySlots(day: number, members: FamilyMember[]) {
+  return MEAL_SLOTS.filter(({ key }) =>
+    members.some(m => m.meals?.[String(day)]?.[key] === true)
+  )
 }
 
-function FamilyMealSlot({
-  emoji, zh, en, entitled, scans,
+function MealDot({
+  ordered, scannedAt,
 }: {
-  emoji: string
-  zh: string
-  en: string
-  entitled: FamilyMember[]
-  scans: MealScanRecord[]
+  ordered: boolean
+  scannedAt: string | null
 }) {
-  if (entitled.length === 0) return null
+  if (!ordered) {
+    return (
+      <span className="text-[11px]" style={{ color: 'var(--border2)' }}>—</span>
+    )
+  }
+  if (scannedAt) {
+    return (
+      <span title={`已取 ${fmtTime(scannedAt)}`}
+        className="inline-flex items-center justify-center w-6 h-6 rounded-full text-[11px] font-bold"
+        style={{ background: 'var(--green-dim)', color: 'var(--green)' }}>
+        ✓
+      </span>
+    )
+  }
+  // Ordered but not yet picked up — gold filled so the order is obvious
+  return (
+    <span
+      className="inline-flex items-center justify-center w-6 h-6 rounded-full text-[11px] font-bold"
+      style={{ background: 'var(--gold-dim)', color: 'var(--gold)' }}>
+      ●
+    </span>
+  )
+}
 
-  const taken = [...scans]
-    .sort((a, b) => a.scannedAt.localeCompare(b.scannedAt))
-    .map(s => ({ scan: s, member: entitled.find(m => m.id === s.personId) }))
-    .filter(r => r.member)
+function DayCard({
+  day, dateIso, members, scansBySlot,
+}: {
+  day: number
+  dateIso: string | null
+  members: FamilyMember[]
+  scansBySlot: Map<string, MealScanRecord[]>
+}) {
+  const slots = daySlots(day, members)
+  if (slots.length === 0) return null
 
-  const allTaken = taken.length === entitled.length
+  // Count totals for summary badge
+  let totalOrdered = 0
+  let totalScanned = 0
+  for (const { key } of slots) {
+    for (const m of members) {
+      if (m.meals?.[String(day)]?.[key] === true) {
+        totalOrdered++
+        const scans = scansBySlot.get(`${day}:${key}`) ?? []
+        if (scans.some(s => s.personId === m.id)) totalScanned++
+      }
+    }
+  }
+  const allDone = totalScanned === totalOrdered
+  const someDone = totalScanned > 0
 
   return (
-    <div className="flex items-start gap-3 py-3 border-b last:border-0" style={{ borderColor: 'var(--border2)' }}>
-      <span className="text-base w-6 shrink-0 mt-0.5">{emoji}</span>
-      <div className="flex-1 min-w-0">
-        <span className="text-sm font-semibold" style={{ color: 'var(--text)' }}>
-          {zh}{' '}
-          <span className="font-normal text-xs" style={{ color: 'var(--text-dim)' }}>{en}</span>
+    <div className="rounded-3xl border overflow-hidden"
+      style={{ background: 'var(--surface)', borderColor: 'var(--border)' }}>
+
+      {/* Day header */}
+      <div className="flex items-center justify-between px-4 py-3 border-b"
+        style={{ borderColor: 'var(--border)', background: 'var(--surface2)' }}>
+        <p className="text-xs font-bold uppercase tracking-widest" style={{ color: 'var(--text-dim)' }}>
+          {dateIso ? fmtDayHeader(dateIso, day) : `DAY ${day}`}
+        </p>
+        <span className="text-xs font-bold px-2 py-0.5 rounded-full"
+          style={{
+            background: allDone ? 'var(--green-dim)' : someDone ? 'var(--gold-dim)' : 'var(--border)',
+            color:      allDone ? 'var(--green)'     : someDone ? 'var(--gold)'     : 'var(--text-dim)',
+          }}>
+          {totalScanned}/{totalOrdered} 已取
         </span>
-        {taken.length > 0 && (
-          <div className="mt-1.5 space-y-1">
-            {taken.map(({ scan, member }) => (
-              <div key={scan.personId} className="flex items-center gap-1.5 text-xs">
-                <span className="font-semibold" style={{ color: 'var(--green)' }}>
-                  {memberDisplayName(member!)}
-                </span>
-                <span style={{ color: 'var(--text-dim)' }}>· {fmtTime(scan.scannedAt)}</span>
-              </div>
-            ))}
-          </div>
-        )}
-        {taken.length === 0 && (
-          <p className="text-xs mt-1" style={{ color: 'var(--text-dim)' }}>尚未取餐 Not picked up</p>
-        )}
       </div>
-      <span
-        className="text-xs font-bold px-2 py-0.5 rounded-full shrink-0 mt-0.5"
-        style={{
-          background: allTaken ? 'var(--green-dim)' : taken.length > 0 ? 'var(--gold-dim)' : 'var(--border)',
-          color:      allTaken ? 'var(--green)'     : taken.length > 0 ? 'var(--gold)'     : 'var(--text-dim)',
-        }}
-      >
-        {taken.length}/{entitled.length}
-      </span>
+
+      {/* Column headers: meal slots */}
+      <div className="px-4 pt-3 pb-1">
+        <div className="grid items-center" style={{ gridTemplateColumns: `1fr repeat(${slots.length}, 2.5rem)` }}>
+          <span /> {/* name column */}
+          {slots.map(s => (
+            <div key={s.key} className="text-center">
+              <div className="text-base leading-none">{s.emoji}</div>
+              <div className="text-[10px] mt-0.5 font-semibold" style={{ color: 'var(--text-dim)' }}>{s.zh}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Per-member rows */}
+      <div className="px-4 pb-3 space-y-1">
+        {members.map(m => {
+          const hasAnyOnDay = slots.some(({ key }) => m.meals?.[String(day)]?.[key] === true)
+          if (!hasAnyOnDay) return null
+          return (
+            <div key={m.id} className="grid items-center py-1.5 border-t"
+              style={{
+                gridTemplateColumns: `1fr repeat(${slots.length}, 2.5rem)`,
+                borderColor: 'var(--border2)',
+              }}>
+              {/* Name */}
+              <div className="flex items-center gap-1.5 min-w-0 pr-2">
+                {m.isMe && (
+                  <span className="text-[9px] px-1 py-0.5 rounded font-bold shrink-0"
+                    style={{ background: 'var(--accent)', color: '#fff' }}>我</span>
+                )}
+                <span className="text-sm font-semibold truncate" style={{ color: 'var(--text)' }}>
+                  {memberShortName(m)}
+                </span>
+              </div>
+              {/* Dot per slot */}
+              {slots.map(({ key }) => {
+                const ordered = m.meals?.[String(day)]?.[key] === true
+                const scans = scansBySlot.get(`${day}:${key}`) ?? []
+                const scan = scans.find(s => s.personId === m.id)
+                return (
+                  <div key={key} className="flex justify-center">
+                    <MealDot ordered={ordered} scannedAt={scan?.scannedAt ?? null} />
+                  </div>
+                )
+              })}
+            </div>
+          )
+        })}
+      </div>
+
+      {/* Legend (only shown once, on the last card via CSS sibling trick — just show inline) */}
     </div>
   )
 }
@@ -93,6 +180,17 @@ export default function Meals() {
     retry: false,
   })
 
+  const { data: sessions = [] } = useQuery({
+    queryKey: ['schedule', personId],
+    queryFn: scheduleApi.getAll,
+    staleTime: 5 * 60_000,
+  })
+
+  const dayDateMap = new Map<number, string>()
+  for (const s of sessions) {
+    if (s.day != null && !dayDateMap.has(s.day)) dayDateMap.set(s.day, s.startTime)
+  }
+
   const members = family?.members ?? []
 
   const scansBySlot = new Map<string, MealScanRecord[]>()
@@ -103,18 +201,18 @@ export default function Meals() {
     scansBySlot.set(k, arr)
   }
 
-  // Members come back with every event day listed, ordered or not — keep only days
-  // where someone in the family actually has a meal, so a family that ordered nothing
-  // sees a clear message instead of empty day cards.
   const allDays = [...new Set(
     members.flatMap(m => Object.entries(m.meals ?? {})
       .filter(([, slots]) => Object.values(slots ?? {}).some(v => v === true))
       .map(([day]) => day)).map(Number)
   )].sort((a, b) => a - b)
 
+  const totalOrdered = scanRecords.length > 0 ? scanRecords.length : null
+
   return (
     <div className="max-w-sm mx-auto px-4 py-6">
-      <div className="flex items-center gap-2 mb-5">
+      {/* Header */}
+      <div className="flex items-center gap-2 mb-2">
         <div className="w-9 h-9 rounded-xl flex items-center justify-center"
           style={{ background: 'var(--gold-dim)' }}>
           <Utensils size={17} style={{ color: 'var(--gold)' }} />
@@ -123,12 +221,33 @@ export default function Meals() {
           <h1 className="text-base font-black" style={{ color: 'var(--text)' }}>家庭餐食</h1>
           <p className="text-xs" style={{ color: 'var(--text-dim)' }}>Family Meal Pickup</p>
         </div>
-        {scanRecords.length > 0 && (
+        {totalOrdered != null && (
           <span className="ml-auto text-xs font-bold px-2.5 py-1 rounded-full"
             style={{ background: 'var(--green-dim)', color: 'var(--green)' }}>
-            {scanRecords.length} 筆已取
+            {totalOrdered} 筆已取
           </span>
         )}
+      </div>
+
+      {/* Legend */}
+      <div className="flex items-center gap-3 mb-5 px-1">
+        <span className="flex items-center gap-1 text-[11px]" style={{ color: 'var(--text-dim)' }}>
+          <span className="inline-flex items-center justify-center w-4 h-4 rounded-full"
+            style={{ background: 'var(--gold-dim)', color: 'var(--gold)', fontSize: 10 }}>●</span>
+          已訂・待取
+        </span>
+        <span className="flex items-center gap-1 text-[11px]" style={{ color: 'var(--text-dim)' }}>
+          <span className="inline-flex items-center justify-center w-4 h-4 rounded-full"
+            style={{ background: 'var(--green-dim)', color: 'var(--green)', fontSize: 10 }}>✓</span>
+          已取餐
+        </span>
+        <span className="flex items-center gap-1 text-[11px]" style={{ color: 'var(--text-dim)' }}>
+          <span style={{ color: 'var(--border2)' }}>—</span>
+          未訂餐
+        </span>
+        <span className="ml-auto text-[11px]" style={{ color: 'var(--text-dim)' }}>
+          一人可代取全家
+        </span>
       </div>
 
       {allDays.length === 0 ? (
@@ -142,27 +261,7 @@ export default function Meals() {
       ) : (
         <div className="space-y-4">
           {allDays.map(day => (
-            <div key={day} className="rounded-3xl p-4 border"
-              style={{ background: 'var(--surface)', borderColor: 'var(--border)' }}>
-              <p className="text-xs font-bold uppercase tracking-widest mb-3"
-                style={{ color: 'var(--text-dim)' }}>
-                第 {day} 天 · Day {day}
-              </p>
-              {MEAL_SLOTS.map(({ key, zh, en, emoji }) => {
-                const entitled = members.filter(m => m.meals?.[String(day)]?.[key] === true)
-                const scans = scansBySlot.get(`${day}:${key}`) ?? []
-                return (
-                  <FamilyMealSlot
-                    key={key}
-                    emoji={emoji}
-                    zh={zh}
-                    en={en}
-                    entitled={entitled}
-                    scans={scans}
-                  />
-                )
-              })}
-            </div>
+            <DayCard key={day} day={day} dateIso={dayDateMap.get(day) ?? null} members={members} scansBySlot={scansBySlot} />
           ))}
         </div>
       )}
