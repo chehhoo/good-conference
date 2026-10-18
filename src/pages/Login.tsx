@@ -154,7 +154,7 @@ export default function Login() {
           <img src="/logo.svg" alt="Good Vessel" className="w-4 h-4 rounded opacity-50" />
           <p className="text-[10px] tracking-widest uppercase"
             style={{ color: 'rgba(255,255,255,0.45)' }}>
-            Good Vessel · 好器皿 · 大會入口
+            Good Vessel · 好器皿 · 大會入口 · v{__APP_VERSION__}
           </p>
         </div>
 
