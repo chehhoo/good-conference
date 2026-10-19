@@ -25,10 +25,11 @@ function fmtTime(iso: string) {
   return iso.slice(11, 16)
 }
 
-// For a given day, build the columns: only slots where at least one member has that meal
+// For a given day, build the columns: slots that appear in the data for any member
+// (show all 3 if the day exists in meals data, so attendees see the full picture)
 function daySlots(day: number, members: FamilyMember[]) {
   return MEAL_SLOTS.filter(({ key }) =>
-    members.some(m => m.meals?.[String(day)]?.[key] === true)
+    members.some(m => m.meals?.[String(day)]?.[key] != null)
   )
 }
 
@@ -201,10 +202,10 @@ export default function Meals() {
     scansBySlot.set(k, arr)
   }
 
+  // Include all days that appear in any member's meals data so attendees
+  // can see their full meal plan, including days/slots where nothing was ordered
   const allDays = [...new Set(
-    members.flatMap(m => Object.entries(m.meals ?? {})
-      .filter(([, slots]) => Object.values(slots ?? {}).some(v => v === true))
-      .map(([day]) => day)).map(Number)
+    members.flatMap(m => Object.keys(m.meals ?? {})).map(Number)
   )].sort((a, b) => a - b)
 
   const totalOrdered = scanRecords.length > 0 ? scanRecords.length : null
