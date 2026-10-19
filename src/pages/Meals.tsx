@@ -31,14 +31,23 @@ function daySlots(_day: number, _members: FamilyMember[]) {
 }
 
 function MealDot({
-  ordered, scannedAt,
+  value, scannedAt,
 }: {
-  ordered: boolean
+  value: boolean | null   // null = not offered, false = offered not ordered, true = ordered
   scannedAt: string | null
 }) {
-  if (!ordered) {
+  if (value === null) {
+    // Not offered by the conference on this day
     return (
-      <span className="text-[11px]" style={{ color: 'var(--border2)' }}>—</span>
+      <span className="inline-flex items-center justify-center w-6 h-6 rounded-full text-[11px]"
+        style={{ color: 'var(--border2)' }}>✕</span>
+    )
+  }
+  if (value === false) {
+    // Offered but attendee did not order
+    return (
+      <span className="inline-flex items-center justify-center w-6 h-6 rounded-full text-[11px] font-bold"
+        style={{ background: 'var(--border)', color: 'var(--text-dim)' }}>—</span>
     )
   }
   if (scannedAt) {
@@ -50,7 +59,7 @@ function MealDot({
       </span>
     )
   }
-  // Ordered but not yet picked up — gold filled so the order is obvious
+  // Ordered, not yet picked up
   return (
     <span
       className="inline-flex items-center justify-center w-6 h-6 rounded-full text-[11px] font-bold"
@@ -139,12 +148,13 @@ function DayCard({
               </div>
               {/* Dot per slot */}
               {slots.map(({ key }) => {
-                const ordered = m.meals?.[String(day)]?.[key] === true
+                const raw = m.meals?.[String(day)]?.[key]
+                const value: boolean | null = raw === undefined ? null : raw
                 const scans = scansBySlot.get(`${day}:${key}`) ?? []
                 const scan = scans.find(s => s.personId === m.id)
                 return (
                   <div key={key} className="flex justify-center">
-                    <MealDot ordered={ordered} scannedAt={scan?.scannedAt ?? null} />
+                    <MealDot value={value} scannedAt={scan?.scannedAt ?? null} />
                   </div>
                 )
               })}
@@ -238,8 +248,14 @@ export default function Meals() {
           已取餐
         </span>
         <span className="flex items-center gap-1 text-[11px]" style={{ color: 'var(--text-dim)' }}>
-          <span style={{ color: 'var(--border2)' }}>—</span>
-          未訂餐
+          <span className="inline-flex items-center justify-center w-4 h-4 rounded-full text-[10px] font-bold shrink-0"
+            style={{ background: 'var(--border)', color: 'var(--text-dim)' }}>—</span>
+          未訂
+        </span>
+        <span className="flex items-center gap-1 text-[11px]" style={{ color: 'var(--text-dim)' }}>
+          <span className="inline-flex items-center justify-center w-4 h-4 rounded-full text-[10px]"
+            style={{ color: 'var(--border2)' }}>✕</span>
+          不供應
         </span>
         <span className="ml-auto text-[11px]" style={{ color: 'var(--text-dim)' }}>
           一人可代取全家
