@@ -92,7 +92,7 @@ function DayCard({
       }
     }
   }
-  const allDone = totalScanned === totalOrdered
+  const allDone = totalOrdered > 0 && totalScanned === totalOrdered
   const someDone = totalScanned > 0
 
   return (
@@ -110,30 +110,32 @@ function DayCard({
             background: allDone ? 'var(--green-dim)' : someDone ? 'var(--gold-dim)' : 'var(--border)',
             color:      allDone ? 'var(--green)'     : someDone ? 'var(--gold)'     : 'var(--text-dim)',
           }}>
-          {totalScanned}/{totalOrdered} 已取
+          {totalScanned}/{totalOrdered} 已取 Picked up
         </span>
       </div>
 
       {/* Column headers: meal slots */}
       <div className="px-4 pt-3 pb-1">
-        <div className="grid items-center" style={{ gridTemplateColumns: `1fr repeat(${slots.length}, 2.5rem)` }}>
+        <div className="grid items-center" style={{ gridTemplateColumns: `1fr repeat(${slots.length}, 2.5rem) 2rem` }}>
           <span /> {/* name column */}
           {slots.map(s => (
             <div key={s.key} className="text-center">
               <div className="text-base leading-none">{s.emoji}</div>
-              <div className="text-[10px] mt-0.5 font-semibold" style={{ color: 'var(--text-dim)' }}>{s.zh}</div>
+              <div className="text-[10px] mt-0.5 font-semibold leading-tight" style={{ color: 'var(--text-dim)' }}>{s.zh}</div>
+              <div className="text-[9px] leading-tight" style={{ color: 'var(--text-dim)' }}>{s.en}</div>
             </div>
           ))}
         </div>
       </div>
 
       {/* Per-member rows */}
-      <div className="px-4 pb-3 space-y-1">
+      <div className="px-4 space-y-1">
         {members.map(m => {
+          const memberTotal = slots.filter(({ key }) => m.meals?.[String(day)]?.[key] === true).length
           return (
             <div key={m.id} className="grid items-center py-1.5 border-t"
               style={{
-                gridTemplateColumns: `1fr repeat(${slots.length}, 2.5rem)`,
+                gridTemplateColumns: `1fr repeat(${slots.length}, 2.5rem) 2rem`,
                 borderColor: 'var(--border2)',
               }}>
               {/* Name */}
@@ -142,9 +144,16 @@ function DayCard({
                   <span className="text-[9px] px-1 py-0.5 rounded font-bold shrink-0"
                     style={{ background: 'var(--accent)', color: '#fff' }}>我</span>
                 )}
-                <span className="text-sm font-semibold truncate" style={{ color: 'var(--text)' }}>
-                  {memberShortName(m)}
-                </span>
+                <div className="min-w-0">
+                  <div className="text-sm font-semibold truncate" style={{ color: 'var(--text)' }}>
+                    {memberShortName(m)}
+                  </div>
+                  {m.chineseName && (m.firstName || m.lastName) && (
+                    <div className="text-[10px] truncate leading-tight" style={{ color: 'var(--text-dim)' }}>
+                      {`${m.firstName ?? ''} ${m.lastName ?? ''}`.trim()}
+                    </div>
+                  )}
+                </div>
               </div>
               {/* Dot per slot */}
               {slots.map(({ key }) => {
@@ -158,12 +167,47 @@ function DayCard({
                   </div>
                 )
               })}
+              {/* Per-person subtotal */}
+              <div className="text-right text-xs font-bold tabular-nums"
+                style={{ color: memberTotal > 0 ? 'var(--text-mid)' : 'var(--border2)' }}>
+                {memberTotal > 0 ? `×${memberTotal}` : ''}
+              </div>
             </div>
           )
         })}
       </div>
 
-      {/* Legend (only shown once, on the last card via CSS sibling trick — just show inline) */}
+      {/* Slot subtotal row — only shown when at least one meal is ordered */}
+      {totalOrdered > 0 && (
+        <div className="px-4">
+          <div className="grid items-center py-1.5 border-t"
+            style={{ gridTemplateColumns: `1fr repeat(${slots.length}, 2.5rem) 2rem`, borderColor: 'var(--border)' }}>
+            <span className="text-[10px] font-bold" style={{ color: 'var(--text-dim)' }}>小計 Sub</span>
+            {slots.map(({ key }) => {
+              const count = members.filter(m => m.meals?.[String(day)]?.[key] === true).length
+              return (
+                <div key={key} className="text-center text-xs font-bold tabular-nums"
+                  style={{ color: count > 0 ? 'var(--text-mid)' : 'var(--border2)' }}>
+                  {count > 0 ? count : '—'}
+                </div>
+              )
+            })}
+            <span />
+          </div>
+        </div>
+      )}
+
+      {/* Family total footer — only shown when at least one meal is ordered */}
+      {totalOrdered > 0 && (
+        <div className="mx-4 mb-3 pt-2 mt-1 border-t flex items-center justify-between"
+          style={{ borderColor: 'var(--border)' }}>
+          <span className="text-xs font-bold" style={{ color: 'var(--text-dim)' }}>合計 Total</span>
+          <span className="text-sm font-black tabular-nums" style={{ color: 'var(--text)' }}>
+            {totalOrdered} 餐
+          </span>
+        </div>
+      )}
+      {totalOrdered === 0 && <div className="mb-3" />}
     </div>
   )
 }
@@ -236,29 +280,29 @@ export default function Meals() {
       </div>
 
       {/* Legend */}
-      <div className="flex items-center gap-3 mb-5 px-1">
+      <div className="flex items-center gap-3 mb-5 px-1 flex-wrap">
         <span className="flex items-center gap-1 text-[11px]" style={{ color: 'var(--text-dim)' }}>
           <span className="inline-flex items-center justify-center w-4 h-4 rounded-full"
             style={{ background: 'var(--gold-dim)', color: 'var(--gold)', fontSize: 10 }}>●</span>
-          已訂・待取
+          已訂 Ordered
         </span>
         <span className="flex items-center gap-1 text-[11px]" style={{ color: 'var(--text-dim)' }}>
           <span className="inline-flex items-center justify-center w-4 h-4 rounded-full"
             style={{ background: 'var(--green-dim)', color: 'var(--green)', fontSize: 10 }}>✓</span>
-          已取餐
+          已取 Picked up
         </span>
         <span className="flex items-center gap-1 text-[11px]" style={{ color: 'var(--text-dim)' }}>
           <span className="inline-flex items-center justify-center w-4 h-4 rounded-full text-[10px] font-bold shrink-0"
             style={{ background: 'var(--border)', color: 'var(--text-dim)' }}>—</span>
-          未訂
+          未訂 Not ordered
         </span>
         <span className="flex items-center gap-1 text-[11px]" style={{ color: 'var(--text-dim)' }}>
           <span className="inline-flex items-center justify-center w-4 h-4 rounded-full text-[10px]"
             style={{ color: 'var(--border2)' }}>✕</span>
-          不供應
+          不供應 N/A
         </span>
-        <span className="ml-auto text-[11px]" style={{ color: 'var(--text-dim)' }}>
-          一人可代取全家
+        <span className="w-full text-[11px]" style={{ color: 'var(--text-dim)' }}>
+          一人可代取全家 · Any family member may pick up for the whole family
         </span>
       </div>
 
