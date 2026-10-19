@@ -162,13 +162,21 @@ export default function Login() {
         <div className="rounded-3xl p-6 space-y-4 border"
           style={{ background: 'var(--surface)', borderColor: 'var(--border)' }}>
 
+          {/* App purpose — always visible above the form */}
+          <p className="text-xs text-center font-medium" style={{ color: 'var(--text-dim)' }}>
+            登入後可查看：大會場次 · 餐食 · QR Badge · 家庭資訊
+          </p>
+
           {/* ── OTP: enter contact ── */}
           {mode === 'otp-contact' && (
             <form onSubmit={handleSendOtp} className="space-y-4">
               <div>
-                <label className="block text-sm font-semibold mb-2" style={{ color: 'var(--text-mid)' }}>
+                <label className="block text-sm font-semibold mb-1" style={{ color: 'var(--text-mid)' }}>
                   電子郵件 Email
                 </label>
+                <p className="text-xs mb-2" style={{ color: 'var(--text-dim)' }}>
+                  請使用報名時填寫的電郵 · Use your registration email
+                </p>
                 <input
                   type="text"
                   inputMode="email"
