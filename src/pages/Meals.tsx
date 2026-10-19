@@ -124,8 +124,6 @@ function DayCard({
       {/* Per-member rows */}
       <div className="px-4 pb-3 space-y-1">
         {members.map(m => {
-          const hasAnyOnDay = slots.some(({ key }) => m.meals?.[String(day)]?.[key] === true)
-          if (!hasAnyOnDay) return null
           return (
             <div key={m.id} className="grid items-center py-1.5 border-t"
               style={{
