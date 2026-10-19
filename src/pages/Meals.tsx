@@ -25,12 +25,9 @@ function fmtTime(iso: string) {
   return iso.slice(11, 16)
 }
 
-// For a given day, build the columns: slots that appear in the data for any member
-// (show all 3 if the day exists in meals data, so attendees see the full picture)
-function daySlots(day: number, members: FamilyMember[]) {
-  return MEAL_SLOTS.filter(({ key }) =>
-    members.some(m => m.meals?.[String(day)]?.[key] != null)
-  )
+// Always show all 3 meal slot columns so attendees can see — for unordered slots
+function daySlots(_day: number, _members: FamilyMember[]) {
+  return MEAL_SLOTS
 }
 
 function MealDot({
@@ -72,7 +69,7 @@ function DayCard({
   scansBySlot: Map<string, MealScanRecord[]>
 }) {
   const slots = daySlots(day, members)
-  if (slots.length === 0) return null
+
 
   // Count totals for summary badge
   let totalOrdered = 0
