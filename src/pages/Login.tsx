@@ -68,7 +68,7 @@ export default function Login() {
       setMode('otp-code')
     } catch (err) {
       const msg = isAxiosError(err) ? err.response?.data?.message ?? err.response?.data?.error : undefined
-      setError(msg ?? '找不到此帳號，請確認輸入。')
+      setError(msg ?? '找不到此帳號，請確認輸入。Account not found — please check your email.')
     } finally {
       setLoading(false)
     }
@@ -84,7 +84,7 @@ export default function Login() {
       navigate('/', { replace: true })
     } catch (err) {
       const msg = isAxiosError(err) ? err.response?.data?.message ?? err.response?.data?.error : undefined
-      setError(msg ?? '驗證碼錯誤，請再試一次。')
+      setError(msg ?? '驗證碼錯誤，請再試一次。Incorrect code — please try again.')
     } finally {
       setLoading(false)
     }
@@ -100,7 +100,7 @@ export default function Login() {
       navigate('/', { replace: true })
     } catch (err) {
       const msg = isAxiosError(err) ? err.response?.data?.error : undefined
-      setError(msg ?? '登入失敗，請確認報名號碼和姓氏。')
+      setError(msg ?? '登入失敗，請確認報名號碼和姓氏。Sign-in failed — please check your registration code and first name.')
     } finally {
       setLoading(false)
     }
@@ -164,7 +164,8 @@ export default function Login() {
 
           {/* App purpose — always visible above the form */}
           <p className="text-xs text-center font-medium" style={{ color: 'var(--text-dim)' }}>
-            登入後可查看：大會場次 · 餐食 · QR Badge · 家庭資訊
+            登入後可查看：大會場次 · 餐食 · 大會證 · 家庭資訊
+            <br /><span className="text-[11px]" style={{ color: 'var(--text-dim)', opacity: 0.7 }}>Sign in to view: Schedule · Meals · Badge · Family Info</span>
           </p>
 
           {/* ── OTP: enter contact ── */}
@@ -219,10 +220,10 @@ export default function Login() {
               <div className="text-center text-sm rounded-2xl px-3 py-3"
                 style={{ background: 'var(--surface2)', color: 'var(--text-mid)' }}>
                 {channel === 'SMS'
-                  ? <span className="flex items-center justify-center gap-1.5"><Phone size={14} /> 驗證碼已發送至 {masked}</span>
-                  : <span className="flex items-center justify-center gap-1.5"><Mail size={14} /> 驗證碼已發送至 {masked}</span>
+                  ? <span className="flex items-center justify-center gap-1.5"><Phone size={14} /> 驗證碼已發送至 Code sent to {masked}</span>
+                  : <span className="flex items-center justify-center gap-1.5"><Mail size={14} /> 驗證碼已發送至 Code sent to {masked}</span>
                 }
-                <p className="text-xs mt-1" style={{ color: 'var(--text-dim)' }}>Code sent to {masked}</p>
+                <p className="text-xs mt-1" style={{ color: 'var(--text-dim)' }}>請在 10 分鐘內輸入 · Enter within 10 minutes</p>
               </div>
 
               <div>
@@ -235,7 +236,7 @@ export default function Login() {
                   maxLength={6}
                   value={code}
                   onChange={e => setCode(e.target.value.replace(/\D/g, ''))}
-                  placeholder="6 位數字"
+                  placeholder="6-digit code 驗證碼"
                   required
                   autoFocus
                   className="w-full px-4 py-3 rounded-2xl text-xl font-mono text-center tracking-[0.4em] focus:outline-none"
@@ -276,7 +277,7 @@ export default function Login() {
                     setChannel(result.channel as 'EMAIL' | 'SMS')
                     setMasked(result.maskedDestination)
                   } catch {
-                    setError('重新發送失敗，請稍後再試。')
+                    setError('重新發送失敗，請稍後再試。Failed to resend — please try again later.')
                   } finally {
                     setLoading(false)
                   }
