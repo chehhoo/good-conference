@@ -26,6 +26,12 @@ api.interceptors.response.use(
 
 export type SessionType = 'PLENARY' | 'GENERAL' | 'WORSHIP' | 'WORKSHOP' | 'OTHER'
 
+export interface EventProgram {
+  code: string
+  name: string
+  nameEng: string | null
+}
+
 export interface CampSession {
   id: number
   title: string
@@ -42,6 +48,9 @@ export interface CampSession {
   sessionType: SessionType
   signupCount: number
   signedUp: boolean
+  programCode?: string | null
+  programName?: string | null
+  programNameEng?: string | null
 }
 
 export const scheduleApi = {
@@ -56,6 +65,9 @@ export const scheduleApi = {
 
   unsignup: (id: number) =>
     api.delete<CampSession>(`/schedule/${id}/signup`).then(r => r.data),
+
+  programs: () =>
+    api.get<EventProgram[]>('/schedule/programs').then(r => r.data),
 }
 
 export const conferenceApi = {
@@ -103,6 +115,9 @@ export interface FamilyMember {
   church?: { nameChn: string | null; nameEng: string } | null
   meals?: Record<string, MealDay>
   lodging?: MemberLodging
+  programCode?: string | null
+  programName?: string | null
+  programNameEng?: string | null
 }
 
 export interface FamilyInfo {

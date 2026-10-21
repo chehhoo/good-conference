@@ -158,7 +158,7 @@ export default function Dashboard() {
 
         <div className="flex items-center justify-between mb-3">
           <div className="text-xs font-bold tracking-widest uppercase" style={{ color: 'rgba(236,241,255,0.5)' }}>
-            ATTENDEE · 大會學員
+            {person?.programName ? `${person.programName} · ATTENDEE` : 'ATTENDEE · 大會學員'}
           </div>
           <div className="text-xs font-medium" style={{ color: 'rgba(236,241,255,0.45)' }}>
             {todayFull()}
@@ -309,8 +309,10 @@ export default function Dashboard() {
         )}
 
         {!sessLoading && (() => {
+          const myProgram = person?.programCode ?? null
           const myToday = [...todaySessions]
             .filter(s => s.sessionType !== 'OTHER' && (s.signedUp || s.sessionType === 'PLENARY'))
+            .filter(s => !myProgram || !s.programCode || s.programCode === myProgram)
             .sort((a, b) => a.startTime.localeCompare(b.startTime))
 
           if (myToday.length === 0) return (
