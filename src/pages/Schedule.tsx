@@ -390,7 +390,7 @@ export default function Schedule() {
 
   // Filter by program first, then by day
   const programFiltered = selectedProgram != null
-    ? sessions.filter(s => !s.programCode || s.programCode === selectedProgram)
+    ? sessions.filter(s => s.programCode === selectedProgram)
     : sessions
 
   const days = [...new Set(programFiltered.map(s => s.day).filter((d): d is number => d != null))].sort()
