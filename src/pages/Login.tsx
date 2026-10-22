@@ -146,6 +146,20 @@ export default function Login() {
           />
           <div style={{ flex: 1, minWidth: 0 }}>
             <TitleImage />
+            <div className="flex items-center justify-center gap-2 mt-1.5">
+              <span className="text-xs font-semibold" style={{ color: 'rgba(255,255,255,0.7)' }}>暨</span>
+              <div className="flex items-center gap-2 px-2.5 py-1 rounded-full"
+                style={{ background: 'rgba(255,255,255,0.88)', backdropFilter: 'blur(6px)' }}>
+                <img
+                  src="/grace-logo.png"
+                  alt="Grace Conference"
+                  style={{ height: 28, maxWidth: 130 }}
+                />
+                <span className="text-[9px] font-medium leading-tight shrink-0" style={{ color: '#444' }}>
+                  Grace Conference<br />2026
+                </span>
+              </div>
+            </div>
           </div>
         </div>
 
