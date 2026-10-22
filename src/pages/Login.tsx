@@ -149,7 +149,7 @@ export default function Login() {
             <div className="flex items-center justify-center gap-2 mt-1.5">
               <span className="text-xs font-semibold" style={{ color: 'rgba(255,255,255,0.7)' }}>暨</span>
               <div className="flex items-center gap-2 px-2.5 py-1 rounded-full"
-                style={{ background: 'rgba(255,255,255,0.88)', backdropFilter: 'blur(6px)' }}>
+                style={{ background: 'rgba(255,255,255,0.10)', backdropFilter: 'blur(6px)' }}>
                 <img
                   src="/grace-logo.png"
                   alt="Grace Conference"

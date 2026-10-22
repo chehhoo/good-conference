@@ -76,11 +76,11 @@ function SessionDetailSheet({ session: s, onClose, onSignup, onUnsignup, loading
   return (
     <>
       {/* Backdrop */}
-      <div className="fixed inset-0 z-40" style={{ background: 'rgba(0,0,0,0.5)' }} onClick={onClose} />
+      <div className="fixed inset-0 z-[60]" style={{ background: 'rgba(0,0,0,0.5)' }} onClick={onClose} />
 
       {/* Sheet */}
       <div
-        className="fixed bottom-0 left-0 right-0 z-50 rounded-t-3xl max-h-[85vh] overflow-y-auto"
+        className="fixed bottom-0 left-0 right-0 z-[70] rounded-t-3xl max-h-[85vh] overflow-y-auto"
         style={{ background: 'var(--surface)', boxShadow: '0 -4px 40px rgba(0,0,0,0.4)' }}
       >
         {/* Handle */}
@@ -88,7 +88,7 @@ function SessionDetailSheet({ session: s, onClose, onSignup, onUnsignup, loading
           <div className="w-10 h-1 rounded-full" style={{ background: 'var(--border2)' }} />
         </div>
 
-        <div className="px-5 pb-10 pt-2">
+        <div className="px-5 pb-24 pt-2">
           {/* Close */}
           <div className="flex justify-end mb-2">
             <button onClick={onClose} className="p-1.5 rounded-full" style={{ background: 'var(--surface2)', color: 'var(--text-dim)' }}>
