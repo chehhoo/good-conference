@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { Loader2, MapPin, User, Users, X, Clock } from 'lucide-react'
-import { scheduleApi, type CampSession } from '../api/client'
+import { scheduleApi, type CampSession, type EventProgram } from '../api/client'
 import { useAuth } from '../auth-context'
 import ShareModal from '../components/ShareModal'
 import { Share2 } from 'lucide-react'
@@ -346,6 +346,7 @@ export default function Schedule() {
   const personId = person?.id ?? null
 
   const [selectedDay, setSelectedDay] = useState<number | null>(null)
+  const [selectedProgram, setSelectedProgram] = useState<string | null>(person?.programCode ?? null)
   const [viewMode, setViewMode] = useState<ViewMode>('all')
   const [pendingId, setPendingId] = useState<number | null>(null)
   const [mutationError, setMutationError] = useState<string | null>(null)
@@ -356,6 +357,13 @@ export default function Schedule() {
   const { data: sessions = [], isLoading, isError } = useQuery<CampSession[]>({
     queryKey: ['schedule', personId],
     queryFn: scheduleApi.getAll,
+  })
+
+  const { data: programs = [] } = useQuery<EventProgram[]>({
+    queryKey: ['schedule-programs'],
+    queryFn: scheduleApi.programs,
+    staleTime: 5 * 60_000,
+    retry: false,
   })
 
   const signup = useMutation({
@@ -380,14 +388,19 @@ export default function Schedule() {
     },
   })
 
-  const days = [...new Set(sessions.map(s => s.day).filter((d): d is number => d != null))].sort()
+  // Filter by program first, then by day
+  const programFiltered = selectedProgram != null
+    ? sessions.filter(s => !s.programCode || s.programCode === selectedProgram)
+    : sessions
+
+  const days = [...new Set(programFiltered.map(s => s.day).filter((d): d is number => d != null))].sort()
 
   const firstByDay = new Map<number, CampSession>()
-  for (const s of sessions) {
+  for (const s of programFiltered) {
     if (s.day != null && !firstByDay.has(s.day)) firstByDay.set(s.day, s)
   }
 
-  const byDay = selectedDay != null ? sessions.filter(s => s.day === selectedDay) : sessions
+  const byDay = selectedDay != null ? programFiltered.filter(s => s.day === selectedDay) : programFiltered
   const preFilter = viewMode === 'mine' ? byDay.filter(s => s.signedUp) : byDay
   const visible = [...preFilter].sort((a, b) => a.startTime.localeCompare(b.startTime))
 
@@ -413,7 +426,7 @@ export default function Schedule() {
   return (
     <div className="min-h-screen" style={{ background: 'var(--bg)' }}>
       {/* Sticky header */}
-      {days.length > 0 && (
+      {(days.length > 0 || programs.length > 0) && (
         <div className="sticky top-0 z-10 border-b" style={{ background: 'var(--nav)', borderColor: 'var(--border)' }}>
           <div className="max-w-4xl mx-auto px-4 pt-3 pb-2 flex gap-2 items-center">
             <div className="flex rounded-xl overflow-hidden border" style={{ borderColor: 'var(--border)' }}>
@@ -440,6 +453,38 @@ export default function Schedule() {
               <Share2 size={16} />
             </button>
           </div>
+
+          {/* Program chips — only shown when multiple programs exist */}
+          {programs.length > 1 && (
+            <div className="max-w-4xl mx-auto px-4 pb-2 flex gap-1.5 overflow-x-auto scrollbar-hide">
+              <button
+                onClick={() => { setSelectedProgram(null); setSelectedDay(null) }}
+                className="shrink-0 text-xs font-bold px-3 py-1 rounded-full transition-colors"
+                style={{
+                  background: selectedProgram === null ? 'var(--gold)' : 'var(--surface)',
+                  color: selectedProgram === null ? '#fff' : 'var(--text-dim)',
+                  border: `1px solid ${selectedProgram === null ? 'transparent' : 'var(--border)'}`,
+                }}
+              >
+                全部 All
+              </button>
+              {programs.map(p => (
+                <button
+                  key={p.code}
+                  onClick={() => { setSelectedProgram(p.code); setSelectedDay(null) }}
+                  className="shrink-0 text-xs font-bold px-3 py-1 rounded-full transition-colors whitespace-nowrap"
+                  style={{
+                    background: selectedProgram === p.code ? 'var(--gold)' : 'var(--surface)',
+                    color: selectedProgram === p.code ? '#fff' : 'var(--text-dim)',
+                    border: `1px solid ${selectedProgram === p.code ? 'transparent' : 'var(--border)'}`,
+                  }}
+                >
+                  {p.name}
+                </button>
+              ))}
+            </div>
+          )}
+
           {/* Day tabs */}
           <div className="max-w-4xl mx-auto px-4 flex gap-0.5 overflow-x-auto scrollbar-hide">
             <button

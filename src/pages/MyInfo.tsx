@@ -118,9 +118,15 @@ function MemberCard({ member, onSwitch, switching, canSwitch }: {
             )}
           </div>
           {engName && <p className="text-xs" style={{ color: 'var(--text-dim)' }}>{engName}</p>}
-          <div className="flex gap-1.5 mt-0.5">
+          <div className="flex gap-1.5 mt-0.5 flex-wrap">
             {member.gender && <span className="text-[11px]" style={{ color: 'var(--text-dim)' }}>{GENDER_LABELS[member.gender] ?? member.gender}</span>}
             {member.ageCode && <span className="text-[11px]" style={{ color: 'var(--text-dim)' }}>· {AGE_LABELS[member.ageCode] ?? member.ageCode}</span>}
+            {member.programName && (
+              <span className="text-[10px] px-1.5 py-0.5 rounded-full font-semibold"
+                style={{ background: 'var(--gold-dim)', color: 'var(--gold)' }}>
+                {member.programName}
+              </span>
+            )}
           </div>
         </div>
         {!member.isMe && onSwitch && canSwitch && (

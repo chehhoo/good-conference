@@ -18,6 +18,7 @@ function groupByDay(sessions: Awaited<ReturnType<typeof myApi.mySignups>>) {
 export default function MySchedule() {
   const qc = useQueryClient()
   const { person, token } = useAuth()
+  const myProgram = person?.programCode ?? null
   const personId = person?.id ?? null
 
   const { data, isLoading, isError } = useQuery({
@@ -88,6 +89,7 @@ export default function MySchedule() {
                 session={s}
                 loading={unsignup.isPending && unsignup.variables === s.id}
                 onUnsignup={() => unsignup.mutate(s.id)}
+                viewingProgram={myProgram}
               />
             ))}
           </div>

@@ -8,6 +8,9 @@ export interface StoredPerson {
   chineseName: string
   uid: string | null
   canSwitch: boolean
+  programCode?: string | null
+  programName?: string | null
+  programNameEng?: string | null
 }
 
 export function getToken(): string | null {

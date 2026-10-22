@@ -26,9 +26,12 @@ interface Props {
   onSignup?: (id: number) => void
   onUnsignup?: (id: number) => void
   loading?: boolean
+  /** When set, show a program chip if session.programCode differs from this value */
+  viewingProgram?: string | null
 }
 
-export default function SessionCard({ session: s, onSignup, onUnsignup, loading }: Props) {
+export default function SessionCard({ session: s, onSignup, onUnsignup, loading, viewingProgram }: Props) {
+  const showProgramChip = s.programCode && s.programCode !== viewingProgram
   const atCapacity = s.capacity != null && s.signupCount >= s.capacity
   const pct = s.capacity ? Math.min(100, Math.round((s.signupCount / s.capacity) * 100)) : null
   const typeColor = TYPE_ACCENT[s.sessionType] ?? 'var(--text-dim)'
@@ -44,11 +47,17 @@ export default function SessionCard({ session: s, onSignup, onUnsignup, loading 
 
       {/* Content */}
       <div className="flex-1 min-w-0 flex flex-col gap-1.5">
-        <div>
+        <div className="flex items-center gap-1.5 flex-wrap">
           <span className="text-[10px] font-bold uppercase tracking-wide px-2 py-0.5 rounded-md"
             style={{ background: `${typeColor}22`, color: typeColor }}>
             {TYPE_LABELS[s.sessionType] ?? s.sessionType}
           </span>
+          {showProgramChip && (
+            <span className="text-[10px] font-bold px-2 py-0.5 rounded-md"
+              style={{ background: 'var(--gold-dim)', color: 'var(--gold)' }}>
+              {s.programName ?? s.programCode}
+            </span>
+          )}
         </div>
 
         <h3 className="font-bold leading-snug" style={{ color: 'var(--text)', fontSize: 15 }}>{s.title}</h3>
