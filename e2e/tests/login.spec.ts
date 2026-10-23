@@ -7,7 +7,7 @@ test.describe('Login page', () => {
   test('shows branding and email input', async ({ page }) => {
     await page.goto('/login')
     await expect(page.getByText('大會入口')).toBeVisible()
-    await expect(page.getByText('Conference Portal')).toBeVisible()
+    await expect(page.getByText(/Good Vessel/)).toBeVisible()
     await expect(page.locator('input[inputmode="email"]')).toBeVisible()
     await expect(page.getByRole('button', { name: /發送驗證碼/ })).toBeVisible()
   })
@@ -34,7 +34,7 @@ test.describe('Login page', () => {
 
     await page.getByRole('button', { name: /用報名號碼登入/ }).click()
     await page.locator('input[inputmode="numeric"]').fill('10042')
-    await page.locator('input[placeholder*="Chen"]').fill('Chen')
+    await page.locator('input[placeholder*="Jason"]').fill('Chen')
     await page.locator('button[type="submit"]').click()
 
     await page.waitForURL('/', { timeout: 10_000 })
