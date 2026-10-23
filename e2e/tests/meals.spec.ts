@@ -14,16 +14,16 @@ test.describe('Meals page', () => {
   })
 
   test('shows all days with meal slots', async ({ page }) => {
-    await expect(page.getByText('第 1 天 · Day 1')).toBeVisible()
-    await expect(page.getByText('第 2 天 · Day 2')).toBeVisible()
+    await expect(page.getByText('DAY 1')).toBeVisible()
+    await expect(page.getByText('DAY 2')).toBeVisible()
     // All three slots present
     await expect(page.getByText('早餐').first()).toBeVisible()
     await expect(page.getByText('午餐').first()).toBeVisible()
     await expect(page.getByText('晚餐').first()).toBeVisible()
   })
 
-  test('un-picked meals show "尚未取餐"', async ({ page }) => {
-    await expect(page.getByText('尚未取餐 Not picked up').first()).toBeVisible()
+  test('picked-up summary badge is visible', async ({ page }) => {
+    await expect(page.getByText(/已取 Picked up/).first()).toBeVisible()
   })
 
   test('day 2 dinner slot not rendered (family has no day-2 dinner)', async ({ page }) => {

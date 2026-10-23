@@ -34,7 +34,7 @@ test.describe('Login page', () => {
 
     await page.getByRole('button', { name: /用報名號碼登入/ }).click()
     await page.locator('input[inputmode="numeric"]').fill('10042')
-    await page.locator('input[placeholder*="Chen"]').fill('Chen')
+    await page.locator('input[placeholder*="Jason"]').fill('Chen')
     await page.locator('button[type="submit"]').click()
 
     await page.waitForURL('/', { timeout: 10_000 })
