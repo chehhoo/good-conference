@@ -7,7 +7,7 @@ test.describe('Login page', () => {
   test('shows branding and email input', async ({ page }) => {
     await page.goto('/login')
     await expect(page.getByText('大會入口')).toBeVisible()
-    await expect(page.getByText('Conference Portal')).toBeVisible()
+    await expect(page.getByText(/Good Vessel/)).toBeVisible()
     await expect(page.locator('input[inputmode="email"]')).toBeVisible()
     await expect(page.getByRole('button', { name: /發送驗證碼/ })).toBeVisible()
   })
