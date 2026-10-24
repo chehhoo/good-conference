@@ -6,6 +6,7 @@ import { useNavigate, Link } from 'react-router-dom'
 import { scheduleApi, myApi, type CampSession, type MealDay, type MealScanRecord } from '../api/client'
 import { useAuth } from '../auth-context'
 import BadgeOverlay from '../components/BadgeOverlay'
+import { InstallBanner } from '../components/InstallBanner'
 
 const MEAL_SLOTS: { key: keyof MealDay; zh: string; emoji: string }[] = [
   { key: 'breakfast', zh: '早餐', emoji: '🌅' },
@@ -188,6 +189,9 @@ export default function Dashboard() {
           </button>
         )}
       </div>
+
+      {/* ── Install banner ── */}
+      <InstallBanner />
 
       {/* ── Next Up ── */}
       {nextSession && (
