@@ -32,6 +32,6 @@ test.describe('My Info', () => {
   })
 
   test('SMS opt-in section is shown', async ({ page }) => {
-    await expect(page.getByText('登入方式 Sign-in')).toBeVisible()
+    await expect(page.getByText('設定 Settings')).toBeVisible()
   })
 })

@@ -5,6 +5,7 @@ import { usePageTitle } from '../hooks/usePageTitle'
 import { myApi, conferenceApi, type FamilyMember, type MealDay } from '../api/client'
 import { useAuth } from '../auth-context'
 import { SmsOptIn } from '../components/SmsOptIn'
+import { InstallSettingsCard } from '../components/InstallBanner'
 
 const MEAL_LABELS = ['早餐', '午餐', '晚餐'] as const
 const MEAL_KEYS: (keyof MealDay)[] = ['breakfast', 'lunch', 'dinner']
@@ -212,12 +213,12 @@ export default function MyInfo() {
         />
       ))}
 
-      {/* Sign-in preferences. Placed after the family cards so it reads as a
-          setting rather than something required to see your information. */}
-      <div className="space-y-1.5 pt-2">
+      {/* Settings section */}
+      <div className="space-y-3 pt-2">
         <p className="text-xs font-bold uppercase tracking-widest" style={{ color: 'var(--text-dim)' }}>
-          登入方式 Sign-in
+          設定 Settings
         </p>
+        <InstallSettingsCard />
         <SmsOptIn />
       </div>
     </div>
