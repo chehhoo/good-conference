@@ -2,7 +2,7 @@
   "ci": {
     "collect": {
       "staticDistDir": "./dist",
-      "url": ["http://localhost/login"]
+      "url": ["http://localhost/"]
     },
     "assert": {
       "assertions": {
