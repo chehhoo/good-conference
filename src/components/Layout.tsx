@@ -1,6 +1,6 @@
 import { NavLink, useLocation, useNavigate } from 'react-router-dom'
 import { useEffect, useState } from 'react'
-import { LogOut, Sun, Moon, Monitor, User } from 'lucide-react'
+import { LogOut, Sun, Moon, Monitor, User, WifiOff } from 'lucide-react'
 import { useAuth } from '../auth-context'
 import { NotificationBell } from './NotificationBell'
 
@@ -111,6 +111,14 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   const [theme, setThemeState] = useState<ThemeChoice>(() =>
     (localStorage.getItem('gc_theme') as ThemeChoice) ?? 'auto'
   )
+  const [isOnline, setIsOnline] = useState(() => navigator.onLine)
+  useEffect(() => {
+    const on = () => setIsOnline(true)
+    const off = () => setIsOnline(false)
+    window.addEventListener('online', on)
+    window.addEventListener('offline', off)
+    return () => { window.removeEventListener('online', on); window.removeEventListener('offline', off) }
+  }, [])
 
   function setTheme(choice: ThemeChoice) {
     setThemeState(choice)
@@ -172,6 +180,14 @@ export default function Layout({ children }: { children: React.ReactNode }) {
             </button>
           </div>
         </header>
+      )}
+
+      {!isOnline && (
+        <div className="flex items-center justify-center gap-2 px-4 py-1.5 text-xs font-semibold"
+          style={{ background: 'var(--amber)', color: '#1a1200' }}>
+          <WifiOff size={12} />
+          離線模式 · Offline — 顯示已緩存資料 Showing cached data
+        </div>
       )}
 
       <main className="flex-1 overflow-y-auto pb-[calc(5rem+env(safe-area-inset-bottom))]">
