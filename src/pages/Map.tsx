@@ -1,4 +1,5 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import { MapPin, Navigation } from 'lucide-react'
 import { usePageTitle } from '../hooks/usePageTitle'
 
@@ -13,31 +14,57 @@ const FLOOR_PLANS = [
     zh: '一樓會議室',
     en: 'Meeting Rooms — Floor 1',
     img: 'https://cdn.prod.website-files.com/5e8517632b93897386b44f9c/5e8c8d5b245505d24986f377_meeting-rooms-first-floor-sm.png',
+    keywords: ['salon', 'meeting room', 'zurich', 'portsmith', 'schaumburg'],
   },
   {
     id: 'floor2',
     zh: '二樓會議室',
     en: 'Meeting Rooms — Floor 2',
     img: 'https://cdn.prod.website-files.com/5e8517632b93897386b44f9c/5e8c8e98f1f3222484334b2e_meeting-rooms-second-floor-sm.png',
+    keywords: ['floor 2', 'level 2'],
   },
   {
     id: 'exhibit',
     zh: '展覽廳',
     en: 'Exhibit Hall',
     img: 'https://cdn.prod.website-files.com/5e8517632b93897386b44f9c/5e8e53f0eccc38c88f40a022_exhibit-hall-sm.png',
+    keywords: ['exhibit', '展覽'],
   },
   {
     id: 'ballroom',
     zh: '宴會廳',
     en: 'Schaumburg Ballroom',
     img: 'https://cdn.prod.website-files.com/5e8517632b93897386b44f9c/5e8c8b0a0b8aea771cf1c32b_schaumburg-ballroom-sm.png',
+    keywords: ['ballroom', '宴會', 'grand'],
   },
 ]
 
+// Match priority order: most specific first to avoid substring collisions (e.g. "ballroom" before "schaumburg").
+const MATCH_ORDER = ['ballroom', 'exhibit', 'floor2', 'floor1']
+
+/** Find the best floor plan for a room name string, or return null. */
+function floorPlanForRoom(room: string): string | null {
+  const lower = room.toLowerCase()
+  for (const id of MATCH_ORDER) {
+    const plan = FLOOR_PLANS.find(p => p.id === id)!
+    if (plan.keywords.some(k => lower.includes(k))) return id
+  }
+  return null
+}
+
 export default function Map() {
   usePageTitle('場地地圖', 'Venue Map')
+  const [searchParams] = useSearchParams()
   const [planId, setPlanId] = useState('floor1')
 
+  // Sync floor plan tab when ?room= param changes (including on first load)
+  useEffect(() => {
+    const room = searchParams.get('room')
+    const matched = room ? floorPlanForRoom(room) : null
+    setPlanId(matched ?? 'floor1')
+  }, [searchParams])
+
+  const highlightRoom = searchParams.get('room')
   const activePlan = FLOOR_PLANS.find(p => p.id === planId)!
 
   return (
@@ -110,6 +137,17 @@ export default function Map() {
           </button>
         ))}
       </div>
+
+      {/* Room highlight banner (when arriving from a session deep-link) */}
+      {highlightRoom && (
+        <div className="flex items-center gap-2 px-4 py-2.5 rounded-2xl mb-3 border"
+          style={{ background: 'var(--gold-dim)', borderColor: 'var(--gold)' }}>
+          <MapPin size={13} style={{ color: 'var(--gold)', flexShrink: 0 }} />
+          <span className="text-xs font-bold" style={{ color: 'var(--gold)' }}>
+            {highlightRoom}
+          </span>
+        </div>
+      )}
 
       {/* Floor plan image */}
       <div className="rounded-3xl border overflow-hidden"
