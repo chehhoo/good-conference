@@ -1,4 +1,5 @@
 import { MapPin, Users, User } from 'lucide-react'
+import { Link } from 'react-router-dom'
 import type { CampSession } from '../api/client'
 
 const TYPE_LABELS: Record<string, string> = {
@@ -71,10 +72,14 @@ export default function SessionCard({ session: s, onSignup, onUnsignup, loading,
         )}
 
         {s.location && (
-          <div className="flex items-center gap-1.5 text-xs min-w-0" style={{ color: 'var(--text-dim)' }}>
+          <Link
+            to={`/map?room=${encodeURIComponent(s.location)}`}
+            className="flex items-center gap-1.5 text-xs min-w-0 hover:underline"
+            style={{ color: 'var(--text-dim)' }}
+          >
             <MapPin size={11} className="shrink-0" />
             <span className="truncate">{s.location}</span>
-          </div>
+          </Link>
         )}
 
         {s.capacity != null && (

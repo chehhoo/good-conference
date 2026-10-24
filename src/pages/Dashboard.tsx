@@ -2,7 +2,7 @@ import { useState, useCallback, useEffect } from 'react'
 import { usePageTitle } from '../hooks/usePageTitle'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { Loader2, MapPin, Maximize2, Clock } from 'lucide-react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, Link } from 'react-router-dom'
 import { scheduleApi, myApi, type CampSession, type MealDay, type MealScanRecord } from '../api/client'
 import { useAuth } from '../auth-context'
 import BadgeOverlay from '../components/BadgeOverlay'
@@ -212,9 +212,13 @@ export default function Dashboard() {
               <div className="font-bold text-sm leading-snug mb-1" style={{ color: 'var(--text)' }}>{nextSession.title}</div>
               {nextSession.speaker && <div className="text-xs mb-1" style={{ color: 'var(--text-mid)' }}>{nextSession.speaker}</div>}
               {nextSession.location && (
-                <div className="flex items-center gap-1 text-xs" style={{ color: 'var(--text-dim)' }}>
+                <Link
+                  to={`/map?room=${encodeURIComponent(nextSession.location)}`}
+                  className="flex items-center gap-1 text-xs hover:underline"
+                  style={{ color: 'var(--text-dim)' }}
+                >
                   <MapPin size={10} />{nextSession.location}
-                </div>
+                </Link>
               )}
             </div>
           </div>
@@ -430,9 +434,13 @@ function DashSessionRow({ session: s, onSignup, onUnsignup, loading, isLast }: {
               <span className="text-xs" style={{ color: 'var(--text-dim)' }}>{s.speaker}</span>
             )}
             {s.location && (
-              <span className="flex items-center gap-1 text-xs" style={{ color: 'var(--text-dim)' }}>
+              <Link
+                to={`/map?room=${encodeURIComponent(s.location)}`}
+                className="flex items-center gap-1 text-xs hover:underline"
+                style={{ color: 'var(--text-dim)' }}
+              >
                 <MapPin size={10} className="shrink-0" />{s.location}
-              </span>
+              </Link>
             )}
           </div>
         )}
