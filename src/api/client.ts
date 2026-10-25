@@ -40,6 +40,7 @@ export interface CampSession {
   descriptionEng: string | null
   speaker: string | null
   speakerEng: string | null
+  speakerId?: number | null
   startTime: string   // ISO 8601
   endTime: string
   location: string | null
@@ -51,6 +52,15 @@ export interface CampSession {
   programCode?: string | null
   programName?: string | null
   programNameEng?: string | null
+}
+
+export interface Speaker {
+  id: number
+  nameChn: string | null
+  nameEng: string | null
+  bioChn: string | null
+  bioEng: string | null
+  photoUrl: string | null
 }
 
 export const scheduleApi = {
@@ -149,6 +159,11 @@ export interface Announcement {
 export const announcementsApi = {
   getAll: () =>
     api.get<Announcement[]>('/conference/announcements').then(r => r.data),
+}
+
+export const speakersApi = {
+  getById: (id: number) =>
+    api.get<Speaker>(`/conference/speakers/${id}`).then(r => r.data),
 }
 
 export const myApi = {

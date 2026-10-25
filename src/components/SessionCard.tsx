@@ -1,6 +1,8 @@
+import { useState } from 'react'
 import { MapPin, Users, User } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import type { CampSession } from '../api/client'
+import SpeakerSheet from './SpeakerSheet'
 
 const TYPE_LABELS: Record<string, string> = {
   PLENARY:  '全體大會',
@@ -32,6 +34,7 @@ interface Props {
 }
 
 export default function SessionCard({ session: s, onSignup, onUnsignup, loading, viewingProgram }: Props) {
+  const [speakerOpen, setSpeakerOpen] = useState(false)
   const showProgramChip = s.programCode && s.programCode !== viewingProgram
   const atCapacity = s.capacity != null && s.signupCount >= s.capacity
   const pct = s.capacity ? Math.min(100, Math.round((s.signupCount / s.capacity) * 100)) : null
@@ -65,10 +68,28 @@ export default function SessionCard({ session: s, onSignup, onUnsignup, loading,
         {s.titleEng && <p className="text-xs" style={{ color: 'var(--text-dim)' }}>{s.titleEng}</p>}
 
         {(s.speaker || s.speakerEng) && (
-          <div className="flex items-center gap-1.5 text-xs min-w-0" style={{ color: 'var(--text-mid)' }}>
-            <User size={11} className="shrink-0" />
-            <span className="truncate">{s.speaker}{s.speakerEng ? ` · ${s.speakerEng}` : ''}</span>
-          </div>
+          s.speakerId != null ? (
+            <button
+              onClick={e => { e.stopPropagation(); setSpeakerOpen(true) }}
+              className="flex items-center gap-1.5 text-xs min-w-0 hover:underline text-left"
+              style={{ color: 'var(--text-mid)' }}
+            >
+              <User size={11} className="shrink-0" />
+              <span className="truncate">{s.speaker}{s.speakerEng ? ` · ${s.speakerEng}` : ''}</span>
+            </button>
+          ) : (
+            <div className="flex items-center gap-1.5 text-xs min-w-0" style={{ color: 'var(--text-mid)' }}>
+              <User size={11} className="shrink-0" />
+              <span className="truncate">{s.speaker}{s.speakerEng ? ` · ${s.speakerEng}` : ''}</span>
+            </div>
+          )
+        )}
+        {speakerOpen && s.speakerId != null && (
+          <SpeakerSheet
+            speakerId={s.speakerId}
+            fallbackName={[s.speaker, s.speakerEng].filter(Boolean).join(' · ')}
+            onClose={() => setSpeakerOpen(false)}
+          />
         )}
 
         {s.location && (

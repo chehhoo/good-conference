@@ -7,6 +7,7 @@ import { scheduleApi, myApi, type CampSession, type MealDay, type MealScanRecord
 import { useAuth } from '../auth-context'
 import BadgeOverlay from '../components/BadgeOverlay'
 import { InstallBanner } from '../components/InstallBanner'
+import SpeakerSheet from '../components/SpeakerSheet'
 
 const MEAL_SLOTS: { key: keyof MealDay; zh: string; emoji: string }[] = [
   { key: 'breakfast', zh: '早餐', emoji: '🌅' },
@@ -58,6 +59,7 @@ export default function Dashboard() {
   const engName = person?.chineseName ? `${person.firstName} ${person.lastName}` : ''
   const uid = person?.uid || (person ? String(person.id) : null)
   const [badgeOpen, setBadgeOpen] = useState(false)
+  const [nextSpeakerOpen, setNextSpeakerOpen] = useState(false)
   const openBadge = useCallback(() => setBadgeOpen(true), [])
   const closeBadge = useCallback(() => setBadgeOpen(false), [])
 
@@ -214,7 +216,18 @@ export default function Dashboard() {
             </div>
             <div className="flex-1 min-w-0">
               <div className="font-bold text-sm leading-snug mb-1" style={{ color: 'var(--text)' }}>{nextSession.title}</div>
-              {nextSession.speaker && <div className="text-xs mb-1" style={{ color: 'var(--text-mid)' }}>{nextSession.speaker}</div>}
+              {nextSession.speaker && (
+                nextSession.speakerId != null ? (
+                  <button onClick={() => setNextSpeakerOpen(true)} className="text-xs mb-1 hover:underline text-left" style={{ color: 'var(--text-mid)' }}>
+                    {nextSession.speaker}
+                  </button>
+                ) : (
+                  <div className="text-xs mb-1" style={{ color: 'var(--text-mid)' }}>{nextSession.speaker}</div>
+                )
+              )}
+              {nextSpeakerOpen && nextSession.speakerId != null && (
+                <SpeakerSheet speakerId={nextSession.speakerId} fallbackName={nextSession.speaker} onClose={() => setNextSpeakerOpen(false)} />
+              )}
               {nextSession.location && (
                 <Link
                   to={`/map?room=${encodeURIComponent(nextSession.location)}`}
@@ -373,6 +386,7 @@ const GOING_TYPES = new Set(['WORKSHOP', 'GENERAL', 'PLENARY', 'WORSHIP'])
 function DashSessionRow({ session: s, onSignup, onUnsignup, loading, isLast }: {
   session: CampSession; onSignup: () => void; onUnsignup: () => void; loading: boolean; isLast: boolean
 }) {
+  const [speakerOpen, setSpeakerOpen] = useState(false)
   const isOther = s.sessionType === 'OTHER'
   const canGo = GOING_TYPES.has(s.sessionType)
   const atCapacity = s.capacity != null && s.signupCount >= s.capacity
@@ -435,7 +449,16 @@ function DashSessionRow({ session: s, onSignup, onUnsignup, loading, isLast }: {
         {(s.speaker || s.location) && (
           <div className="flex flex-wrap gap-x-3 mt-0.5">
             {s.speaker && (
-              <span className="text-xs" style={{ color: 'var(--text-dim)' }}>{s.speaker}</span>
+              s.speakerId != null ? (
+                <button onClick={() => setSpeakerOpen(true)} className="text-xs hover:underline text-left" style={{ color: 'var(--text-dim)' }}>
+                  {s.speaker}
+                </button>
+              ) : (
+                <span className="text-xs" style={{ color: 'var(--text-dim)' }}>{s.speaker}</span>
+              )
+            )}
+            {speakerOpen && s.speakerId != null && (
+              <SpeakerSheet speakerId={s.speakerId} fallbackName={s.speaker} onClose={() => setSpeakerOpen(false)} />
             )}
             {s.location && (
               <Link
