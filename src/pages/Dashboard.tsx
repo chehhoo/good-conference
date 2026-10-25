@@ -343,7 +343,8 @@ export default function Dashboard() {
           const myProgram = person?.programCode ?? null
           const myToday = [...todaySessions]
             .filter(s => s.sessionType !== 'OTHER' && (s.signedUp || s.sessionType === 'PLENARY'))
-            .filter(s => !myProgram || !s.programCode || s.programCode === myProgram)
+            // Always show signed-up sessions; only filter PLENARY auto-includes by program
+            .filter(s => s.signedUp || !myProgram || !s.programCode || s.programCode === myProgram)
             .sort((a, b) => a.startTime.localeCompare(b.startTime))
 
           if (myToday.length === 0) return (
