@@ -57,6 +57,7 @@ export const TEST_SESSIONS: import('../../src/api/client').CampSession[] = [
     descriptionEng: null,
     speaker: '張牧師',
     speakerEng: 'Pastor Zhang',
+    speakerId: 7,
     startTime: `${D1}T09:00:00`,
     endTime:   `${D1}T10:30:00`,
     location: '大宴會廳',
@@ -137,3 +138,21 @@ export const TEST_SESSIONS: import('../../src/api/client').CampSession[] = [
 ]
 
 export const TEST_SCAN_RECORDS: import('../../src/api/client').MealScanRecord[] = []
+
+export const TEST_SPEAKER: import('../../src/api/client').Speaker = {
+  id: 7,
+  nameChn: '王大明牧師',
+  nameEng: 'Pastor David Wang',
+  bioChn: '神學院院長，事奉主三十年。',
+  bioEng: 'Seminary president with thirty years of ministry.',
+  photoUrl: null,
+}
+
+export const TEST_SPEAKER_NO_BIO: import('../../src/api/client').Speaker = {
+  id: 8,
+  nameChn: '李傳道',
+  nameEng: null,
+  bioChn: null,
+  bioEng: null,
+  photoUrl: null,
+}

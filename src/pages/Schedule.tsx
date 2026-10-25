@@ -4,6 +4,7 @@ import { Loader2, MapPin, User, Users, X, Clock } from 'lucide-react'
 import { scheduleApi, type CampSession, type EventProgram } from '../api/client'
 import { useAuth } from '../auth-context'
 import ShareModal from '../components/ShareModal'
+import SpeakerSheet from '../components/SpeakerSheet'
 import { Share2 } from 'lucide-react'
 import { usePageTitle } from '../hooks/usePageTitle'
 
@@ -58,6 +59,7 @@ function SessionDetailSheet({ session: s, onClose, onSignup, onUnsignup, loading
   loading: boolean
   allSessions: CampSession[]
 }) {
+  const [speakerOpen, setSpeakerOpen] = useState(false)
   const canGo = GOING_TYPES.has(s.sessionType)
   const atCapacity = s.capacity != null && s.signupCount >= s.capacity
   const typeColor = TYPE_COLOR[s.sessionType] ?? 'var(--text-dim)'
@@ -118,13 +120,33 @@ function SessionDetailSheet({ session: s, onClose, onSignup, onUnsignup, loading
 
           {/* Speaker */}
           {(s.speaker || s.speakerEng) && (
-            <div className="flex items-start gap-2 mt-2">
-              <User size={13} className="mt-0.5 shrink-0" style={{ color: 'var(--text-dim)' }} />
-              <div>
-                {s.speaker && <p className="text-sm font-semibold" style={{ color: 'var(--text)' }}>{s.speaker}</p>}
-                {s.speakerEng && <p className="text-xs" style={{ color: 'var(--text-dim)' }}>{s.speakerEng}</p>}
+            s.speakerId != null ? (
+              <button
+                onClick={() => setSpeakerOpen(true)}
+                className="flex items-start gap-2 mt-2 hover:opacity-75 text-left w-full"
+              >
+                <User size={13} className="mt-0.5 shrink-0" style={{ color: 'var(--text-dim)' }} />
+                <div>
+                  {s.speaker && <p className="text-sm font-semibold underline underline-offset-2" style={{ color: 'var(--text)' }}>{s.speaker}</p>}
+                  {s.speakerEng && <p className="text-xs" style={{ color: 'var(--text-dim)' }}>{s.speakerEng}</p>}
+                </div>
+              </button>
+            ) : (
+              <div className="flex items-start gap-2 mt-2">
+                <User size={13} className="mt-0.5 shrink-0" style={{ color: 'var(--text-dim)' }} />
+                <div>
+                  {s.speaker && <p className="text-sm font-semibold" style={{ color: 'var(--text)' }}>{s.speaker}</p>}
+                  {s.speakerEng && <p className="text-xs" style={{ color: 'var(--text-dim)' }}>{s.speakerEng}</p>}
+                </div>
               </div>
-            </div>
+            )
+          )}
+          {speakerOpen && s.speakerId != null && (
+            <SpeakerSheet
+              speakerId={s.speakerId}
+              fallbackName={[s.speaker, s.speakerEng].filter(Boolean).join(' · ')}
+              onClose={() => setSpeakerOpen(false)}
+            />
           )}
 
           {/* Location */}
@@ -210,6 +232,7 @@ function SessionDetailSheet({ session: s, onClose, onSignup, onUnsignup, loading
 }
 
 function SessionRow({ session: s, onSignup, onUnsignup, onSelect, loading, isLast }: RowProps) {
+  const [speakerOpen, setSpeakerOpen] = useState(false)
   const canGo = GOING_TYPES.has(s.sessionType)
   const isOther = s.sessionType === 'OTHER'
   const typeColor = TYPE_COLOR[s.sessionType] ?? 'var(--text-dim)'
@@ -300,9 +323,26 @@ function SessionRow({ session: s, onSignup, onUnsignup, onSelect, loading, isLas
         {(s.speaker || s.location) && (
           <div className="flex flex-wrap gap-x-3 gap-y-0.5 mt-1">
             {s.speaker && (
-              <span className="flex items-center gap-1 text-xs" style={{ color: 'var(--text-dim)' }}>
-                <User size={10} className="shrink-0" />{s.speaker}
-              </span>
+              s.speakerId != null ? (
+                <button
+                  onClick={e => { e.stopPropagation(); setSpeakerOpen(true) }}
+                  className="flex items-center gap-1 text-xs hover:underline text-left"
+                  style={{ color: 'var(--text-dim)' }}
+                >
+                  <User size={10} className="shrink-0" />{s.speaker}{s.speakerEng ? ` · ${s.speakerEng}` : ''}
+                </button>
+              ) : (
+                <span className="flex items-center gap-1 text-xs" style={{ color: 'var(--text-dim)' }}>
+                  <User size={10} className="shrink-0" />{s.speaker}
+                </span>
+              )
+            )}
+            {speakerOpen && s.speakerId != null && (
+              <SpeakerSheet
+                speakerId={s.speakerId}
+                fallbackName={[s.speaker, s.speakerEng].filter(Boolean).join(' · ')}
+                onClose={() => setSpeakerOpen(false)}
+              />
             )}
             {s.location && (
               <span className="flex items-center gap-1 text-xs" style={{ color: 'var(--text-dim)' }}>

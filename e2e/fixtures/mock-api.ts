@@ -1,5 +1,5 @@
 import type { Page } from '@playwright/test'
-import { TEST_TOKEN, TEST_PERSON, TEST_FAMILY, TEST_SESSIONS, TEST_SCAN_RECORDS } from './test-data'
+import { TEST_TOKEN, TEST_PERSON, TEST_FAMILY, TEST_SESSIONS, TEST_SCAN_RECORDS, TEST_SPEAKER, TEST_SPEAKER_NO_BIO } from './test-data'
 
 /**
  * Mocks all API routes so no real good-api is needed.
@@ -35,6 +35,30 @@ export async function mockAll(page: Page) {
       r.fulfill({ json: { ...session, signedUp: false, signupCount: Math.max(0, (session?.signupCount ?? 0) - 1) } })
     }
   })
+
+  // Speakers
+  await page.route('**/api/conference/speakers/7', (r) =>
+    r.fulfill({ json: TEST_SPEAKER })
+  )
+  await page.route('**/api/conference/speakers/8', (r) =>
+    r.fulfill({ json: TEST_SPEAKER_NO_BIO })
+  )
+  await page.route('**/api/conference/speakers/404', (r) =>
+    r.fulfill({ status: 404, json: { message: 'Not found' } })
+  )
+  await page.route('**/api/conference/speakers', (r) =>
+    r.fulfill({ json: [TEST_SPEAKER, TEST_SPEAKER_NO_BIO] })
+  )
+
+  // Me (called on app load; 401 would clear auth)
+  await page.route('**/api/conference/me', (r) =>
+    r.fulfill({ json: TEST_PERSON })
+  )
+
+  // Announcements (must be mocked or the 401 from real API clears auth in local runs)
+  await page.route('**/api/conference/announcements', (r) =>
+    r.fulfill({ json: [] })
+  )
 
   // My data
   await page.route('**/api/conference/my/family', (r) =>
