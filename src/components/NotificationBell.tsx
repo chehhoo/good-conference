@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query'
 import { Bell, X } from 'lucide-react'
 import { announcementsApi, type Announcement } from '../api/client'
 import { useAuth } from '../auth-context'
+import { useLang } from '../lang-context'
 
 const STORAGE_KEY = 'gc_read_announcements'
 
@@ -30,11 +31,11 @@ function formatTime(iso: string) {
   }
 }
 
-function formatDate(iso: string) {
+function formatDate(iso: string, todayLabel: string) {
   try {
     const d = new Date(iso)
     const today = new Date()
-    if (d.toDateString() === today.toDateString()) return '今天'
+    if (d.toDateString() === today.toDateString()) return todayLabel
     return d.toLocaleDateString([], { month: 'short', day: 'numeric' })
   } catch {
     return ''
@@ -43,6 +44,7 @@ function formatDate(iso: string) {
 
 export function NotificationBell() {
   const { token } = useAuth()
+  const { t, primary, secondary } = useLang()
   const [open, setOpen] = useState(false)
   const [readIds, setReadIds] = useState<Set<number>>(getReadIds)
   const panelRef = useRef<HTMLDivElement>(null)
@@ -126,7 +128,7 @@ export function NotificationBell() {
           <div className="overflow-y-auto" style={{ maxHeight: 360 }}>
             {announcements.length === 0 ? (
               <p className="px-4 py-6 text-sm text-center" style={{ color: 'var(--text-dim)' }}>
-                暫無公告
+                {t('暫無公告', 'No announcements')}
               </p>
             ) : (
               announcements.map(a => (
@@ -136,15 +138,15 @@ export function NotificationBell() {
                   style={{ borderColor: 'var(--border)' }}
                 >
                   <p className="text-sm leading-snug" style={{ color: 'var(--text)' }}>
-                    {a.message}
+                    {primary(a.message, a.messageEng)}
                   </p>
-                  {a.messageEng && (
+                  {secondary(a.message, a.messageEng) && (
                     <p className="text-xs mt-1 leading-snug" style={{ color: 'var(--text-mid)' }}>
-                      {a.messageEng}
+                      {secondary(a.message, a.messageEng)}
                     </p>
                   )}
                   <p className="text-[11px] mt-1.5" style={{ color: 'var(--text-dim)' }}>
-                    {formatDate(a.createdAt)} · {formatTime(a.createdAt)}
+                    {formatDate(a.createdAt, t('今天', 'Today'))} · {formatTime(a.createdAt)}
                   </p>
                 </div>
               ))

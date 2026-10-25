@@ -4,37 +4,45 @@ import { useNavigate } from 'react-router-dom'
 import { usePageTitle } from '../hooks/usePageTitle'
 import { myApi, conferenceApi, type FamilyMember, type MealDay } from '../api/client'
 import { useAuth } from '../auth-context'
+import { useLang } from '../lang-context'
 import { SmsOptIn } from '../components/SmsOptIn'
 import { InstallSettingsCard } from '../components/InstallBanner'
 
-const MEAL_LABELS = ['早餐', '午餐', '晚餐'] as const
+const MEAL_LABELS_ZH = ['早餐', '午餐', '晚餐'] as const
+const MEAL_LABELS_EN = ['Breakfast', 'Lunch', 'Dinner'] as const
 const MEAL_KEYS: (keyof MealDay)[] = ['breakfast', 'lunch', 'dinner']
-const NIGHT_LABELS = ['第一夜', '第二夜', '第三夜', '第四夜']
+const NIGHT_LABELS_ZH = ['第一夜', '第二夜', '第三夜', '第四夜']
+const NIGHT_LABELS_EN = ['Night 1', 'Night 2', 'Night 3', 'Night 4']
 
-const LODGING_STATUS: Record<string, { label: string; color: string; bg: string }> = {
-  STAY:          { label: '住宿 Stay',    color: '#63B3ED', bg: 'rgba(99,179,237,0.15)' },
-  COMMUTE:       { label: '通勤 Commute', color: 'var(--gold)', bg: 'var(--gold-dim)' },
-  SELF_ARRANGED: { label: '自行安排',     color: 'var(--text-dim)', bg: 'var(--border)' },
+const LODGING_STATUS: Record<string, { zh: string; en: string; color: string; bg: string }> = {
+  STAY:          { zh: '住宿', en: 'Stay',          color: '#63B3ED', bg: 'rgba(99,179,237,0.15)' },
+  COMMUTE:       { zh: '通勤', en: 'Commute',       color: 'var(--gold)', bg: 'var(--gold-dim)' },
+  SELF_ARRANGED: { zh: '自行安排', en: 'Self-arranged', color: 'var(--text-dim)', bg: 'var(--border)' },
 }
 
-const AGE_LABELS: Record<string, string> = {
+const AGE_LABELS_ZH: Record<string, string> = {
   AD: '成人', YA: '青年', JR: '少年', CH: '兒童', IN: '嬰幼兒',
 }
+const AGE_LABELS_EN: Record<string, string> = {
+  AD: 'Adult', YA: 'Young Adult', JR: 'Junior', CH: 'Child', IN: 'Infant',
+}
 
-const GENDER_LABELS: Record<string, string> = { M: '男', F: '女', C: '兒' }
+const GENDER_LABELS_ZH: Record<string, string> = { M: '男', F: '女', C: '兒' }
+const GENDER_LABELS_EN: Record<string, string> = { M: 'M', F: 'F', C: 'Ch' }
 
 function MealsGrid({ meals }: { meals: FamilyMember['meals'] }) {
-  if (!meals) return <p className="text-xs" style={{ color: 'var(--text-dim)' }}>無膳食資料</p>
+  const { t } = useLang()
+  if (!meals) return <p className="text-xs" style={{ color: 'var(--text-dim)' }}>{t('無膳食資料', 'No meal data')}</p>
   const days = Object.keys(meals).sort()
   const hasAny = days.some(d => MEAL_KEYS.some(k => meals[d][k] === true))
-  if (!hasAny) return <p className="text-xs" style={{ color: 'var(--text-dim)' }}>無膳食安排</p>
+  if (!hasAny) return <p className="text-xs" style={{ color: 'var(--text-dim)' }}>{t('無膳食安排', 'No meals ordered')}</p>
   return (
     <div className="overflow-x-auto">
       <table className="w-full text-xs border-collapse">
         <thead>
           <tr style={{ color: 'var(--text-dim)' }}>
-            <th className="text-left py-1 pr-2 font-medium">天</th>
-            {MEAL_LABELS.map(l => <th key={l} className="text-center py-1 px-2 font-medium">{l}</th>)}
+            <th className="text-left py-1 pr-2 font-medium">{t('天', 'Day')}</th>
+            {MEAL_LABELS_ZH.map((zh, i) => <th key={zh} className="text-center py-1 px-2 font-medium">{t(zh, MEAL_LABELS_EN[i])}</th>)}
           </tr>
         </thead>
         <tbody>
@@ -43,7 +51,7 @@ function MealsGrid({ meals }: { meals: FamilyMember['meals'] }) {
             if (MEAL_KEYS.every(k => !row[k])) return null
             return (
               <tr key={d} className="border-t" style={{ borderColor: 'var(--border)' }}>
-                <td className="py-1 pr-2" style={{ color: 'var(--text-dim)' }}>第{d}天</td>
+                <td className="py-1 pr-2" style={{ color: 'var(--text-dim)' }}>{t(`第${d}天`, `Day ${d}`)}</td>
                 {MEAL_KEYS.map(k => (
                   <td key={k} className="text-center py-1 px-2">
                     {row[k] === true
@@ -62,7 +70,8 @@ function MealsGrid({ meals }: { meals: FamilyMember['meals'] }) {
 }
 
 function LodgingInfo({ lodging }: { lodging: FamilyMember['lodging'] }) {
-  if (!lodging) return <p className="text-xs" style={{ color: 'var(--text-dim)' }}>無住宿資料</p>
+  const { t } = useLang()
+  if (!lodging) return <p className="text-xs" style={{ color: 'var(--text-dim)' }}>{t('無住宿資料', 'No lodging data')}</p>
   const badge = lodging.status ? LODGING_STATUS[lodging.status] : null
   const rooms = Object.entries(lodging.nights).filter(([, room]) => room != null)
   return (
@@ -70,20 +79,20 @@ function LodgingInfo({ lodging }: { lodging: FamilyMember['lodging'] }) {
       {badge && (
         <span className="inline-block text-xs px-2 py-0.5 rounded-full font-semibold"
           style={{ background: badge.bg, color: badge.color }}>
-          {badge.label}
+          {t(badge.zh, badge.en)}
         </span>
       )}
       {rooms.length > 0 && (
         <div className="flex flex-wrap gap-2">
           {rooms.map(([night, room]) => (
             <span key={night} className="text-xs px-2 py-0.5 rounded border" style={{ borderColor: 'var(--border)', color: 'var(--text-mid)' }}>
-              {NIGHT_LABELS[Number(night) - 1] ?? `夜${night}`}: {room}
+              {t(NIGHT_LABELS_ZH[Number(night) - 1] ?? `夜${night}`, NIGHT_LABELS_EN[Number(night) - 1] ?? `Night ${night}`)}: {room}
             </span>
           ))}
         </div>
       )}
       {rooms.length === 0 && lodging.status === 'STAY' && (
-        <p className="text-xs" style={{ color: 'var(--text-dim)' }}>房間尚未分配</p>
+        <p className="text-xs" style={{ color: 'var(--text-dim)' }}>{t('房間尚未分配', 'Room not yet assigned')}</p>
       )}
     </div>
   )
@@ -95,6 +104,7 @@ function MemberCard({ member, onSwitch, switching, canSwitch }: {
   switching?: boolean
   canSwitch?: boolean
 }) {
+  const { t } = useLang()
   const displayName = member.chineseName || `${member.firstName} ${member.lastName}`
   const engName = member.chineseName ? `${member.firstName} ${member.lastName}` : null
 
@@ -115,13 +125,13 @@ function MemberCard({ member, onSwitch, switching, canSwitch }: {
             <span className="font-bold" style={{ color: 'var(--text)' }}>{displayName}</span>
             {member.isMe && (
               <span className="text-[10px] px-1.5 py-0.5 rounded-full font-bold"
-                style={{ background: 'var(--accent)', color: '#fff' }}>我</span>
+                style={{ background: 'var(--accent)', color: '#fff' }}>{t('我', 'Me')}</span>
             )}
           </div>
           {engName && <p className="text-xs" style={{ color: 'var(--text-dim)' }}>{engName}</p>}
           <div className="flex gap-1.5 mt-0.5 flex-wrap">
-            {member.gender && <span className="text-[11px]" style={{ color: 'var(--text-dim)' }}>{GENDER_LABELS[member.gender] ?? member.gender}</span>}
-            {member.ageCode && <span className="text-[11px]" style={{ color: 'var(--text-dim)' }}>· {AGE_LABELS[member.ageCode] ?? member.ageCode}</span>}
+            {member.gender && <span className="text-[11px]" style={{ color: 'var(--text-dim)' }}>{t(GENDER_LABELS_ZH[member.gender] ?? member.gender, GENDER_LABELS_EN[member.gender] ?? member.gender)}</span>}
+            {member.ageCode && <span className="text-[11px]" style={{ color: 'var(--text-dim)' }}>· {t(AGE_LABELS_ZH[member.ageCode] ?? member.ageCode, AGE_LABELS_EN[member.ageCode] ?? member.ageCode)}</span>}
             {member.programName && (
               <span className="text-[10px] px-1.5 py-0.5 rounded-full font-semibold"
                 style={{ background: 'var(--gold-dim)', color: 'var(--gold)' }}>
@@ -159,6 +169,7 @@ function MemberCard({ member, onSwitch, switching, canSwitch }: {
 export default function MyInfo() {
   usePageTitle('我的資訊', 'My Info')
   const { person, token, login } = useAuth()
+  const { t } = useLang()
   const personId = person?.id ?? null
   const navigate = useNavigate()
   const qc = useQueryClient()
@@ -190,8 +201,7 @@ export default function MyInfo() {
   if (error || !data) {
     return (
       <div className="flex flex-col items-center py-20 gap-2" style={{ color: 'var(--text-dim)' }}>
-        <p>無法載入資料</p>
-        <p className="text-sm">Unable to load info</p>
+        <p>{t('無法載入資料', 'Unable to load info')}</p>
       </div>
     )
   }
@@ -199,8 +209,8 @@ export default function MyInfo() {
   return (
     <div className="max-w-2xl mx-auto px-4 py-5 space-y-4">
       <div className="flex items-baseline gap-2">
-        <h1 className="text-2xl font-black" style={{ color: 'var(--text)' }}>我的資訊</h1>
-        <span className="text-sm" style={{ color: 'var(--text-dim)' }}>My Info</span>
+        <h1 className="text-2xl font-black" style={{ color: 'var(--text)' }}>{t('我的資訊', 'My Info')}</h1>
+        {t('', 'My Info') && <span className="text-sm" style={{ color: 'var(--text-dim)' }}>{t('My Info', '我的資訊')}</span>}
       </div>
 
       {data.members.map(m => (

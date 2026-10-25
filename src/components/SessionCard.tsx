@@ -3,13 +3,21 @@ import { MapPin, Users, User } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import type { CampSession } from '../api/client'
 import SpeakerSheet from './SpeakerSheet'
+import { useLang } from '../lang-context'
 
-const TYPE_LABELS: Record<string, string> = {
+const TYPE_ZH: Record<string, string> = {
   PLENARY:  '全體大會',
   WORSHIP:  '敬拜',
   WORKSHOP: '工作坊',
   GENERAL:  '分組',
   OTHER:    '其他',
+}
+const TYPE_EN: Record<string, string> = {
+  PLENARY:  'Plenary',
+  WORSHIP:  'Worship',
+  WORKSHOP: 'Workshop',
+  GENERAL:  'Session',
+  OTHER:    'Other',
 }
 
 const TYPE_ACCENT: Record<string, string> = {
@@ -35,6 +43,7 @@ interface Props {
 
 export default function SessionCard({ session: s, onSignup, onUnsignup, loading, viewingProgram }: Props) {
   const [speakerOpen, setSpeakerOpen] = useState(false)
+  const { t, primary, secondary } = useLang()
   const showProgramChip = s.programCode && s.programCode !== viewingProgram
   const atCapacity = s.capacity != null && s.signupCount >= s.capacity
   const pct = s.capacity ? Math.min(100, Math.round((s.signupCount / s.capacity) * 100)) : null
@@ -54,7 +63,7 @@ export default function SessionCard({ session: s, onSignup, onUnsignup, loading,
         <div className="flex items-center gap-1.5 flex-wrap">
           <span className="text-[10px] font-bold uppercase tracking-wide px-2 py-0.5 rounded-md"
             style={{ background: `${typeColor}22`, color: typeColor }}>
-            {TYPE_LABELS[s.sessionType] ?? s.sessionType}
+            {t(TYPE_ZH[s.sessionType] ?? s.sessionType, TYPE_EN[s.sessionType] ?? s.sessionType)}
           </span>
           {showProgramChip && (
             <span className="text-[10px] font-bold px-2 py-0.5 rounded-md"
@@ -64,8 +73,8 @@ export default function SessionCard({ session: s, onSignup, onUnsignup, loading,
           )}
         </div>
 
-        <h3 className="font-bold leading-snug" style={{ color: 'var(--text)', fontSize: 15 }}>{s.title}</h3>
-        {s.titleEng && <p className="text-xs" style={{ color: 'var(--text-dim)' }}>{s.titleEng}</p>}
+        <h3 className="font-bold leading-snug" style={{ color: 'var(--text)', fontSize: 15 }}>{primary(s.title, s.titleEng)}</h3>
+        {secondary(s.title, s.titleEng) && <p className="text-xs" style={{ color: 'var(--text-dim)' }}>{secondary(s.title, s.titleEng)}</p>}
 
         {(s.speaker || s.speakerEng) && (
           s.speakerId != null ? (
@@ -75,12 +84,12 @@ export default function SessionCard({ session: s, onSignup, onUnsignup, loading,
               style={{ color: 'var(--text-mid)' }}
             >
               <User size={11} className="shrink-0" />
-              <span className="truncate">{s.speaker}{s.speakerEng ? ` · ${s.speakerEng}` : ''}</span>
+              <span className="truncate">{primary(s.speaker, s.speakerEng)}{secondary(s.speaker, s.speakerEng) ? ` · ${secondary(s.speaker, s.speakerEng)}` : ''}</span>
             </button>
           ) : (
             <div className="flex items-center gap-1.5 text-xs min-w-0" style={{ color: 'var(--text-mid)' }}>
               <User size={11} className="shrink-0" />
-              <span className="truncate">{s.speaker}{s.speakerEng ? ` · ${s.speakerEng}` : ''}</span>
+              <span className="truncate">{primary(s.speaker, s.speakerEng)}{secondary(s.speaker, s.speakerEng) ? ` · ${secondary(s.speaker, s.speakerEng)}` : ''}</span>
             </div>
           )
         )}
@@ -107,7 +116,7 @@ export default function SessionCard({ session: s, onSignup, onUnsignup, loading,
           <div className="space-y-1">
             <div className="flex items-center justify-between text-xs" style={{ color: 'var(--text-dim)' }}>
               <span className="flex items-center gap-1"><Users size={11} />{s.signupCount} / {s.capacity}</span>
-              {atCapacity && <span style={{ color: 'var(--accent)' }} className="font-semibold">額滿</span>}
+              {atCapacity && <span style={{ color: 'var(--accent)' }} className="font-semibold">{t('額滿', 'Full')}</span>}
             </div>
             <div className="h-1 rounded-full overflow-hidden" style={{ background: 'var(--border)' }}>
               <div className="h-full rounded-full" style={{
@@ -131,7 +140,7 @@ export default function SessionCard({ session: s, onSignup, onUnsignup, loading,
                 className="w-full py-2.5 rounded-xl text-xs font-bold border transition-colors disabled:opacity-50"
                 style={{ background: 'var(--green-dim)', color: 'var(--green)', borderColor: 'transparent' }}
               >
-                ✓ 已報名 · 取消報名
+                ✓ {t('已報名 · 取消報名', 'Signed Up · Cancel')}
               </button>
             ) : (
               <button
@@ -140,7 +149,7 @@ export default function SessionCard({ session: s, onSignup, onUnsignup, loading,
                 className="w-full py-2.5 rounded-xl text-xs font-bold transition-colors disabled:opacity-40"
                 style={{ background: atCapacity ? 'var(--border)' : 'var(--accent)', color: atCapacity ? 'var(--text-dim)' : '#fff' }}
               >
-                {atCapacity ? '額滿 Full' : '報名 Sign Up'}
+                {atCapacity ? t('額滿 Full', 'Full') : t('報名 Sign Up', 'Sign Up')}
               </button>
             )}
           </div>

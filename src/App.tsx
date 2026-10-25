@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { useAuth } from './auth-context'
+import { LangProvider } from './lang-context'
 import Layout from './components/Layout'
 import Dashboard from './pages/Dashboard'
 import Schedule from './pages/Schedule'
@@ -17,6 +18,7 @@ function RequireAuth({ children }: { children: React.ReactNode }) {
 export default function App() {
   return (
     <BrowserRouter basename={import.meta.env.BASE_URL}>
+      <LangProvider>
       <Routes>
         <Route path="/login" element={<Login />} />
         <Route
@@ -39,6 +41,7 @@ export default function App() {
           }
         />
       </Routes>
+      </LangProvider>
     </BrowserRouter>
   )
 }

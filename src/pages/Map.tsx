@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { MapPin, Navigation } from 'lucide-react'
 import { usePageTitle } from '../hooks/usePageTitle'
+import { useLang } from '../lang-context'
 
 const HOTEL_NAME = 'Renaissance Schaumburg Convention Center Hotel'
 const HOTEL_ADDRESS = '1551 N Thoreau Dr, Schaumburg, IL 60173'
@@ -56,6 +57,7 @@ export default function Map() {
   usePageTitle('場地地圖', 'Venue Map')
   const [searchParams] = useSearchParams()
   const [planId, setPlanId] = useState('floor1')
+  const { t, primary, secondary } = useLang()
 
   // Sync floor plan tab when ?room= param changes (including on first load)
   useEffect(() => {
@@ -75,8 +77,8 @@ export default function Map() {
           <MapPin size={17} style={{ color: '#63B3ED' }} />
         </div>
         <div>
-          <h1 className="text-base font-black" style={{ color: 'var(--text)' }}>場地地圖</h1>
-          <p className="text-xs" style={{ color: 'var(--text-dim)' }}>Venue Map</p>
+          <h1 className="text-base font-black" style={{ color: 'var(--text)' }}>{t('場地地圖', 'Venue Map')}</h1>
+          {t('', '場地地圖') && <p className="text-xs" style={{ color: 'var(--text-dim)' }}>{secondary('場地地圖', 'Venue Map')}</p>}
         </div>
       </div>
 
@@ -132,8 +134,8 @@ export default function Map() {
               borderColor: planId === p.id ? 'transparent' : 'var(--border)',
             }}
           >
-            <div className="text-xs font-bold leading-snug">{p.zh}</div>
-            <div className="text-[10px] opacity-70 leading-snug">{p.en}</div>
+            <div className="text-xs font-bold leading-snug">{primary(p.zh, p.en)}</div>
+            <div className="text-[10px] opacity-70 leading-snug">{secondary(p.zh, p.en)}</div>
           </button>
         ))}
       </div>
@@ -160,8 +162,8 @@ export default function Map() {
           style={{ imageRendering: 'auto' }}
         />
         <div className="px-4 py-3 border-t" style={{ borderColor: 'var(--border)' }}>
-          <p className="text-xs font-bold" style={{ color: 'var(--text)' }}>{activePlan.zh}</p>
-          <p className="text-[11px] mt-0.5" style={{ color: 'var(--text-dim)' }}>{activePlan.en}</p>
+          <p className="text-xs font-bold" style={{ color: 'var(--text)' }}>{primary(activePlan.zh, activePlan.en)}</p>
+          {secondary(activePlan.zh, activePlan.en) && <p className="text-[11px] mt-0.5" style={{ color: 'var(--text-dim)' }}>{secondary(activePlan.zh, activePlan.en)}</p>}
         </div>
       </div>
     </div>

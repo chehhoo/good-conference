@@ -2,6 +2,7 @@ import { NavLink, useLocation, useNavigate } from 'react-router-dom'
 import { useEffect, useState } from 'react'
 import { LogOut, Sun, Moon, Monitor, User, WifiOff } from 'lucide-react'
 import { useAuth } from '../auth-context'
+import { useLang } from '../lang-context'
 import { NotificationBell } from './NotificationBell'
 
 type ThemeChoice = 'dark' | 'light' | 'auto'
@@ -15,10 +16,11 @@ function applyTheme(choice: ThemeChoice) {
 }
 
 function ThemePicker({ theme, setTheme }: { theme: ThemeChoice; setTheme: (t: ThemeChoice) => void }) {
+  const { t } = useLang()
   const options: { value: ThemeChoice; icon: React.ReactNode; label: string }[] = [
-    { value: 'light', icon: <Sun size={13} />,     label: '亮' },
-    { value: 'auto',  icon: <Monitor size={13} />, label: '自動' },
-    { value: 'dark',  icon: <Moon size={13} />,    label: '暗' },
+    { value: 'light', icon: <Sun size={13} />,     label: t('亮', 'Light') },
+    { value: 'auto',  icon: <Monitor size={13} />, label: t('自動', 'Auto') },
+    { value: 'dark',  icon: <Moon size={13} />,    label: t('暗', 'Dark') },
   ]
   return (
     <div
@@ -94,20 +96,23 @@ function MapIcon() {
 
 // ── Nav config ────────────────────────────────────────────────────────────────
 
-const NAV_ITEMS = [
-  { to: '/',         label: '今日', Icon: HomeIcon, exact: true },
-  { to: '/schedule', label: '行程', Icon: ScheduleIcon },
-  { to: '/my-qr',   label: 'QR碼', isCenter: true },
-  { to: '/meals',   label: '餐食', Icon: MealIcon },
-  { to: '/map',     label: '地圖', Icon: MapIcon },
-]
+// NAV_ITEMS are computed inside the component to use lang context
 
 // ── Component ─────────────────────────────────────────────────────────────────
 
 export default function Layout({ children }: { children: React.ReactNode }) {
   const { token, logout } = useAuth()
+  const { t, lang, setLang } = useLang()
   const location = useLocation()
   const navigate = useNavigate()
+
+  const NAV_ITEMS = [
+    { to: '/',         label: t('今日', 'Today'),    Icon: HomeIcon, exact: true },
+    { to: '/schedule', label: t('行程', 'Schedule'), Icon: ScheduleIcon },
+    { to: '/my-qr',   label: 'QR',                  isCenter: true },
+    { to: '/meals',   label: t('餐食', 'Meals'),    Icon: MealIcon },
+    { to: '/map',     label: t('地圖', 'Map'),      Icon: MapIcon },
+  ]
   const [theme, setThemeState] = useState<ThemeChoice>(() =>
     (localStorage.getItem('gc_theme') as ThemeChoice) ?? 'auto'
   )
@@ -161,12 +166,30 @@ export default function Layout({ children }: { children: React.ReactNode }) {
 
           <div className="flex items-center gap-1.5">
             <NotificationBell />
+            <div
+              className="flex items-center rounded-lg overflow-hidden"
+              style={{ border: '1px solid var(--border)', background: 'var(--surface2)' }}
+            >
+              {(['zh', 'en'] as const).map(l => (
+                <button
+                  key={l}
+                  onClick={() => setLang(l)}
+                  className="px-2 py-1 text-[10px] font-bold transition-colors"
+                  style={{
+                    background: lang === l ? 'var(--accent)' : 'transparent',
+                    color:      lang === l ? '#fff'          : 'var(--text-dim)',
+                  }}
+                >
+                  {l.toUpperCase()}
+                </button>
+              ))}
+            </div>
             <ThemePicker theme={theme} setTheme={setTheme} />
             <button
               onClick={() => navigate('/my-info')}
               className="p-2 rounded-lg transition-colors"
               style={{ color: location.pathname === '/my-info' ? 'var(--accent)' : 'var(--text-dim)' }}
-              aria-label="我的資訊"
+              aria-label={t('我的資訊', 'My Info')}
             >
               <User size={16} />
             </button>
@@ -176,7 +199,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
               style={{ color: 'var(--text-dim)' }}
             >
               <LogOut size={14} />
-              登出
+              {t('登出', 'Log Out')}
             </button>
           </div>
         </header>

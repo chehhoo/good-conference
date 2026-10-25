@@ -5,22 +5,30 @@ import { Loader2, MapPin, Maximize2, Clock } from 'lucide-react'
 import { useNavigate, Link } from 'react-router-dom'
 import { scheduleApi, myApi, type CampSession, type MealDay, type MealScanRecord } from '../api/client'
 import { useAuth } from '../auth-context'
+import { useLang } from '../lang-context'
 import BadgeOverlay from '../components/BadgeOverlay'
 import { InstallBanner } from '../components/InstallBanner'
 import SpeakerSheet from '../components/SpeakerSheet'
 
-const MEAL_SLOTS: { key: keyof MealDay; zh: string; emoji: string }[] = [
-  { key: 'breakfast', zh: '早餐', emoji: '🌅' },
-  { key: 'lunch',     zh: '午餐', emoji: '☀️' },
-  { key: 'dinner',    zh: '晚餐', emoji: '🌙' },
+const MEAL_SLOTS: { key: keyof MealDay; zh: string; en: string; emoji: string }[] = [
+  { key: 'breakfast', zh: '早餐', en: 'Breakfast', emoji: '🌅' },
+  { key: 'lunch',     zh: '午餐', en: 'Lunch',     emoji: '☀️' },
+  { key: 'dinner',    zh: '晚餐', en: 'Dinner',    emoji: '🌙' },
 ]
 
-const TYPE_LABELS: Record<string, string> = {
+const TYPE_LABELS_ZH: Record<string, string> = {
   PLENARY:  '全體大會',
   WORSHIP:  '敬拜',
   WORKSHOP: '工作坊',
   GENERAL:  '分組',
   OTHER:    '其他',
+}
+const TYPE_LABELS_EN: Record<string, string> = {
+  PLENARY:  'Plenary',
+  WORSHIP:  'Worship',
+  WORKSHOP: 'Workshop',
+  GENERAL:  'Session',
+  OTHER:    'Other',
 }
 
 const TYPE_ACCENT: Record<string, string> = {
@@ -52,6 +60,7 @@ function todayFull() {
 export default function Dashboard() {
   usePageTitle('今日總覽', 'Dashboard')
   const { person } = useAuth()
+  const { t, primary, secondary } = useLang()
   const qc = useQueryClient()
   const navigate = useNavigate()
   const personId = person?.id ?? null
@@ -120,7 +129,7 @@ export default function Dashboard() {
 
   const mealDayMeals = mealDay != null && me?.meals ? me.meals[String(mealDay)] ?? null : null
 
-  const todayLabel = todayDayNum != null ? `第 ${todayDayNum} 天` : ''
+  const todayLabel = todayDayNum != null ? t(`第 ${todayDayNum} 天`, `Day ${todayDayNum}`) : ''
 
   // Live clock for "Next Up" countdown
   const [now, setNow] = useState(Date.now())
@@ -215,14 +224,15 @@ export default function Dashboard() {
               <span className="text-xs" style={{ color: 'var(--text-dim)' }}>{fmt(nextSession.endTime)}</span>
             </div>
             <div className="flex-1 min-w-0">
-              <div className="font-bold text-sm leading-snug mb-1" style={{ color: 'var(--text)' }}>{nextSession.title}</div>
-              {nextSession.speaker && (
+              <div className="font-bold text-sm leading-snug mb-1" style={{ color: 'var(--text)' }}>{primary(nextSession.title, nextSession.titleEng)}</div>
+              {secondary(nextSession.title, nextSession.titleEng) && <div className="text-xs leading-snug mb-1" style={{ color: 'var(--text-dim)' }}>{secondary(nextSession.title, nextSession.titleEng)}</div>}
+              {(nextSession.speaker || nextSession.speakerEng) && (
                 nextSession.speakerId != null ? (
                   <button onClick={() => setNextSpeakerOpen(true)} className="text-xs mb-1 hover:underline text-left" style={{ color: 'var(--text-mid)' }}>
-                    {nextSession.speaker}
+                    {primary(nextSession.speaker, nextSession.speakerEng)}
                   </button>
                 ) : (
-                  <div className="text-xs mb-1" style={{ color: 'var(--text-mid)' }}>{nextSession.speaker}</div>
+                  <div className="text-xs mb-1" style={{ color: 'var(--text-mid)' }}>{primary(nextSession.speaker, nextSession.speakerEng)}</div>
                 )
               )}
               {nextSpeakerOpen && nextSession.speakerId != null && (
@@ -248,9 +258,9 @@ export default function Dashboard() {
           {/* Header + day pills */}
           <div className="flex items-center gap-2 mb-3 flex-wrap">
             <div className="text-xs font-bold tracking-widest uppercase" style={{ color: 'var(--text-dim)' }}>
-              {mealDay === todayDayNum ? '今日餐食' : (() => {
+              {mealDay === todayDayNum ? t('今日餐食', "Today's Meals") : (() => {
                 const dateIso = dayDateMap.get(mealDay!)
-                return dateIso ? `${fmtDate(dateIso)} 餐食` : '餐食'
+                return dateIso ? `${fmtDate(dateIso)} ${t('餐食', 'Meals')}` : t('餐食', 'Meals')
               })()}
             </div>
             <div className="flex gap-1.5 flex-wrap">
@@ -270,7 +280,7 @@ export default function Dashboard() {
                       border: `1px solid ${isSelected ? 'transparent' : 'var(--border)'}`,
                     }}
                   >
-                    {isToday ? `今日 · ${dateLabel}` : dateLabel}
+                    {isToday ? `${t('今日', 'Today')} · ${dateLabel}` : dateLabel}
                   </button>
                 )
               })}
@@ -279,13 +289,13 @@ export default function Dashboard() {
 
           {/* Meal slots grid */}
           <div className="grid grid-cols-3 gap-2">
-            {MEAL_SLOTS.map(({ key, zh, emoji }) => {
+            {MEAL_SLOTS.map(({ key, zh, en, emoji }) => {
               const has = mealDayMeals?.[key]
               if (!has) return (
                 <div key={key} className="rounded-2xl p-3 flex flex-col items-center gap-1.5 border opacity-40"
                   style={{ background: 'var(--surface)', borderColor: 'var(--border)' }}>
                   <span className="text-xl">{emoji}</span>
-                  <span className="text-xs font-semibold" style={{ color: 'var(--text-mid)' }}>{zh}</span>
+                  <span className="text-xs font-semibold" style={{ color: 'var(--text-mid)' }}>{t(zh, en)}</span>
                   <span className="text-xs font-bold px-2 py-0.5 rounded-full" style={{ background: 'rgba(255,255,255,0.05)', color: 'var(--text-dim)' }}>—</span>
                 </div>
               )
@@ -297,7 +307,7 @@ export default function Dashboard() {
                 <div key={key} className="rounded-2xl p-3 flex flex-col items-center gap-1.5 border"
                   style={{ background: 'var(--surface)', borderColor: 'var(--border)' }}>
                   <span className="text-xl">{emoji}</span>
-                  <span className="text-xs font-semibold" style={{ color: 'var(--text-mid)' }}>{zh}</span>
+                  <span className="text-xs font-semibold" style={{ color: 'var(--text-mid)' }}>{t(zh, en)}</span>
                   <span className="text-xs font-bold px-2 py-0.5 rounded-full"
                     style={{
                       background: allPicked ? 'var(--green-dim)' : picked > 0 ? 'var(--gold-dim)' : 'rgba(255,255,255,0.05)',
@@ -316,12 +326,12 @@ export default function Dashboard() {
       <div>
         <div className="flex items-center justify-between mb-3">
           <div className="text-xs font-bold tracking-widest uppercase" style={{ color: 'var(--text-dim)' }}>
-            我的今日行程 · {todayDayNum != null && dayDateMap.get(todayDayNum)
+            {t('我的今日行程', "Today's Schedule")} · {todayDayNum != null && dayDateMap.get(todayDayNum)
               ? fmtDate(dayDateMap.get(todayDayNum)!)
               : todayLabel}
           </div>
           <button onClick={() => navigate('/schedule')} className="text-xs font-semibold" style={{ color: 'var(--accent)' }}>
-            全部 →
+            {t('全部', 'All')} →
           </button>
         </div>
 
@@ -340,23 +350,17 @@ export default function Dashboard() {
             <div className="rounded-3xl p-6 text-center border" style={{ background: 'var(--surface)', borderColor: 'var(--border)' }}>
               <div className="text-3xl mb-3">🗓️</div>
               <p className="text-sm font-semibold mb-1" style={{ color: 'var(--text)' }}>
-                尚未報名任何場次
-              </p>
-              <p className="text-xs mb-1" style={{ color: 'var(--text-dim)' }}>
-                You haven't signed up for any sessions yet.
+                {t('尚未報名任何場次', "You haven't signed up for any sessions yet.")}
               </p>
               <p className="text-xs mb-4" style={{ color: 'var(--text-dim)' }}>
-                報名場次後，您的個人行程將顯示在此，方便隨時查看今日安排。
-              </p>
-              <p className="text-[11px] mb-4" style={{ color: 'var(--text-dim)' }}>
-                Sign up for sessions to see your personal schedule here and never miss an event.
+                {t('報名場次後，您的個人行程將顯示在此，方便隨時查看今日安排。', 'Sign up for sessions to see your personal schedule here.')}
               </p>
               <button
                 onClick={() => navigate('/schedule')}
                 className="px-5 py-2.5 rounded-2xl text-sm font-bold"
                 style={{ background: 'var(--accent)', color: '#fff' }}
               >
-                瀏覽並報名場次 Browse Sessions →
+                {t('瀏覽並報名場次', 'Browse Sessions')} →
               </button>
             </div>
           )
@@ -387,6 +391,7 @@ function DashSessionRow({ session: s, onSignup, onUnsignup, loading, isLast }: {
   session: CampSession; onSignup: () => void; onUnsignup: () => void; loading: boolean; isLast: boolean
 }) {
   const [speakerOpen, setSpeakerOpen] = useState(false)
+  const { t, primary } = useLang()
   const isOther = s.sessionType === 'OTHER'
   const canGo = GOING_TYPES.has(s.sessionType)
   const atCapacity = s.capacity != null && s.signupCount >= s.capacity
@@ -415,46 +420,46 @@ function DashSessionRow({ session: s, onSignup, onUnsignup, loading, isLast }: {
 
       {/* Content */}
       <div className="flex-1 min-w-0 pb-4">
-        {TYPE_LABELS[s.sessionType] && !isOther && (
+        {TYPE_LABELS_ZH[s.sessionType] && !isOther && (
           <span className="text-[10px] font-bold tracking-wide px-1.5 py-0.5 rounded"
             style={{ background: `color-mix(in srgb, ${typeColor} 18%, transparent)`, color: typeColor }}>
-            {TYPE_LABELS[s.sessionType]}
+            {t(TYPE_LABELS_ZH[s.sessionType] ?? '', TYPE_LABELS_EN[s.sessionType] ?? '')}
           </span>
         )}
         <div className="flex items-center gap-2 mt-0.5 flex-wrap">
           <span className="font-semibold leading-snug"
             style={{ color: isOther ? 'var(--text-dim)' : 'var(--text)', fontSize: 14 }}>
-            {s.title}
+            {primary(s.title, s.titleEng)}
           </span>
           {canGo && !atCapacity && (
             s.signedUp ? (
               <button disabled={loading} onClick={onUnsignup}
                 className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-bold transition-all shrink-0"
                 style={{ background: 'var(--green)', color: '#fff' }}>
-                🙋 我去！
+                🙋 {t('我去！', 'Going!')}
               </button>
             ) : (
               <button disabled={loading} onClick={onSignup}
                 className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-bold transition-all shrink-0"
                 style={{ background: 'var(--accent-dim)', color: 'var(--accent)', border: '1px solid var(--accent)' }}>
-                想去？
+                {t('想去？', 'Sign up?')}
               </button>
             )
           )}
           {canGo && atCapacity && (
             <span className="text-[11px] px-2 py-0.5 rounded-full shrink-0"
-              style={{ background: 'var(--border)', color: 'var(--text-dim)' }}>額滿</span>
+              style={{ background: 'var(--border)', color: 'var(--text-dim)' }}>{t('額滿', 'Full')}</span>
           )}
         </div>
-        {(s.speaker || s.location) && (
+        {(s.speaker || s.speakerEng || s.location) && (
           <div className="flex flex-wrap gap-x-3 mt-0.5">
-            {s.speaker && (
+            {(s.speaker || s.speakerEng) && (
               s.speakerId != null ? (
                 <button onClick={() => setSpeakerOpen(true)} className="text-xs hover:underline text-left" style={{ color: 'var(--text-dim)' }}>
-                  {s.speaker}
+                  {primary(s.speaker, s.speakerEng)}
                 </button>
               ) : (
-                <span className="text-xs" style={{ color: 'var(--text-dim)' }}>{s.speaker}</span>
+                <span className="text-xs" style={{ color: 'var(--text-dim)' }}>{primary(s.speaker, s.speakerEng)}</span>
               )
             )}
             {speakerOpen && s.speakerId != null && (
