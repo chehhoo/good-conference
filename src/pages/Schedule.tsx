@@ -302,7 +302,7 @@ function SessionRow({ session: s, onSignup, onUnsignup, onSelect, loading, isLas
             s.signedUp ? (
               <button
                 disabled={loading}
-                onClick={() => onUnsignup(s.id)}
+                onClick={e => { e.stopPropagation(); onUnsignup(s.id) }}
                 className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold transition-all disabled:opacity-50 shrink-0"
                 style={{ background: 'var(--green)', color: '#fff' }}
                 title={t('取消', 'Cancel')}
@@ -312,7 +312,7 @@ function SessionRow({ session: s, onSignup, onUnsignup, onSelect, loading, isLas
             ) : (
               <button
                 disabled={loading}
-                onClick={() => onSignup(s.id)}
+                onClick={e => { e.stopPropagation(); onSignup(s.id) }}
                 className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold transition-all disabled:opacity-40 shrink-0"
                 style={{ background: 'var(--accent-dim)', color: 'var(--accent)', border: '1px solid var(--accent)' }}
               >

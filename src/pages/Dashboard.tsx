@@ -343,7 +343,8 @@ export default function Dashboard() {
           const myProgram = person?.programCode ?? null
           const myToday = [...todaySessions]
             .filter(s => s.sessionType !== 'OTHER' && (s.signedUp || s.sessionType === 'PLENARY'))
-            .filter(s => !myProgram || !s.programCode || s.programCode === myProgram)
+            // Always show signed-up sessions; only filter PLENARY auto-includes by program
+            .filter(s => s.signedUp || !myProgram || !s.programCode || s.programCode === myProgram)
             .sort((a, b) => a.startTime.localeCompare(b.startTime))
 
           if (myToday.length === 0) return (
@@ -392,6 +393,7 @@ function DashSessionRow({ session: s, onSignup, onUnsignup, loading, isLast }: {
 }) {
   const [speakerOpen, setSpeakerOpen] = useState(false)
   const { t, primary } = useLang()
+  const { person } = useAuth()
   const isOther = s.sessionType === 'OTHER'
   const canGo = GOING_TYPES.has(s.sessionType)
   const atCapacity = s.capacity != null && s.signupCount >= s.capacity
@@ -420,12 +422,20 @@ function DashSessionRow({ session: s, onSignup, onUnsignup, loading, isLast }: {
 
       {/* Content */}
       <div className="flex-1 min-w-0 pb-4">
-        {TYPE_LABELS_ZH[s.sessionType] && !isOther && (
-          <span className="text-[10px] font-bold tracking-wide px-1.5 py-0.5 rounded"
-            style={{ background: `color-mix(in srgb, ${typeColor} 18%, transparent)`, color: typeColor }}>
-            {t(TYPE_LABELS_ZH[s.sessionType] ?? '', TYPE_LABELS_EN[s.sessionType] ?? '')}
-          </span>
-        )}
+        <div className="flex items-center gap-1.5 flex-wrap mb-0.5">
+          {TYPE_LABELS_ZH[s.sessionType] && !isOther && (
+            <span className="text-[10px] font-bold tracking-wide px-1.5 py-0.5 rounded"
+              style={{ background: `color-mix(in srgb, ${typeColor} 18%, transparent)`, color: typeColor }}>
+              {t(TYPE_LABELS_ZH[s.sessionType] ?? '', TYPE_LABELS_EN[s.sessionType] ?? '')}
+            </span>
+          )}
+          {s.programCode && s.programCode !== person?.programCode && (s.programName || s.programNameEng) && (
+            <span className="text-[10px] font-bold px-1.5 py-0.5 rounded"
+              style={{ background: 'var(--gold-dim)', color: 'var(--gold)' }}>
+              {primary(s.programName, s.programNameEng)}
+            </span>
+          )}
+        </div>
         <div className="flex items-center gap-2 mt-0.5 flex-wrap">
           <span className="font-semibold leading-snug"
             style={{ color: isOther ? 'var(--text-dim)' : 'var(--text)', fontSize: 14 }}>
