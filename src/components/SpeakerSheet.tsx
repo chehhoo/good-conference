@@ -2,6 +2,7 @@ import { useEffect, useRef } from 'react'
 import { X, User } from 'lucide-react'
 import { useQuery } from '@tanstack/react-query'
 import { speakersApi } from '../api/client'
+import { useLang } from '../lang-context'
 
 interface Props {
   speakerId: number
@@ -11,6 +12,7 @@ interface Props {
 
 export default function SpeakerSheet({ speakerId, fallbackName, onClose }: Props) {
   const sheetRef = useRef<HTMLDivElement>(null)
+  const { t, primary, secondary } = useLang()
 
   const { data: speaker, isLoading, isError } = useQuery({
     queryKey: ['speaker', speakerId],
@@ -35,7 +37,7 @@ export default function SpeakerSheet({ speakerId, fallbackName, onClose }: Props
   }, [])
 
   const displayName = speaker
-    ? [speaker.nameChn, speaker.nameEng].filter(Boolean).join(' · ')
+    ? [primary(speaker.nameChn, speaker.nameEng), secondary(speaker.nameChn, speaker.nameEng)].filter(Boolean).join(' · ')
     : fallbackName ?? ''
 
   return (
@@ -57,7 +59,7 @@ export default function SpeakerSheet({ speakerId, fallbackName, onClose }: Props
         {/* Header */}
         <div className="flex items-center justify-between px-5 pt-2 pb-4 shrink-0">
           <h2 className="text-base font-black" style={{ color: 'var(--text)' }}>
-            {isLoading ? '載入中…' : displayName}
+            {isLoading ? t('載入中…', 'Loading…') : displayName}
           </h2>
           <button
             onClick={e => { e.stopPropagation(); onClose() }}
@@ -85,7 +87,7 @@ export default function SpeakerSheet({ speakerId, fallbackName, onClose }: Props
                 <User size={36} style={{ color: 'var(--text-dim)' }} />
               </div>
               <p className="text-sm" style={{ color: 'var(--text-dim)' }}>
-                簡介即將更新 · Bio coming soon
+                {t('簡介即將更新', 'Bio coming soon')}
               </p>
             </div>
           )}
@@ -107,20 +109,20 @@ export default function SpeakerSheet({ speakerId, fallbackName, onClose }: Props
                 </div>
               )}
 
-              {/* Bio — Chinese */}
-              {speaker.bioChn && (
+              {/* Primary bio */}
+              {primary(speaker.bioChn, speaker.bioEng) && (
                 <div>
                   <p className="text-sm leading-relaxed" style={{ color: 'var(--text)' }}>
-                    {speaker.bioChn}
+                    {primary(speaker.bioChn, speaker.bioEng)}
                   </p>
                 </div>
               )}
 
-              {/* Bio — English */}
-              {speaker.bioEng && (
-                <div className={speaker.bioChn ? 'border-t pt-4' : ''} style={{ borderColor: 'var(--border)' }}>
-                  <p className="text-sm leading-relaxed" style={{ color: speaker.bioChn ? 'var(--text-dim)' : 'var(--text)' }}>
-                    {speaker.bioEng}
+              {/* Secondary bio */}
+              {secondary(speaker.bioChn, speaker.bioEng) && (
+                <div className={primary(speaker.bioChn, speaker.bioEng) ? 'border-t pt-4' : ''} style={{ borderColor: 'var(--border)' }}>
+                  <p className="text-sm leading-relaxed" style={{ color: primary(speaker.bioChn, speaker.bioEng) ? 'var(--text-dim)' : 'var(--text)' }}>
+                    {secondary(speaker.bioChn, speaker.bioEng)}
                   </p>
                 </div>
               )}
@@ -128,7 +130,7 @@ export default function SpeakerSheet({ speakerId, fallbackName, onClose }: Props
               {/* No bio yet */}
               {!speaker.bioChn && !speaker.bioEng && (
                 <p className="text-sm" style={{ color: 'var(--text-dim)' }}>
-                  簡介即將更新 · Bio coming soon
+                  {t('簡介即將更新', 'Bio coming soon')}
                 </p>
               )}
             </div>

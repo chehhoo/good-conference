@@ -3,6 +3,7 @@ import { Utensils } from 'lucide-react'
 import { usePageTitle } from '../hooks/usePageTitle'
 import { myApi, scheduleApi, type MealDay, type MealScanRecord, type FamilyMember } from '../api/client'
 import { useAuth } from '../auth-context'
+import { useLang } from '../lang-context'
 
 const MEAL_SLOTS: { key: keyof MealDay; zh: string; en: string; emoji: string }[] = [
   { key: 'breakfast', zh: '早餐', en: 'Breakfast', emoji: '🌅' },
@@ -77,6 +78,7 @@ function DayCard({
   members: FamilyMember[]
   scansBySlot: Map<string, MealScanRecord[]>
 }) {
+  const { t } = useLang()
   const slots = daySlots(day, members)
 
 
@@ -110,7 +112,7 @@ function DayCard({
             background: allDone ? 'var(--green-dim)' : someDone ? 'var(--gold-dim)' : 'var(--border)',
             color:      allDone ? 'var(--green)'     : someDone ? 'var(--gold)'     : 'var(--text-dim)',
           }}>
-          {totalScanned}/{totalOrdered} 已取 Picked up
+          {totalScanned}/{totalOrdered} {t('已取', 'Picked up')}
         </span>
       </div>
 
@@ -121,8 +123,7 @@ function DayCard({
           {slots.map(s => (
             <div key={s.key} className="text-center">
               <div className="text-base leading-none">{s.emoji}</div>
-              <div className="text-[10px] mt-0.5 font-semibold leading-tight" style={{ color: 'var(--text-dim)' }}>{s.zh}</div>
-              <div className="text-[9px] leading-tight" style={{ color: 'var(--text-dim)' }}>{s.en}</div>
+              <div className="text-[10px] mt-0.5 font-semibold leading-tight" style={{ color: 'var(--text-dim)' }}>{t(s.zh, s.en)}</div>
             </div>
           ))}
         </div>
@@ -142,7 +143,7 @@ function DayCard({
               <div className="flex items-center gap-1.5 min-w-0 pr-2">
                 {m.isMe && (
                   <span className="text-[9px] px-1 py-0.5 rounded font-bold shrink-0"
-                    style={{ background: 'var(--accent)', color: '#fff' }}>我</span>
+                    style={{ background: 'var(--accent)', color: '#fff' }}>{t('我', 'Me')}</span>
                 )}
                 <div className="min-w-0">
                   <div className="text-sm font-semibold truncate" style={{ color: 'var(--text)' }}>
@@ -203,7 +204,7 @@ function DayCard({
           style={{ borderColor: 'var(--border)' }}>
           <span className="text-xs font-bold" style={{ color: 'var(--text-dim)' }}>合計 Total</span>
           <span className="text-sm font-black tabular-nums" style={{ color: 'var(--text)' }}>
-            {totalOrdered} 餐
+            {totalOrdered} {t('餐', 'meals')}
           </span>
         </div>
       )}

@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { Loader2, MapPin, User, Users, X, Clock } from 'lucide-react'
 import { scheduleApi, type CampSession, type EventProgram } from '../api/client'
 import { useAuth } from '../auth-context'
+import { useLang } from '../lang-context'
 import ShareModal from '../components/ShareModal'
 import SpeakerSheet from '../components/SpeakerSheet'
 import { Share2 } from 'lucide-react'
@@ -20,11 +21,18 @@ const TYPE_COLOR: Record<string, string> = {
   OTHER:    'var(--border2)',
 }
 
-const TYPE_LABEL: Record<string, string> = {
+const TYPE_LABEL_ZH: Record<string, string> = {
   PLENARY:  '全體大會',
   WORSHIP:  '敬拜',
   WORKSHOP: '工作坊',
   GENERAL:  '分組',
+  OTHER:    '',
+}
+const TYPE_LABEL_EN: Record<string, string> = {
+  PLENARY:  'Plenary',
+  WORSHIP:  'Worship',
+  WORKSHOP: 'Workshop',
+  GENERAL:  'Session',
   OTHER:    '',
 }
 
@@ -60,6 +68,7 @@ function SessionDetailSheet({ session: s, onClose, onSignup, onUnsignup, loading
   allSessions: CampSession[]
 }) {
   const [speakerOpen, setSpeakerOpen] = useState(false)
+  const { t, primary, secondary } = useLang()
   const canGo = GOING_TYPES.has(s.sessionType)
   const atCapacity = s.capacity != null && s.signupCount >= s.capacity
   const typeColor = TYPE_COLOR[s.sessionType] ?? 'var(--text-dim)'
@@ -99,16 +108,16 @@ function SessionDetailSheet({ session: s, onClose, onSignup, onUnsignup, loading
           </div>
 
           {/* Type badge */}
-          {TYPE_LABEL[s.sessionType] && (
+          {(TYPE_LABEL_ZH[s.sessionType] || TYPE_LABEL_EN[s.sessionType]) && (
             <span className="text-[10px] font-bold tracking-wide px-2 py-0.5 rounded"
               style={{ background: `color-mix(in srgb, ${typeColor} 18%, transparent)`, color: typeColor }}>
-              {TYPE_LABEL[s.sessionType]}
+              {t(TYPE_LABEL_ZH[s.sessionType] ?? '', TYPE_LABEL_EN[s.sessionType] ?? '')}
             </span>
           )}
 
           {/* Title */}
-          <h2 className="text-xl font-black mt-2 leading-snug" style={{ color: 'var(--text)' }}>{s.title}</h2>
-          {s.titleEng && <p className="text-sm mt-0.5" style={{ color: 'var(--text-dim)' }}>{s.titleEng}</p>}
+          <h2 className="text-xl font-black mt-2 leading-snug" style={{ color: 'var(--text)' }}>{primary(s.title, s.titleEng)}</h2>
+          {secondary(s.title, s.titleEng) && <p className="text-sm mt-0.5" style={{ color: 'var(--text-dim)' }}>{secondary(s.title, s.titleEng)}</p>}
 
           {/* Time */}
           <div className="flex items-center gap-2 mt-4">
@@ -127,16 +136,16 @@ function SessionDetailSheet({ session: s, onClose, onSignup, onUnsignup, loading
               >
                 <User size={13} className="mt-0.5 shrink-0" style={{ color: 'var(--text-dim)' }} />
                 <div>
-                  {s.speaker && <p className="text-sm font-semibold underline underline-offset-2" style={{ color: 'var(--text)' }}>{s.speaker}</p>}
-                  {s.speakerEng && <p className="text-xs" style={{ color: 'var(--text-dim)' }}>{s.speakerEng}</p>}
+                  {primary(s.speaker, s.speakerEng) && <p className="text-sm font-semibold underline underline-offset-2" style={{ color: 'var(--text)' }}>{primary(s.speaker, s.speakerEng)}</p>}
+                  {secondary(s.speaker, s.speakerEng) && <p className="text-xs" style={{ color: 'var(--text-dim)' }}>{secondary(s.speaker, s.speakerEng)}</p>}
                 </div>
               </button>
             ) : (
               <div className="flex items-start gap-2 mt-2">
                 <User size={13} className="mt-0.5 shrink-0" style={{ color: 'var(--text-dim)' }} />
                 <div>
-                  {s.speaker && <p className="text-sm font-semibold" style={{ color: 'var(--text)' }}>{s.speaker}</p>}
-                  {s.speakerEng && <p className="text-xs" style={{ color: 'var(--text-dim)' }}>{s.speakerEng}</p>}
+                  {primary(s.speaker, s.speakerEng) && <p className="text-sm font-semibold" style={{ color: 'var(--text)' }}>{primary(s.speaker, s.speakerEng)}</p>}
+                  {secondary(s.speaker, s.speakerEng) && <p className="text-xs" style={{ color: 'var(--text-dim)' }}>{secondary(s.speaker, s.speakerEng)}</p>}
                 </div>
               </div>
             )
@@ -178,9 +187,12 @@ function SessionDetailSheet({ session: s, onClose, onSignup, onUnsignup, loading
           )}
 
           {/* Description */}
-          {s.description && (
+          {(s.description || s.descriptionEng) && (
             <div className="mt-4 p-3 rounded-2xl" style={{ background: 'var(--surface2)' }}>
-              <p className="text-sm leading-relaxed whitespace-pre-line" style={{ color: 'var(--text-mid)' }}>{s.description}</p>
+              <p className="text-sm leading-relaxed whitespace-pre-line" style={{ color: 'var(--text-mid)' }}>{primary(s.description, s.descriptionEng)}</p>
+              {secondary(s.description, s.descriptionEng) && (
+                <p className="text-xs leading-relaxed whitespace-pre-line mt-2 pt-2 border-t" style={{ color: 'var(--text-dim)', borderColor: 'var(--border)' }}>{secondary(s.description, s.descriptionEng)}</p>
+              )}
             </div>
           )}
 
@@ -206,12 +218,12 @@ function SessionDetailSheet({ session: s, onClose, onSignup, onUnsignup, loading
                   className="w-full py-3 rounded-2xl text-sm font-bold transition-all disabled:opacity-50"
                   style={{ background: 'var(--green)', color: '#fff' }}
                 >
-                  🙋 我去！ · 點擊取消
+                  🙋 {t('我去！ · 點擊取消', 'Going! · Tap to cancel')}
                 </button>
               ) : atCapacity ? (
                 <button disabled className="w-full py-3 rounded-2xl text-sm font-bold"
                   style={{ background: 'var(--border)', color: 'var(--text-dim)' }}>
-                  額滿 Full
+                  {t('額滿 Full', 'Full')}
                 </button>
               ) : (
                 <button
@@ -220,7 +232,7 @@ function SessionDetailSheet({ session: s, onClose, onSignup, onUnsignup, loading
                   className="w-full py-3 rounded-2xl text-sm font-bold transition-all disabled:opacity-40"
                   style={{ background: 'var(--accent)', color: '#fff' }}
                 >
-                  想去？標記我要參加！
+                  {t('想去？標記我要參加！', 'Want to go? Sign up!')}
                 </button>
               )}
             </div>
@@ -233,6 +245,7 @@ function SessionDetailSheet({ session: s, onClose, onSignup, onUnsignup, loading
 
 function SessionRow({ session: s, onSignup, onUnsignup, onSelect, loading, isLast }: RowProps) {
   const [speakerOpen, setSpeakerOpen] = useState(false)
+  const { t, primary, secondary } = useLang()
   const canGo = GOING_TYPES.has(s.sessionType)
   const isOther = s.sessionType === 'OTHER'
   const typeColor = TYPE_COLOR[s.sessionType] ?? 'var(--text-dim)'
@@ -268,12 +281,12 @@ function SessionRow({ session: s, onSignup, onUnsignup, onSelect, loading, isLas
       {/* Content */}
       <div className="flex-1 min-w-0 pb-5 cursor-pointer" onClick={() => onSelect(s)}>
         {/* Type badge */}
-        {TYPE_LABEL[s.sessionType] && (
+        {(TYPE_LABEL_ZH[s.sessionType] || TYPE_LABEL_EN[s.sessionType]) && (
           <span
             className="text-[10px] font-bold tracking-wide px-1.5 py-0.5 rounded"
             style={{ background: `color-mix(in srgb, ${typeColor} 18%, transparent)`, color: typeColor }}
           >
-            {TYPE_LABEL[s.sessionType]}
+            {t(TYPE_LABEL_ZH[s.sessionType] ?? '', TYPE_LABEL_EN[s.sessionType] ?? '')}
           </span>
         )}
 
@@ -283,7 +296,7 @@ function SessionRow({ session: s, onSignup, onUnsignup, onSelect, loading, isLas
             className="font-semibold leading-snug"
             style={{ color: isOther ? 'var(--text-dim)' : 'var(--text)', fontSize: 14 }}
           >
-            {s.title}
+            {primary(s.title, s.titleEng)}
           </span>
           {canGo && !atCapacity && (
             s.signedUp ? (
@@ -292,9 +305,9 @@ function SessionRow({ session: s, onSignup, onUnsignup, onSelect, loading, isLas
                 onClick={() => onUnsignup(s.id)}
                 className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold transition-all disabled:opacity-50 shrink-0"
                 style={{ background: 'var(--green)', color: '#fff' }}
-                title="取消"
+                title={t('取消', 'Cancel')}
               >
-                🙋 我去！
+                🙋 {t('我去！', "Going!")}
               </button>
             ) : (
               <button
@@ -303,37 +316,37 @@ function SessionRow({ session: s, onSignup, onUnsignup, onSelect, loading, isLas
                 className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold transition-all disabled:opacity-40 shrink-0"
                 style={{ background: 'var(--accent-dim)', color: 'var(--accent)', border: '1px solid var(--accent)' }}
               >
-                想去？
+                {t('想去？', 'Sign up?')}
               </button>
             )
           )}
           {canGo && atCapacity && (
             <span className="text-[11px] px-2 py-0.5 rounded-full shrink-0"
               style={{ background: 'var(--border)', color: 'var(--text-dim)' }}>
-              額滿
+              {t('額滿', 'Full')}
             </span>
           )}
         </div>
 
-        {s.titleEng && (
-          <p className="text-xs mt-0.5 leading-snug" style={{ color: 'var(--text-dim)' }}>{s.titleEng}</p>
+        {secondary(s.title, s.titleEng) && (
+          <p className="text-xs mt-0.5 leading-snug" style={{ color: 'var(--text-dim)' }}>{secondary(s.title, s.titleEng)}</p>
         )}
 
         {/* Meta row: speaker, location */}
         {(s.speaker || s.location) && (
           <div className="flex flex-wrap gap-x-3 gap-y-0.5 mt-1">
-            {s.speaker && (
+            {(s.speaker || s.speakerEng) && (
               s.speakerId != null ? (
                 <button
                   onClick={e => { e.stopPropagation(); setSpeakerOpen(true) }}
                   className="flex items-center gap-1 text-xs hover:underline text-left"
                   style={{ color: 'var(--text-dim)' }}
                 >
-                  <User size={10} className="shrink-0" />{s.speaker}{s.speakerEng ? ` · ${s.speakerEng}` : ''}
+                  <User size={10} className="shrink-0" />{primary(s.speaker, s.speakerEng)}{secondary(s.speaker, s.speakerEng) ? ` · ${secondary(s.speaker, s.speakerEng)}` : ''}
                 </button>
               ) : (
                 <span className="flex items-center gap-1 text-xs" style={{ color: 'var(--text-dim)' }}>
-                  <User size={10} className="shrink-0" />{s.speaker}
+                  <User size={10} className="shrink-0" />{primary(s.speaker, s.speakerEng)}
                 </span>
               )
             )}
@@ -383,6 +396,7 @@ export default function Schedule() {
   usePageTitle('大會行程', 'Conference Schedule')
   const qc = useQueryClient()
   const { person } = useAuth()
+  const { t } = useLang()
   const personId = person?.id ?? null
 
   const [selectedDay, setSelectedDay] = useState<number | null>(null)
@@ -459,7 +473,7 @@ export default function Schedule() {
       const dateLabel = new Date(first.startTime).toLocaleDateString('zh-TW', {
         month: 'long', day: 'numeric', weekday: 'short',
       })
-      groupedByDay.push({ day: d, label: `第 ${d} 天 · ${dateLabel}`, sessions: ss })
+      groupedByDay.push({ day: d, label: `${t(`第 ${d} 天`, `Day ${d}`)} · ${dateLabel}`, sessions: ss })
     }
   }
 
@@ -480,7 +494,7 @@ export default function Schedule() {
                     color: viewMode === m ? '#fff' : 'var(--text-dim)',
                   }}
                 >
-                  {m === 'all' ? '全部場次' : '我的報名 ✓'}
+                  {m === 'all' ? t('全部場次', 'All Sessions') : t('我的報名 ✓', 'My Sign-ups ✓')}
                 </button>
               ))}
             </div>
@@ -532,7 +546,7 @@ export default function Schedule() {
               className="shrink-0 px-4 py-2.5 text-sm font-semibold transition-colors whitespace-nowrap relative"
               style={{ color: selectedDay === null ? 'var(--accent)' : 'var(--text-dim)' }}
             >
-              全部
+              {t('全部', 'All')}
               {selectedDay === null && <span className="absolute bottom-0 left-0 right-0 h-0.5 rounded-full" style={{ background: 'var(--accent)' }} />}
             </button>
             {days.map(d => {
@@ -545,7 +559,7 @@ export default function Schedule() {
                   className="shrink-0 px-4 py-2.5 text-sm font-semibold transition-colors whitespace-nowrap relative"
                   style={{ color: isActive ? 'var(--accent)' : 'var(--text-dim)' }}
                 >
-                  第 {d} 天
+                  {t(`第 ${d} 天`, `Day ${d}`)}
                   {first && (
                     <span className="hidden sm:inline ml-1 text-xs opacity-60">
                       {fmtDayDate(first.startTime)}
@@ -584,8 +598,8 @@ export default function Schedule() {
         {!isLoading && !isError && visible.length === 0 && (
           <div className="text-center py-20 text-sm" style={{ color: 'var(--text-dim)' }}>
             {viewMode === 'mine'
-              ? <p>尚未報名任何場次。No sign-ups yet.</p>
-              : <p>尚未排定行程。No sessions scheduled yet.</p>
+              ? <p>{t('尚未報名任何場次。', 'No sign-ups yet.')}</p>
+              : <p>{t('尚未排定行程。', 'No sessions scheduled yet.')}</p>
             }
           </div>
         )}
