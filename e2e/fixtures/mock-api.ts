@@ -79,10 +79,11 @@ export async function mockAll(page: Page) {
 /**
  * Seeds localStorage with a valid auth state so tests don't need to go
  * through the login flow. Call after mockAll() and before page.goto().
+ * Pass a custom person to override TEST_PERSON (e.g. for Grace Conference tests).
  */
-export async function seedAuth(page: Page) {
-  await page.addInitScript(({ token, person }) => {
+export async function seedAuth(page: Page, person = TEST_PERSON as object) {
+  await page.addInitScript(({ token, p }) => {
     localStorage.setItem('gc_token', token)
-    localStorage.setItem('gc_person', JSON.stringify(person))
-  }, { token: TEST_TOKEN, person: TEST_PERSON })
+    localStorage.setItem('gc_person', JSON.stringify(p))
+  }, { token: TEST_TOKEN, p: person })
 }

@@ -8,6 +8,15 @@ export const TEST_PERSON = {
   chineseName: '陳偉',
 }
 
+export const TEST_PERSON_GRACE = {
+  id: 99,
+  uid: 'GC-0099',
+  firstName: 'Grace',
+  lastName: 'Liu',
+  chineseName: '劉恩典',
+  programCode: '2',
+}
+
 export const TEST_FAMILY: import('../../src/api/client').FamilyInfo = {
   personId: 42,
   familyId: 10,
