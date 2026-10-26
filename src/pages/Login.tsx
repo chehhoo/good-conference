@@ -148,14 +148,14 @@ export default function Login() {
             <TitleImage />
             <div className="flex items-center justify-center gap-2 mt-1.5">
               <span className="text-xs font-semibold" style={{ color: 'rgba(255,255,255,0.7)' }}>暨</span>
-              <div className="flex items-center gap-2 px-2.5 py-1 rounded-full"
-                style={{ background: 'rgba(255,255,255,0.10)', backdropFilter: 'blur(6px)' }}>
+              <div className="flex items-center gap-2 px-3 py-1.5 rounded-full"
+                style={{ background: 'rgba(255,255,255,0.18)', backdropFilter: 'blur(6px)', border: '1px solid rgba(255,255,255,0.25)' }}>
                 <img
                   src="/grace-logo.png"
                   alt="Grace Conference"
-                  style={{ height: 28, maxWidth: 130 }}
+                  style={{ height: 30, maxWidth: 130 }}
                 />
-                <span className="text-[9px] font-medium leading-tight shrink-0" style={{ color: '#444' }}>
+                <span className="text-[10px] font-semibold leading-tight shrink-0" style={{ color: 'rgba(255,255,255,0.9)' }}>
                   Grace Conference<br />2026
                 </span>
               </div>
@@ -163,14 +163,8 @@ export default function Login() {
           </div>
         </div>
 
-        {/* Good Vessel attribution — subtle */}
-        <div className="flex items-center justify-center gap-2 mb-5">
-          <img src="/logo.svg" alt="Good Vessel" className="w-4 h-4 rounded opacity-50" />
-          <p className="text-[10px] tracking-widest uppercase"
-            style={{ color: 'rgba(255,255,255,0.45)' }}>
-            Good Vessel · 好器皿 · 大會入口 · v{__APP_VERSION__}
-          </p>
-        </div>
+        {/* spacer — attribution moved to bottom corner */}
+        <div className="mb-5" />
 
         {/* Card */}
         <div className="rounded-3xl p-6 space-y-4 border"
@@ -197,7 +191,7 @@ export default function Login() {
                   inputMode="email"
                   value={contact}
                   onChange={e => setContact(e.target.value)}
-                  placeholder="例如：you@email.com"
+                  placeholder="you@email.com"
                   required
                   autoFocus
                   className="w-full px-4 py-3 rounded-2xl text-sm focus:outline-none"
@@ -225,6 +219,9 @@ export default function Login() {
                 {loading ? <Loader2 size={16} className="animate-spin" /> : <Mail size={16} />}
                 發送驗證碼 Send Code
               </button>
+              <p className="text-center text-[11px]" style={{ color: 'var(--text-dim)' }}>
+                若未收到，請檢查垃圾郵件 · Check your spam folder
+              </p>
             </form>
           )}
 
@@ -391,6 +388,14 @@ export default function Login() {
           )}
         </div>
 
+      </div>
+
+      {/* Good Vessel attribution — bottom corner, very subtle */}
+      <div className="fixed bottom-3 right-3 flex items-center gap-1 pointer-events-none" aria-hidden>
+        <img src="/logo.svg" alt="" className="w-3 h-3 rounded opacity-30" />
+        <p className="text-[9px] tracking-wide" style={{ color: 'rgba(255,255,255,0.28)' }}>
+          Good Vessel · 好器皿 · v{__APP_VERSION__}
+        </p>
       </div>
     </div>
   )

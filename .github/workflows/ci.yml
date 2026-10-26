@@ -138,10 +138,10 @@ jobs:
         run: |
           echo "Waiting 15s for CloudFront to propagate..."
           sleep 15
-          STATUS=$(curl -s -o /dev/null -w "%{http_code}" https://conference.goodvessel.org)
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" https://gfc2026.goodvessel.org)
           echo "HTTP status: $STATUS"
           if [ "$STATUS" != "200" ]; then
-            echo "::error::Health check failed — https://conference.goodvessel.org returned HTTP $STATUS"
+            echo "::error::Health check failed — https://gfc2026.goodvessel.org returned HTTP $STATUS"
             exit 1
           fi
           echo "✓ Site is up"
@@ -151,4 +151,4 @@ jobs:
           echo "## Deployed ${{ github.ref_name }}" >> $GITHUB_STEP_SUMMARY
           echo "- **Tag:** ${{ github.ref_name }}" >> $GITHUB_STEP_SUMMARY
           echo "- **Commit:** ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
-          echo "- **URL:** https://conference.goodvessel.org" >> $GITHUB_STEP_SUMMARY
+          echo "- **URL:** https://gfc2026.goodvessel.org" >> $GITHUB_STEP_SUMMARY

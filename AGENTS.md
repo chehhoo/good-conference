@@ -66,7 +66,7 @@ Browser
 ```
 
 Production is static hosting: Vite builds `dist/`, GitHub Actions syncs it to
-S3, and CloudFront serves `conference.goodvessel.org`.
+S3, and CloudFront serves `gfc2026.goodvessel.org`.
 
 ### Source layout
 
