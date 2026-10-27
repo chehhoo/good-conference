@@ -18,6 +18,9 @@ export async function mockAll(page: Page) {
   )
 
   // Schedule
+  await page.route('**/api/schedule/programs', (r) =>
+    r.fulfill({ json: [] })
+  )
   await page.route('**/api/schedule', (r) =>
     r.fulfill({ json: TEST_SESSIONS })
   )

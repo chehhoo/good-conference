@@ -49,8 +49,6 @@ test.describe('Language toggle', () => {
   test('EN mode shows English session titles as primary on schedule', async ({ page }) => {
     await seedAuth(page)
     await page.goto('/schedule')
-    // Select the All tab to ensure sessions are visible regardless of program filter
-    await page.getByRole('button', { name: /全部 All/ }).first().click()
     await expect(page.getByText('開幕式')).toBeVisible({ timeout: 10_000 })
     // Switch to EN
     await page.getByRole('button', { name: 'EN', exact: true }).click()
