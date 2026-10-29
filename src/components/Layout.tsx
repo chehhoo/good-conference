@@ -143,20 +143,21 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   return (
     <div className="flex flex-col min-h-screen" style={{ background: 'var(--bg)' }}>
       {token && (
-        <header className="sticky top-0 z-40 flex items-center justify-between px-4 py-2.5 border-b"
+        <header className="sticky top-0 z-40 flex items-center justify-between px-4 py-2.5 border-b gap-2"
           style={{ background: 'var(--nav)', borderColor: 'var(--border)' }}>
-          <div className="flex items-center gap-2.5 min-w-0">
+          {/* Brand block — grows to fill available space, never causes controls to shrink */}
+          <div className="flex items-center gap-2.5 flex-1 min-w-0">
             <img src="/logo.svg" alt="Good Vessel" className="w-8 h-8 rounded-lg shrink-0" />
             <div className="min-w-0">
-              <div className="text-[10px] font-bold tracking-widest uppercase leading-none mb-0.5"
+              <div className="text-[10px] font-bold tracking-widest uppercase leading-none mb-0.5 whitespace-nowrap"
                 style={{ color: 'var(--text-dim)' }}>
                 GOOD VESSEL · 好器皿
               </div>
-              <div className="flex items-baseline gap-1.5 leading-none">
-                <span className="text-sm font-black tracking-tight" style={{ color: 'var(--text)' }}>
+              <div className="flex items-baseline gap-1.5 leading-none min-w-0">
+                <span className="text-sm font-black tracking-tight truncate" style={{ color: 'var(--text)' }}>
                   {import.meta.env.VITE_CONFERENCE_NAME ?? '中國福音大會 2026'}
                 </span>
-                <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-md"
+                <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-md shrink-0"
                   style={{ background: 'var(--accent-dim)', color: 'var(--accent)' }}>
                   v{__APP_VERSION__}
                 </span>
@@ -164,7 +165,8 @@ export default function Layout({ children }: { children: React.ReactNode }) {
             </div>
           </div>
 
-          <div className="flex items-center gap-1.5">
+          {/* Controls — never shrink, never wrap */}
+          <div className="flex items-center gap-1.5 shrink-0">
             <NotificationBell />
             <div
               className="flex items-center rounded-lg overflow-hidden"
@@ -195,11 +197,12 @@ export default function Layout({ children }: { children: React.ReactNode }) {
             </button>
             <button
               onClick={handleLogout}
-              className="flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-lg transition-colors"
+              className="flex items-center gap-1 p-2 rounded-lg transition-colors"
               style={{ color: 'var(--text-dim)' }}
+              aria-label={t('登出', 'Log Out')}
             >
-              <LogOut size={14} />
-              {t('登出', 'Log Out')}
+              <LogOut size={16} />
+              <span className="hidden sm:inline text-xs font-semibold whitespace-nowrap">{t('登出', 'Log Out')}</span>
             </button>
           </div>
         </header>
