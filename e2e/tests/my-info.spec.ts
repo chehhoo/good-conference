@@ -12,26 +12,29 @@ test.describe('My Info', () => {
     await expect(page.getByText('陳麗')).toBeVisible()
   })
 
-  test('"me" card is highlighted with accent border', async ({ page }) => {
-    // The card for isMe:true has border-top accent color applied inline
+  test('"me" hero card is highlighted with accent border', async ({ page }) => {
     const meCard = page.locator('div.rounded-2xl').filter({ hasText: '我' })
     await expect(meCard).toBeVisible()
   })
 
-  test('meal grid shows days and slots', async ({ page }) => {
-    // MealsGrid renders 第{d}天 (no spaces)
-    await expect(page.getByText('第1天').first()).toBeVisible()
-    await expect(page.getByText('第2天').first()).toBeVisible()
-    await expect(page.getByText('早餐').first()).toBeVisible()
-    await expect(page.getByText('午餐').first()).toBeVisible()
-    await expect(page.getByText('晚餐').first()).toBeVisible()
+  test('meal pills show abbreviated slot labels', async ({ page }) => {
+    // Meals now render as compact pills: 早 / 午 / 晚
+    await expect(page.getByText('早').first()).toBeVisible({ timeout: 10_000 })
+    await expect(page.getByText('午').first()).toBeVisible()
+    await expect(page.getByText('晚').first()).toBeVisible()
+  })
+
+  test('registration code is shown in hero card', async ({ page }) => {
+    await expect(page.getByText('220')).toBeVisible({ timeout: 10_000 })
+    await expect(page.getByText(/英文名字/)).toBeVisible()
+  })
+
+  test('quick-action buttons are present', async ({ page }) => {
+    await expect(page.getByRole('button', { name: /我的證件/ })).toBeVisible({ timeout: 10_000 })
   })
 
   test('lodging shows room number', async ({ page }) => {
+    // Expand family member row to see lodging
     await expect(page.getByText(/301/).first()).toBeVisible({ timeout: 10_000 })
-  })
-
-  test('SMS opt-in section is shown', async ({ page }) => {
-    await expect(page.getByText('設定 Settings')).toBeVisible()
   })
 })
