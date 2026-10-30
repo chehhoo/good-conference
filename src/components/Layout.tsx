@@ -117,6 +117,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
     (localStorage.getItem('gc_theme') as ThemeChoice) ?? 'auto'
   )
   const [isOnline, setIsOnline] = useState(() => navigator.onLine)
+  const [logoutPending, setLogoutPending] = useState(false)
   useEffect(() => {
     const on = () => setIsOnline(true)
     const off = () => setIsOnline(false)
@@ -136,6 +137,11 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   }, [])
 
   function handleLogout() {
+    if (!logoutPending) {
+      setLogoutPending(true)
+      setTimeout(() => setLogoutPending(false), 3000)
+      return
+    }
     logout()
     navigate('/login', { replace: true })
   }
@@ -143,29 +149,35 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   return (
     <div className="flex flex-col min-h-screen" style={{ background: 'var(--bg)' }}>
       {token && (
-        <header className="sticky top-0 z-40 flex items-center justify-between px-4 py-2.5 border-b gap-2"
-          style={{ background: 'var(--nav)', borderColor: 'var(--border)' }}>
-          {/* Brand block — grows to fill available space, never causes controls to shrink */}
-          <div className="flex items-center gap-2.5 flex-1 min-w-0">
+        <header
+          className="sticky top-0 z-40 flex flex-col sm:flex-row sm:items-center sm:justify-between border-b px-4 pt-2 pb-1.5 sm:py-2.5 gap-y-1.5 sm:gap-y-0"
+          style={{ background: 'var(--nav)', borderColor: 'var(--border)' }}
+        >
+          {/* Row 1: logo + brand — always fully visible */}
+          <div className="flex items-center gap-2.5 min-w-0">
             <img src="/logo.svg" alt="Good Vessel" className="w-8 h-8 rounded-lg shrink-0" />
             <div className="min-w-0">
-              <div className="text-[10px] font-bold tracking-widest uppercase leading-none mb-0.5 whitespace-nowrap"
-                style={{ color: 'var(--text-dim)' }}>
-                GOOD VESSEL · 好器皿
-              </div>
-              <div className="flex items-baseline gap-1.5 leading-none min-w-0">
-                <span className="text-sm font-black tracking-tight truncate" style={{ color: 'var(--text)' }}>
-                  {import.meta.env.VITE_CONFERENCE_NAME ?? '中國福音大會 2026'}
+              <div className="flex items-center gap-1.5 leading-none mb-0.5">
+                <span
+                  className="text-[10px] font-bold tracking-widest uppercase whitespace-nowrap"
+                  style={{ color: 'var(--text-dim)' }}
+                >
+                  GOOD VESSEL · 好器皿
                 </span>
-                <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-md shrink-0"
-                  style={{ background: 'var(--accent-dim)', color: 'var(--accent)' }}>
+                <span
+                  className="hidden sm:inline text-[10px] font-bold px-1.5 py-0.5 rounded-md shrink-0"
+                  style={{ background: 'var(--accent-dim)', color: 'var(--accent)' }}
+                >
                   v{__APP_VERSION__}
                 </span>
               </div>
+              <span className="text-sm font-black tracking-tight block truncate" style={{ color: 'var(--text)' }}>
+                {import.meta.env.VITE_CONFERENCE_NAME ?? '中國福音大會 2026'}
+              </span>
             </div>
           </div>
 
-          {/* Controls — never shrink, never wrap */}
+          {/* Row 2 on phones / right side on desktop: controls — all shrink-0, never overlap */}
           <div className="flex items-center gap-1.5 shrink-0">
             <NotificationBell />
             <div
@@ -195,14 +207,17 @@ export default function Layout({ children }: { children: React.ReactNode }) {
             >
               <User size={16} />
             </button>
+            <span className="w-px h-4 shrink-0" style={{ background: 'var(--border)' }} />
             <button
               onClick={handleLogout}
               className="flex items-center gap-1 p-2 rounded-lg transition-colors"
-              style={{ color: 'var(--text-dim)' }}
+              style={{ color: logoutPending ? 'var(--accent)' : 'var(--text-dim)' }}
               aria-label={t('登出', 'Log Out')}
             >
               <LogOut size={16} />
-              <span className="hidden sm:inline text-xs font-semibold whitespace-nowrap">{t('登出', 'Log Out')}</span>
+              <span className="hidden sm:inline text-xs font-semibold whitespace-nowrap">
+                {logoutPending ? t('確定?', 'Sure?') : t('登出', 'Log Out')}
+              </span>
             </button>
           </div>
         </header>
