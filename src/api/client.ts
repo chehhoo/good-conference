@@ -133,6 +133,8 @@ export interface FamilyMember {
 export interface FamilyInfo {
   personId: number
   familyId: number | null
+  registrationCode: number | null
+  email: string | null
   members: FamilyMember[]
 }
 
