@@ -20,6 +20,8 @@ export const TEST_PERSON_GRACE = {
 export const TEST_FAMILY: import('../../src/api/client').FamilyInfo = {
   personId: 42,
   familyId: 10,
+  registrationCode: 220,
+  email: 'wei@example.com',
   members: [
     {
       id: 42,
