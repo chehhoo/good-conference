@@ -439,8 +439,7 @@ export default function Dashboard() {
           {!sessLoading && (() => {
             const myProgram = person?.programCode ?? null
             const myToday = [...todaySessions]
-              .filter(s => s.sessionType !== 'OTHER' && (s.signedUp || s.sessionType === 'PLENARY'))
-              .filter(s => s.signedUp || !myProgram || !s.programCode || s.programCode === myProgram)
+              .filter(s => s.sessionType !== 'OTHER' && s.signedUp)
               .sort((a, b) => a.startTime.localeCompare(b.startTime))
 
             if (myToday.length === 0) return (
