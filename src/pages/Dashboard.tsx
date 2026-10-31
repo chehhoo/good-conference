@@ -352,7 +352,7 @@ export default function Dashboard() {
               <div className="rounded-2xl px-4 py-3 flex items-center gap-3 border"
                 style={{ background: 'var(--surface)', borderColor: 'var(--border)' }}>
                 <span className="text-2xl leading-none">🍽️</span>
-                <div>
+                <div className="flex-1">
                   <p className="text-sm font-semibold" style={{ color: 'var(--text)' }}>
                     {t('今日未訂餐', 'No meals ordered today')}
                   </p>
@@ -360,6 +360,9 @@ export default function Dashboard() {
                     {t('如有疑問，請聯繫大會服務台。', 'Contact the registration desk if you have questions.')}
                   </p>
                 </div>
+                <Link to="/my-info" className="text-xs font-semibold shrink-0" style={{ color: 'var(--accent)' }}>
+                  {t('查看餐食計劃', 'View meal plan')} →
+                </Link>
               </div>
             ) : (
             <div className="grid grid-cols-3 gap-2">
