@@ -2,27 +2,38 @@
 const savedTheme = localStorage.getItem('gc_theme') ?? 'dark'
 document.documentElement.setAttribute('data-theme', savedTheme)
 
-// Dev-only clock mock: ?mockDate=2026-12-26 fakes the system date for the whole app
-if (import.meta.env.DEV) {
-  const mockParam = new URLSearchParams(location.search).get('mockDate')
-  if (mockParam) {
-    const fakeNow = new Date(mockParam).getTime()
+// Hidden clock mock: ?mockDate=2026-12-26T10:00:00 fakes the system date for the whole app.
+// Works in production too (for testing conference-day views on the real site).
+// Offset is saved to sessionStorage so it survives in-app navigation; clears when tab closes.
+;(() => {
+  const urlParam = new URLSearchParams(location.search).get('mockDate')
+  const stored = sessionStorage.getItem('gc_mock_offset')
+  let offset: number | null = null
+
+  if (urlParam) {
+    const fakeNow = new Date(urlParam).getTime()
     if (!isNaN(fakeNow)) {
-      const offset = fakeNow - Date.now()
-      const _Date = Date
-      class MockDate extends _Date {
-        constructor(...args: ConstructorParameters<typeof Date>) {
-          if (args.length) { super(...args) } else { super(_Date.now() + offset) }
-        }
-        static now() { return _Date.now() + offset }
-        static override [Symbol.hasInstance](val: unknown) { return val instanceof _Date }
-      }
-      // @ts-expect-error intentional dev-only Date replacement
-      window.Date = MockDate
-      console.info(`[dev] 🕐 Clock mocked to ${new _Date(fakeNow).toLocaleString()} (offset ${offset > 0 ? '+' : ''}${Math.round(offset / 86400000)}d)`)
+      offset = fakeNow - Date.now()
+      sessionStorage.setItem('gc_mock_offset', String(offset))
     }
+  } else if (stored) {
+    offset = Number(stored)
   }
-}
+
+  if (offset != null) {
+    const _Date = Date
+    class MockDate extends _Date {
+      constructor(...args: ConstructorParameters<typeof Date>) {
+        if (args.length) { super(...args) } else { super(_Date.now() + offset!) }
+      }
+      static now() { return _Date.now() + offset! }
+      static override [Symbol.hasInstance](val: unknown) { return val instanceof _Date }
+    }
+    // @ts-expect-error intentional clock replacement for conference-day testing
+    window.Date = MockDate
+    console.info(`[mockDate] 🕐 Clock set to ${new _Date(_Date.now() + offset).toLocaleString()}`)
+  }
+})()
 
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
