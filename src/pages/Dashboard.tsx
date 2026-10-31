@@ -360,7 +360,7 @@ export default function Dashboard() {
                     {t('如有疑問，請聯繫大會服務台。', 'Contact the registration desk if you have questions.')}
                   </p>
                 </div>
-                <Link to="/my-info" className="text-xs font-semibold shrink-0" style={{ color: 'var(--accent)' }}>
+                <Link to="/meals" className="text-xs font-semibold shrink-0" style={{ color: 'var(--accent)' }}>
                   {t('查看餐食計劃', 'View meal plan')} →
                 </Link>
               </div>
