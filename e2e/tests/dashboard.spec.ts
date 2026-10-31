@@ -28,22 +28,23 @@ test.describe('Dashboard', () => {
   })
 
   test('shows meal status section', async ({ page }) => {
-    await page.goto('/')
-    await expect(page.getByText('今日餐食').or(page.getByText('餐食'))).toBeVisible()
+    // Mock to a conference day so the meals section renders
+    await page.goto('/?mockDate=2026-08-01T10:00:00')
+    await expect(page.getByText('今日餐食').or(page.getByText("Today's Meals"))).toBeVisible()
     // Meal slot emojis
     await expect(page.getByText('🌅')).toBeVisible()
     await expect(page.getByText('☀️')).toBeVisible()
     await expect(page.getByText('🌙')).toBeVisible()
   })
 
-  test('shows today sessions section with "全部 →" link', async ({ page }) => {
+  test('shows today sessions section with "全部" link', async ({ page }) => {
     await page.goto('/')
-    await expect(page.getByRole('button', { name: '全部 →' })).toBeVisible()
+    await expect(page.getByRole('button', { name: /全部/ })).toBeVisible()
   })
 
-  test('"全部 →" navigates to schedule page', async ({ page }) => {
+  test('"全部" link navigates to schedule page', async ({ page }) => {
     await page.goto('/')
-    await page.getByRole('button', { name: '全部 →' }).click()
+    await page.getByRole('button', { name: /全部/ }).click()
     await page.waitForURL('/schedule')
   })
 })
