@@ -570,9 +570,9 @@ function FeedbackButton({ person }: { person: ReturnType<typeof useAuth>['person
 
   return (
     <>
-      <div className="fixed inset-0 z-40" style={{ background: 'rgba(0,0,0,0.55)' }} onClick={closeSheet} />
-      <div className="fixed bottom-0 left-0 right-0 z-50 rounded-t-3xl p-5 pb-8"
-        style={{ background: 'var(--surface)', borderTop: '1px solid var(--border)' }}>
+      <div className="fixed inset-0 z-[199]" style={{ background: 'rgba(0,0,0,0.55)' }} onClick={closeSheet} />
+      <div className="fixed bottom-0 left-0 right-0 z-[200] rounded-t-3xl p-5"
+        style={{ background: 'var(--surface)', borderTop: '1px solid var(--border)', paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 100px)' }}>
         <div className="w-9 h-1 rounded-full mx-auto mb-4" style={{ background: 'var(--border2)' }} />
         <div className="flex items-center justify-between mb-4">
           <span className="text-base font-black" style={{ color: 'var(--text)' }}>
