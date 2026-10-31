@@ -51,6 +51,7 @@ interface RowProps {
   onSelect: (s: CampSession) => void
   loading: boolean
   isLast: boolean
+  allSessions: CampSession[]
 }
 
 function overlaps(a: CampSession, b: CampSession) {
@@ -243,8 +244,9 @@ function SessionDetailSheet({ session: s, onClose, onSignup, onUnsignup, loading
   )
 }
 
-function SessionRow({ session: s, onSignup, onUnsignup, onSelect, loading, isLast }: RowProps) {
+function SessionRow({ session: s, onSignup, onUnsignup, onSelect, loading, isLast, allSessions }: RowProps) {
   const [speakerOpen, setSpeakerOpen] = useState(false)
+  const [conflictPending, setConflictPending] = useState(false)
   const { t, primary, secondary } = useLang()
   const canGo = GOING_TYPES.has(s.sessionType)
   const isOther = s.sessionType === 'OTHER'
@@ -309,10 +311,24 @@ function SessionRow({ session: s, onSignup, onUnsignup, onSelect, loading, isLas
               >
                 🙋 {t('我去！', "Going!")}
               </button>
+            ) : conflictPending ? (
+              <button
+                disabled={loading}
+                onClick={e => { e.stopPropagation(); setConflictPending(false); onSignup(s.id) }}
+                className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold transition-all disabled:opacity-40 shrink-0"
+                style={{ background: 'var(--amber)', color: '#000', border: '1px solid var(--amber)' }}
+              >
+                ⚠️ {t('確定報名', 'Confirm')}
+              </button>
             ) : (
               <button
                 disabled={loading}
-                onClick={e => { e.stopPropagation(); onSignup(s.id) }}
+                onClick={e => {
+                  e.stopPropagation()
+                  const conflicts = allSessions.filter(other => other.signedUp && overlaps(s, other))
+                  if (conflicts.length > 0) { setConflictPending(true); return }
+                  onSignup(s.id)
+                }}
                 className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold transition-all disabled:opacity-40 shrink-0"
                 style={{ background: 'var(--accent-dim)', color: 'var(--accent)', border: '1px solid var(--accent)' }}
               >
@@ -615,6 +631,7 @@ export default function Schedule() {
                 onSelect={setDetailSession}
                 loading={pendingId === s.id}
                 isLast={i === visible.length - 1}
+                allSessions={sessions}
               />
             ))}
           </div>
@@ -641,6 +658,7 @@ export default function Schedule() {
                     onSelect={setDetailSession}
                     loading={pendingId === s.id}
                     isLast={i === daySessions.length - 1}
+                    allSessions={sessions}
                   />
                 ))}
               </div>
