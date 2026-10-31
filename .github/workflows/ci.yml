@@ -32,6 +32,7 @@ jobs:
         run: npm run build
         env:
           VITE_API_BASE_URL: https://api.goodvessel.org/api
+          VITE_FEEDBACK_WHATSAPP: "17734308422"
 
       - name: Upload dist artifact
         if: startsWith(github.ref, 'refs/tags/')
@@ -88,6 +89,7 @@ jobs:
         run: npm run build
         env:
           VITE_API_BASE_URL: https://api.goodvessel.org/api
+          VITE_FEEDBACK_WHATSAPP: "17734308422"
 
       - name: Run Lighthouse CI
         run: npx lhci autorun

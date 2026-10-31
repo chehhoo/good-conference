@@ -1,8 +1,8 @@
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import {
   Loader2, User, LogIn, ChevronDown, ChevronUp,
-  BedDouble, Bus, Home, QrCode, CalendarCheck,
+  BedDouble, Bus, Home, QrCode, CalendarCheck, MessageCircleWarning, Copy, Check,
 } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { usePageTitle } from '../hooks/usePageTitle'
@@ -501,7 +501,131 @@ export default function MyInfo() {
       <InstallSettingsCard />
       {/* SmsOptIn hidden — AWS SMS support request pending; restore here with Settings label when approved */}
 
+      <FeedbackButton person={person} />
+
       <p className="text-center text-[10px] pb-1" style={{ color: 'var(--text-dim)' }}>v{__APP_VERSION__}</p>
     </div>
+  )
+}
+
+// ── Feedback button + bottom sheet ─────────────────────────────────────────────
+
+const WA_NUMBER = import.meta.env.VITE_FEEDBACK_WHATSAPP ?? ''
+
+function FeedbackButton({ person }: { person: ReturnType<typeof useAuth>['person'] }) {
+  const { t } = useLang()
+  const [open, setOpen] = useState(false)
+  const [text, setText] = useState('')
+  const [copied, setCopied] = useState(false)
+  const textareaRef = useRef<HTMLTextAreaElement>(null)
+
+  const context = [
+    `🐛 Bug Report · v${__APP_VERSION__}`,
+    person ? `姓名：${person.chineseName || `${person.firstName} ${person.lastName}`} · #${person.id}` : '',
+    `頁面：${location.pathname}`,
+    '',
+    text.trim(),
+  ].filter(Boolean).join('\n')
+
+  function openSheet() { setOpen(true); setTimeout(() => textareaRef.current?.focus(), 300) }
+  function closeSheet() { setOpen(false); setText(''); setCopied(false) }
+
+  function sendWhatsApp() {
+    if (!WA_NUMBER) { handleCopy(); return }
+    window.open(`https://wa.me/${WA_NUMBER}?text=${encodeURIComponent(context)}`, '_blank')
+    closeSheet()
+  }
+
+  async function handleCopy() {
+    try {
+      await navigator.clipboard.writeText(context)
+    } catch {
+      textareaRef.current?.select()
+    }
+    setCopied(true)
+    setTimeout(() => setCopied(false), 2500)
+  }
+
+  if (!open) return (
+    <button
+      onClick={openSheet}
+      className="w-full flex items-center gap-3 rounded-2xl px-4 py-3 text-left"
+      style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}
+    >
+      <span className="flex items-center justify-center w-8 h-8 rounded-xl flex-shrink-0"
+        style={{ background: 'var(--accent-dim)' }}>
+        <MessageCircleWarning size={16} style={{ color: 'var(--accent)' }} />
+      </span>
+      <span className="flex-1">
+        <span className="block text-sm font-bold" style={{ color: 'var(--text)' }}>
+          {t('回報問題', 'Report an Issue')}
+        </span>
+        <span className="block text-xs mt-0.5" style={{ color: 'var(--text-dim)' }}>
+          {t('版本問題、顯示錯誤、建議改進', 'Bugs, display issues, suggestions')}
+        </span>
+      </span>
+      <span style={{ color: 'var(--text-dim)', fontSize: 16 }}>›</span>
+    </button>
+  )
+
+  return (
+    <>
+      <div className="fixed inset-0 z-[199]" style={{ background: 'rgba(0,0,0,0.55)' }} onClick={closeSheet} />
+      <div className="fixed bottom-0 left-0 right-0 z-[200] rounded-t-3xl p-5"
+        style={{ background: 'var(--surface)', borderTop: '1px solid var(--border)', paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 100px)' }}>
+        <div className="w-9 h-1 rounded-full mx-auto mb-4" style={{ background: 'var(--border2)' }} />
+        <div className="flex items-center justify-between mb-4">
+          <span className="text-base font-black" style={{ color: 'var(--text)' }}>
+            {t('回報問題', 'Report an Issue')}
+          </span>
+          <button onClick={closeSheet} className="w-7 h-7 rounded-full flex items-center justify-center text-sm"
+            style={{ background: 'var(--surface2)', color: 'var(--text-dim)' }}>✕</button>
+        </div>
+        <div className="flex flex-wrap gap-1.5 mb-4">
+          {[`v${__APP_VERSION__}`, person ? `${person.chineseName || person.firstName} #${person.id}` : '', location.pathname]
+            .filter(Boolean).map(label => (
+            <span key={label} className="flex items-center gap-1.5 text-[10px] font-semibold px-2.5 py-1 rounded-full"
+              style={{ background: 'var(--surface2)', border: '1px solid var(--border)', color: 'var(--text-mid)' }}>
+              <span className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ background: 'var(--green)' }} />
+              {label}
+            </span>
+          ))}
+        </div>
+        <p className="text-[10px] font-bold uppercase tracking-widest mb-2" style={{ color: 'var(--text-dim)' }}>
+          {t('問題描述', 'Describe the issue')}
+        </p>
+        <textarea
+          ref={textareaRef}
+          value={text}
+          onChange={e => setText(e.target.value)}
+          rows={4}
+          placeholder={t('請描述你遇到的問題或建議...', 'Describe the issue or suggestion...')}
+          className="w-full rounded-xl px-3 py-2.5 text-sm resize-none mb-3 outline-none"
+          style={{ background: 'var(--bg)', border: '1px solid var(--border)', color: 'var(--text)' }}
+        />
+        <div className="flex gap-2">
+          <button onClick={sendWhatsApp} disabled={!text.trim()}
+            className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-bold text-white disabled:opacity-40"
+            style={{ background: 'var(--accent)' }}>
+            📲 {t('WhatsApp 送出', 'Send via WhatsApp')}
+          </button>
+          <button onClick={handleCopy} disabled={!text.trim()}
+            className="flex items-center gap-1.5 px-4 py-3 rounded-xl text-sm font-bold disabled:opacity-40"
+            style={{
+              background: copied ? 'var(--gold-dim)' : 'var(--surface2)',
+              border: `1px solid ${copied ? 'var(--gold)' : 'var(--border)'}`,
+              color: copied ? 'var(--gold)' : 'var(--text-mid)',
+            }}>
+            {copied ? <Check size={14} /> : <Copy size={14} />}
+            {copied ? t('已複製', 'Copied!') : t('複製', 'Copy')}
+          </button>
+        </div>
+        {copied && (
+          <p className="text-center text-[11px] mt-2" style={{ color: 'var(--text-dim)' }}>
+            {t('已複製！請貼到任何訊息 App', 'Copied — paste into any messaging app')}
+          </p>
+        )}
+      </div>
+    </>
   )
 }
