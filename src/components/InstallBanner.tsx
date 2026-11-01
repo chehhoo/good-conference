@@ -1,12 +1,12 @@
-import { X, Download, Share, Smartphone } from 'lucide-react'
+import { X, Download, Share, Smartphone, CheckCircle2 } from 'lucide-react'
 import { usePwaInstall } from '../hooks/usePwaInstall'
 
 // ── Dashboard banner (dismissible, shown when not yet installed) ───────────────
 
 export function InstallBanner() {
-  const { state, install, dismiss } = usePwaInstall()
+  const { state, install, dismiss, showFallbackHint } = usePwaInstall()
 
-  if (state !== 'android' && state !== 'ios') return null
+  if (state !== 'android' && state !== 'ios' && state !== 'ios-other') return null
 
   return (
     <div
@@ -47,6 +47,11 @@ export function InstallBanner() {
             >
               安裝 Install
             </button>
+            {showFallbackHint && (
+              <p className="text-xs mt-2" style={{ color: 'var(--text-dim)' }}>
+                Chrome 選單 ⋮ → 安裝應用程式 / Install app
+              </p>
+            )}
           </>
         )}
 
@@ -71,6 +76,14 @@ export function InstallBanner() {
             </div>
           </>
         )}
+
+        {state === 'ios-other' && (
+          <p className="text-xs mt-1.5 leading-relaxed" style={{ color: 'var(--text-dim)' }}>
+            請用 Safari 開啟此頁面以安裝。
+            <br />
+            Open this page in Safari to install.
+          </p>
+        )}
       </div>
     </div>
   )
@@ -79,12 +92,12 @@ export function InstallBanner() {
 // ── Settings card (prominent, shown in MyInfo settings section) ───────────────
 
 export function InstallSettingsCard() {
-  const { state, install, reopen } = usePwaInstall()
+  const { state, install, reopen, showFallbackHint } = usePwaInstall()
 
-  // Already running as installed PWA — nothing to do
+  // Already running as installed PWA or confirmed installed
   if (state === 'hidden') return null
 
-  const isInstalled = state === 'dismissed'
+  const isConfirmedInstalled = state === 'installed'
 
   return (
     <div className="rounded-2xl border overflow-hidden" style={{ borderColor: 'var(--border)' }}>
@@ -92,18 +105,25 @@ export function InstallSettingsCard() {
       <div className="flex items-center gap-3 px-4 py-3"
         style={{ background: 'var(--surface)' }}>
         <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0"
-          style={{ background: isInstalled ? 'var(--green-dim)' : 'var(--accent-dim)' }}>
-          <Smartphone size={16} style={{ color: isInstalled ? 'var(--green)' : 'var(--accent)' }} />
+          style={{ background: isConfirmedInstalled ? 'var(--green-dim)' : 'var(--accent-dim)' }}>
+          {isConfirmedInstalled
+            ? <CheckCircle2 size={16} style={{ color: 'var(--green)' }} />
+            : <Smartphone size={16} style={{ color: 'var(--accent)' }} />
+          }
         </div>
         <div className="flex-1 min-w-0">
           <p className="text-sm font-bold" style={{ color: 'var(--text)' }}>
             安裝應用程式
           </p>
           <p className="text-xs" style={{ color: 'var(--text-dim)' }}>
-            {isInstalled ? '已略過 · Skipped' : 'Install App to Home Screen'}
+            {isConfirmedInstalled
+              ? '已安裝 · Installed'
+              : state === 'dismissed'
+                ? '已略過 · Skipped'
+                : 'Install App to Home Screen'}
           </p>
         </div>
-        {!isInstalled && (
+        {state !== 'dismissed' && state !== 'installed' && (
           <span className="text-[10px] font-bold px-2 py-0.5 rounded-full"
             style={{ background: 'var(--accent-dim)', color: 'var(--accent)' }}>
             推薦
@@ -113,6 +133,14 @@ export function InstallSettingsCard() {
 
       {/* Body */}
       <div className="px-4 pb-4 pt-2 border-t" style={{ borderColor: 'var(--border)', background: 'var(--surface)' }}>
+        {state === 'installed' && (
+          <p className="text-xs leading-relaxed" style={{ color: 'var(--text-dim)' }}>
+            已加入主螢幕，可離線使用。
+            <br />
+            Added to home screen — works offline.
+          </p>
+        )}
+
         {state === 'android' && (
           <>
             <p className="text-xs mb-3 leading-relaxed" style={{ color: 'var(--text-dim)' }}>
@@ -127,6 +155,11 @@ export function InstallSettingsCard() {
             >
               安裝 Install
             </button>
+            {showFallbackHint && (
+              <p className="text-xs mt-2 text-center" style={{ color: 'var(--text-dim)' }}>
+                Chrome 選單 ⋮ → 安裝應用程式 / Install app
+              </p>
+            )}
           </>
         )}
 
@@ -155,12 +188,20 @@ export function InstallSettingsCard() {
           </>
         )}
 
+        {state === 'ios-other' && (
+          <p className="text-xs leading-relaxed" style={{ color: 'var(--text-dim)' }}>
+            請用 Safari 開啟此頁面以安裝到主螢幕。
+            <br />
+            Open this page in Safari to install to your home screen.
+          </p>
+        )}
+
         {state === 'dismissed' && (
           <>
             <p className="text-xs mb-3 leading-relaxed" style={{ color: 'var(--text-dim)' }}>
               您之前略過了安裝。隨時可以重新安裝到主螢幕。
               <br />
-              You dismissed the install prompt. You can still add it to your home screen anytime.
+              You skipped the install prompt. You can still add it to your home screen anytime.
             </p>
             <button
               onClick={reopen}

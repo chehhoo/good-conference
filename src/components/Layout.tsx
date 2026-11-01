@@ -4,6 +4,7 @@ import { LogOut, Sun, Moon, Monitor, User, WifiOff } from 'lucide-react'
 import { useAuth } from '../auth-context'
 import { useLang } from '../lang-context'
 import { NotificationBell } from './NotificationBell'
+import { UpdatePrompt } from './UpdatePrompt'
 
 type ThemeChoice = 'dark' | 'light' | 'auto'
 
@@ -148,6 +149,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="flex flex-col min-h-screen" style={{ background: 'var(--bg)' }}>
+      <UpdatePrompt />
       {token && (
         <header
           className="sticky top-0 z-40 flex flex-col sm:flex-row sm:items-center sm:justify-between border-b px-4 pt-2 pb-1.5 sm:py-2.5 gap-y-1.5 sm:gap-y-0"
