@@ -1,6 +1,6 @@
 {
   "name": "good-conference",
-  "version": "0.43.3",
+  "version": "0.45.0",
   "private": true,
   "type": "module",
   "scripts": {
