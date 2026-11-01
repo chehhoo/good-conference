@@ -68,7 +68,7 @@ export default function Login() {
       setMode('otp-code')
     } catch (err) {
       const msg = isAxiosError(err) ? err.response?.data?.message ?? err.response?.data?.error : undefined
-      setError(msg ?? '找不到此帳號，請確認輸入。Account not found — please check your email.')
+      setError(msg ?? '找不到此帳號，請確認輸入的電郵或電話。Account not found — please check your email or phone number.')
     } finally {
       setLoading(false)
     }
