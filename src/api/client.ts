@@ -41,6 +41,7 @@ export interface CampSession {
   speaker: string | null
   speakerEng: string | null
   speakerId?: number | null
+  speakerIds?: number[]
   startTime: string   // ISO 8601
   endTime: string
   location: string | null

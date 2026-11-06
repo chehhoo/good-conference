@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { Loader2, MapPin, User, Users, X, Clock } from 'lucide-react'
-import { scheduleApi, type CampSession, type EventProgram } from '../api/client'
+import { scheduleApi, speakersApi, type CampSession, type EventProgram } from '../api/client'
 import { useAuth } from '../auth-context'
 import { useLang } from '../lang-context'
 import ShareModal from '../components/ShareModal'
@@ -54,6 +54,46 @@ interface RowProps {
   allSessions: CampSession[]
 }
 
+// Fetches a speaker's name and renders a tappable button for the bio sheet.
+// Used when a session has one or more linked speaker IDs.
+function SpeakerNameButton({ speakerId, size = 'md', onOpen }: {
+  speakerId: number
+  size?: 'sm' | 'md'
+  onOpen: (e: React.MouseEvent) => void
+}) {
+  const { primary, secondary } = useLang()
+  const { data } = useQuery({
+    queryKey: ['speaker', speakerId],
+    queryFn: () => speakersApi.getById(speakerId),
+    staleTime: 5 * 60_000,
+    retry: false,
+  })
+  const namePrimary = data ? primary(data.nameChn, data.nameEng) : '…'
+  const nameSecondary = data ? secondary(data.nameChn, data.nameEng) : null
+
+  if (size === 'sm') {
+    return (
+      <button
+        onClick={onOpen}
+        className="flex items-center gap-1 text-xs hover:underline text-left"
+        style={{ color: 'var(--text-dim)' }}
+      >
+        <User size={10} className="shrink-0" />
+        {namePrimary}{nameSecondary ? ` · ${nameSecondary}` : ''}
+      </button>
+    )
+  }
+  return (
+    <button
+      onClick={onOpen}
+      className="hover:opacity-75 text-left"
+    >
+      <p className="text-sm font-semibold underline underline-offset-2" style={{ color: 'var(--text)' }}>{namePrimary}</p>
+      {nameSecondary && <p className="text-xs" style={{ color: 'var(--text-dim)' }}>{nameSecondary}</p>}
+    </button>
+  )
+}
+
 function overlaps(a: CampSession, b: CampSession) {
   return a.id !== b.id &&
     new Date(a.startTime) < new Date(b.endTime) &&
@@ -68,12 +108,13 @@ function SessionDetailSheet({ session: s, onClose, onSignup, onUnsignup, loading
   loading: boolean
   allSessions: CampSession[]
 }) {
-  const [speakerOpen, setSpeakerOpen] = useState(false)
+  const [openSpeakerId, setOpenSpeakerId] = useState<number | null>(null)
   const { t, primary, secondary } = useLang()
   const canGo = GOING_TYPES.has(s.sessionType)
   const atCapacity = s.capacity != null && s.signupCount >= s.capacity
   const typeColor = TYPE_COLOR[s.sessionType] ?? 'var(--text-dim)'
   const pct = s.capacity ? Math.min(100, Math.round((s.signupCount / s.capacity) * 100)) : null
+  const speakerIds = s.speakerIds?.length ? s.speakerIds : s.speakerId != null ? [s.speakerId] : []
 
   const conflictingSessions = !s.signedUp
     ? allSessions.filter(other => other.signedUp && overlaps(s, other))
@@ -128,34 +169,28 @@ function SessionDetailSheet({ session: s, onClose, onSignup, onUnsignup, loading
             </span>
           </div>
 
-          {/* Speaker */}
+          {/* Speaker(s) */}
           {(s.speaker || s.speakerEng) && (
-            s.speakerId != null ? (
-              <button
-                onClick={() => setSpeakerOpen(true)}
-                className="flex items-start gap-2 mt-2 hover:opacity-75 text-left w-full"
-              >
-                <User size={13} className="mt-0.5 shrink-0" style={{ color: 'var(--text-dim)' }} />
-                <div>
-                  {primary(s.speaker, s.speakerEng) && <p className="text-sm font-semibold underline underline-offset-2" style={{ color: 'var(--text)' }}>{primary(s.speaker, s.speakerEng)}</p>}
-                  {secondary(s.speaker, s.speakerEng) && <p className="text-xs" style={{ color: 'var(--text-dim)' }}>{secondary(s.speaker, s.speakerEng)}</p>}
+            <div className="flex items-start gap-2 mt-2">
+              <User size={13} className="mt-0.5 shrink-0" style={{ color: 'var(--text-dim)' }} />
+              {speakerIds.length > 0 ? (
+                <div className="flex flex-wrap gap-x-3 gap-y-1">
+                  {speakerIds.map(id => (
+                    <SpeakerNameButton key={id} speakerId={id} onOpen={() => setOpenSpeakerId(id)} />
+                  ))}
                 </div>
-              </button>
-            ) : (
-              <div className="flex items-start gap-2 mt-2">
-                <User size={13} className="mt-0.5 shrink-0" style={{ color: 'var(--text-dim)' }} />
+              ) : (
                 <div>
                   {primary(s.speaker, s.speakerEng) && <p className="text-sm font-semibold" style={{ color: 'var(--text)' }}>{primary(s.speaker, s.speakerEng)}</p>}
                   {secondary(s.speaker, s.speakerEng) && <p className="text-xs" style={{ color: 'var(--text-dim)' }}>{secondary(s.speaker, s.speakerEng)}</p>}
                 </div>
-              </div>
-            )
+              )}
+            </div>
           )}
-          {speakerOpen && s.speakerId != null && (
+          {openSpeakerId != null && (
             <SpeakerSheet
-              speakerId={s.speakerId}
-              fallbackName={[s.speaker, s.speakerEng].filter(Boolean).join(' · ')}
-              onClose={() => setSpeakerOpen(false)}
+              speakerId={openSpeakerId}
+              onClose={() => setOpenSpeakerId(null)}
             />
           )}
 
@@ -245,10 +280,11 @@ function SessionDetailSheet({ session: s, onClose, onSignup, onUnsignup, loading
 }
 
 function SessionRow({ session: s, onSignup, onUnsignup, onSelect, loading, isLast, allSessions }: RowProps) {
-  const [speakerOpen, setSpeakerOpen] = useState(false)
+  const [openSpeakerId, setOpenSpeakerId] = useState<number | null>(null)
   const [conflictPending, setConflictPending] = useState(false)
   const { t, primary, secondary } = useLang()
   const canGo = GOING_TYPES.has(s.sessionType)
+  const speakerIds = s.speakerIds?.length ? s.speakerIds : s.speakerId != null ? [s.speakerId] : []
   const isOther = s.sessionType === 'OTHER'
   const typeColor = TYPE_COLOR[s.sessionType] ?? 'var(--text-dim)'
   const atCapacity = s.capacity != null && s.signupCount >= s.capacity
@@ -352,25 +388,25 @@ function SessionRow({ session: s, onSignup, onUnsignup, onSelect, loading, isLas
         {(s.speaker || s.location) && (
           <div className="flex flex-wrap gap-x-3 gap-y-0.5 mt-1">
             {(s.speaker || s.speakerEng) && (
-              s.speakerId != null ? (
-                <button
-                  onClick={e => { e.stopPropagation(); setSpeakerOpen(true) }}
-                  className="flex items-center gap-1 text-xs hover:underline text-left"
-                  style={{ color: 'var(--text-dim)' }}
-                >
-                  <User size={10} className="shrink-0" />{primary(s.speaker, s.speakerEng)}{secondary(s.speaker, s.speakerEng) ? ` · ${secondary(s.speaker, s.speakerEng)}` : ''}
-                </button>
+              speakerIds.length > 0 ? (
+                speakerIds.map(id => (
+                  <SpeakerNameButton
+                    key={id}
+                    speakerId={id}
+                    size="sm"
+                    onOpen={e => { e.stopPropagation(); setOpenSpeakerId(id) }}
+                  />
+                ))
               ) : (
                 <span className="flex items-center gap-1 text-xs" style={{ color: 'var(--text-dim)' }}>
                   <User size={10} className="shrink-0" />{primary(s.speaker, s.speakerEng)}
                 </span>
               )
             )}
-            {speakerOpen && s.speakerId != null && (
+            {openSpeakerId != null && (
               <SpeakerSheet
-                speakerId={s.speakerId}
-                fallbackName={[s.speaker, s.speakerEng].filter(Boolean).join(' · ')}
-                onClose={() => setSpeakerOpen(false)}
+                speakerId={openSpeakerId}
+                onClose={() => setOpenSpeakerId(null)}
               />
             )}
             {s.location && (
