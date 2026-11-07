@@ -3,6 +3,7 @@ import { BookMarked, Loader2 } from 'lucide-react'
 import { myApi, scheduleApi } from '../api/client'
 import { useAuth } from '../auth-context'
 import SessionCard from '../components/SessionCard'
+import { ApiErrorCard } from '../components/ApiErrorCard'
 
 function groupByDay(sessions: Awaited<ReturnType<typeof myApi.mySignups>>) {
   const map = new Map<number, typeof sessions>()
@@ -21,7 +22,7 @@ export default function MySchedule() {
   const myProgram = person?.programCode ?? null
   const personId = person?.id ?? null
 
-  const { data, isLoading, isError } = useQuery({
+  const { data, isLoading, isError, refetch } = useQuery({
     queryKey: ['my-signups', personId],
     queryFn: myApi.mySignups,
     staleTime: 60_000,
@@ -46,10 +47,8 @@ export default function MySchedule() {
 
   if (isError) {
     return (
-      <div className="flex flex-col items-center justify-center py-20 gap-3" style={{ color: 'var(--accent)' }}>
-        <BookMarked size={40} strokeWidth={1.5} />
-        <p className="text-lg font-medium">無法載入我的行程</p>
-        <p className="text-sm" style={{ color: 'var(--text-dim)' }}>Could not load your schedule. Please try again later.</p>
+      <div className="max-w-lg mx-auto px-4 py-10">
+        <ApiErrorCard onRetry={() => refetch()} />
       </div>
     )
   }

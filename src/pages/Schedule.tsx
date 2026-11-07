@@ -6,6 +6,7 @@ import { useAuth } from '../auth-context'
 import { useLang } from '../lang-context'
 import ShareModal from '../components/ShareModal'
 import SpeakerSheet from '../components/SpeakerSheet'
+import { ApiErrorCard } from '../components/ApiErrorCard'
 import { Share2 } from 'lucide-react'
 import { usePageTitle } from '../hooks/usePageTitle'
 
@@ -426,7 +427,7 @@ export default function Schedule() {
   const [detailSession, setDetailSession] = useState<CampSession | null>(null)
   const shareUrl = window.location.origin + import.meta.env.BASE_URL
 
-  const { data: sessions = [], isLoading, isError } = useQuery<CampSession[]>({
+  const { data: sessions = [], isLoading, isError, refetch } = useQuery<CampSession[]>({
     queryKey: ['schedule', personId],
     queryFn: scheduleApi.getAll,
   })
@@ -607,9 +608,8 @@ export default function Schedule() {
         )}
 
         {isError && (
-          <div className="text-center py-20 text-sm" style={{ color: 'var(--text-dim)' }}>
-            <p style={{ color: 'var(--accent)' }}>無法載入行程，請稍後再試。</p>
-            <p className="mt-1">Could not load schedule. Please try again later.</p>
+          <div className="px-1 py-6">
+            <ApiErrorCard onRetry={() => refetch()} />
           </div>
         )}
 
