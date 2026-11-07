@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { MapPin, Users, User } from 'lucide-react'
 import { Link } from 'react-router-dom'
-import type { CampSession } from '../api/client'
+import { linkedSpeakerIds, type CampSession } from '../api/client'
 import SpeakerSheet from './SpeakerSheet'
 import { useLang } from '../lang-context'
 
@@ -76,30 +76,33 @@ export default function SessionCard({ session: s, onSignup, onUnsignup, loading,
         <h3 className="font-bold leading-snug" style={{ color: 'var(--text)', fontSize: 15 }}>{primary(s.title, s.titleEng)}</h3>
         {secondary(s.title, s.titleEng) && <p className="text-xs" style={{ color: 'var(--text-dim)' }}>{secondary(s.title, s.titleEng)}</p>}
 
-        {(s.speaker || s.speakerEng) && (
-          s.speakerId != null ? (
-            <button
-              onClick={e => { e.stopPropagation(); setSpeakerOpen(true) }}
-              className="flex items-center gap-1.5 text-xs min-w-0 hover:underline text-left"
-              style={{ color: 'var(--text-mid)' }}
-            >
-              <User size={11} className="shrink-0" />
-              <span className="truncate">{primary(s.speaker, s.speakerEng)}{secondary(s.speaker, s.speakerEng) ? ` · ${secondary(s.speaker, s.speakerEng)}` : ''}</span>
-            </button>
+        {(s.speaker || s.speakerEng) && (() => {
+          const ids = linkedSpeakerIds(s)
+          return ids.length > 0 ? (
+            <>
+              <button
+                onClick={e => { e.stopPropagation(); setSpeakerOpen(true) }}
+                className="flex items-center gap-1.5 text-xs min-w-0 hover:underline text-left"
+                style={{ color: 'var(--text-mid)' }}
+              >
+                <User size={11} className="shrink-0" />
+                <span className="truncate">{primary(s.speaker, s.speakerEng)}{secondary(s.speaker, s.speakerEng) ? ` · ${secondary(s.speaker, s.speakerEng)}` : ''}</span>
+              </button>
+              {speakerOpen && (
+                <SpeakerSheet
+                  speakerIds={ids}
+                  fallbackName={[s.speaker, s.speakerEng].filter(Boolean).join(' · ')}
+                  onClose={() => setSpeakerOpen(false)}
+                />
+              )}
+            </>
           ) : (
             <div className="flex items-center gap-1.5 text-xs min-w-0" style={{ color: 'var(--text-mid)' }}>
               <User size={11} className="shrink-0" />
               <span className="truncate">{primary(s.speaker, s.speakerEng)}{secondary(s.speaker, s.speakerEng) ? ` · ${secondary(s.speaker, s.speakerEng)}` : ''}</span>
             </div>
           )
-        )}
-        {speakerOpen && s.speakerId != null && (
-          <SpeakerSheet
-            speakerId={s.speakerId}
-            fallbackName={[s.speaker, s.speakerEng].filter(Boolean).join(' · ')}
-            onClose={() => setSpeakerOpen(false)}
-          />
-        )}
+        })()}
 
         {s.location && (
           <Link

@@ -1,5 +1,5 @@
 import type { Page } from '@playwright/test'
-import { TEST_TOKEN, TEST_PERSON, TEST_FAMILY, TEST_SESSIONS, TEST_SCAN_RECORDS, TEST_SPEAKER, TEST_SPEAKER_NO_BIO } from './test-data'
+import { TEST_TOKEN, TEST_PERSON, TEST_FAMILY, TEST_SESSIONS, TEST_SCAN_RECORDS, TEST_SPEAKER, TEST_SPEAKER_NO_BIO, TEST_SPEAKER_2 } from './test-data'
 
 /**
  * Mocks all API routes so no real good-api is needed.
@@ -46,11 +46,14 @@ export async function mockAll(page: Page) {
   await page.route('**/api/conference/speakers/8', (r) =>
     r.fulfill({ json: TEST_SPEAKER_NO_BIO })
   )
+  await page.route('**/api/conference/speakers/9', (r) =>
+    r.fulfill({ json: TEST_SPEAKER_2 })
+  )
   await page.route('**/api/conference/speakers/404', (r) =>
     r.fulfill({ status: 404, json: { message: 'Not found' } })
   )
   await page.route('**/api/conference/speakers', (r) =>
-    r.fulfill({ json: [TEST_SPEAKER, TEST_SPEAKER_NO_BIO] })
+    r.fulfill({ json: [TEST_SPEAKER, TEST_SPEAKER_NO_BIO, TEST_SPEAKER_2] })
   )
 
   // Me (called on app load; 401 would clear auth)

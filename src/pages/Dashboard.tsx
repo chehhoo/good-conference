@@ -3,7 +3,7 @@ import { usePageTitle } from '../hooks/usePageTitle'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { Loader2, MapPin, Maximize2, ChevronRight } from 'lucide-react'
 import { useNavigate, Link } from 'react-router-dom'
-import { scheduleApi, myApi, type CampSession, type MealDay, type MealScanRecord } from '../api/client'
+import { scheduleApi, myApi, linkedSpeakerIds, type CampSession, type MealDay, type MealScanRecord } from '../api/client'
 import { useAuth } from '../auth-context'
 import { useLang } from '../lang-context'
 import BadgeOverlay from '../components/BadgeOverlay'
@@ -301,7 +301,7 @@ export default function Dashboard() {
                 {fmtDate(nextSession.startTime)} · {fmt(nextSession.startTime)} – {fmt(nextSession.endTime)}
               </span>
               {(nextSession.speaker || nextSession.speakerEng) && (
-                nextSession.speakerId != null ? (
+                linkedSpeakerIds(nextSession).length > 0 ? (
                   <button onClick={() => setNextSpeakerOpen(true)} className="text-sm hover:underline text-left" style={{ color: 'var(--text-mid)' }}>
                     {primary(nextSession.speaker, nextSession.speakerEng)}
                   </button>
@@ -321,8 +321,8 @@ export default function Dashboard() {
                 </Link>
               )}
             </div>
-            {nextSpeakerOpen && nextSession.speakerId != null && (
-              <SpeakerSheet speakerId={nextSession.speakerId} fallbackName={nextSession.speaker} onClose={() => setNextSpeakerOpen(false)} />
+            {nextSpeakerOpen && (
+              <SpeakerSheet speakerIds={linkedSpeakerIds(nextSession)} fallbackName={nextSession.speaker} onClose={() => setNextSpeakerOpen(false)} />
             )}
           </div>
           </div>
@@ -597,7 +597,7 @@ function DashSessionRow({ session: s, onSignup, onUnsignup, loading, isLast, isL
         {(s.speaker || s.speakerEng || s.location) && (
           <div className="flex flex-wrap gap-x-3 mt-0.5">
             {(s.speaker || s.speakerEng) && (
-              s.speakerId != null ? (
+              linkedSpeakerIds(s).length > 0 ? (
                 <button onClick={() => setSpeakerOpen(true)} className="text-xs hover:underline text-left" style={{ color: 'var(--text-dim)' }}>
                   {primary(s.speaker, s.speakerEng)}
                 </button>
@@ -607,8 +607,8 @@ function DashSessionRow({ session: s, onSignup, onUnsignup, loading, isLast, isL
                 </span>
               )
             )}
-            {speakerOpen && s.speakerId != null && (
-              <SpeakerSheet speakerId={s.speakerId} fallbackName={s.speaker} onClose={() => setSpeakerOpen(false)} />
+            {speakerOpen && (
+              <SpeakerSheet speakerIds={linkedSpeakerIds(s)} fallbackName={s.speaker} onClose={() => setSpeakerOpen(false)} />
             )}
             {s.location && (
               <Link
