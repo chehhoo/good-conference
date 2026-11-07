@@ -41,6 +41,7 @@ export interface CampSession {
   speaker: string | null
   speakerEng: string | null
   speakerId?: number | null
+  speakerIds?: number[]
   startTime: string   // ISO 8601
   endTime: string
   location: string | null
@@ -61,6 +62,13 @@ export interface Speaker {
   bioChn: string | null
   bioEng: string | null
   photoUrl: string | null
+}
+
+/** Returns every linked speaker ID for a session, oldest-API-safe. */
+export function linkedSpeakerIds(s: CampSession): number[] {
+  if (Array.isArray(s.speakerIds) && s.speakerIds.length > 0) return s.speakerIds
+  if (s.speakerId != null) return [s.speakerId]
+  return []
 }
 
 export const scheduleApi = {

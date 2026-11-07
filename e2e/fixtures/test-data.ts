@@ -146,6 +146,25 @@ export const TEST_SESSIONS: import('../../src/api/client').CampSession[] = [
     signupCount: 0,
     signedUp: false,
   },
+  {
+    id: 6,
+    title: '信仰傳承講座',
+    titleEng: 'Faith Legacy Talk',
+    description: null,
+    descriptionEng: null,
+    speaker: '趙約翰牧師、趙恩慧師母',
+    speakerEng: 'Pastor John Zhao & Mrs. Grace Zhao',
+    speakerId: 7,         // legacy single-id field
+    speakerIds: [7, 9],   // new multi-speaker field
+    startTime: `${D1}T16:00:00`,
+    endTime:   `${D1}T17:30:00`,
+    location: '會議室 201',
+    capacity: 30,
+    day: 1,
+    sessionType: 'GENERAL',
+    signupCount: 5,
+    signedUp: false,
+  },
 ]
 
 export const TEST_SCAN_RECORDS: import('../../src/api/client').MealScanRecord[] = []
@@ -165,5 +184,14 @@ export const TEST_SPEAKER_NO_BIO: import('../../src/api/client').Speaker = {
   nameEng: null,
   bioChn: null,
   bioEng: null,
+  photoUrl: null,
+}
+
+export const TEST_SPEAKER_2: import('../../src/api/client').Speaker = {
+  id: 9,
+  nameChn: '趙恩慧師母',
+  nameEng: 'Mrs. Grace Zhao',
+  bioChn: '牧師娘，兒童事工負責人。',
+  bioEng: 'Pastor\'s wife and children\'s ministry director.',
   photoUrl: null,
 }

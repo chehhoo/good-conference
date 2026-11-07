@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { Loader2, MapPin, User, Users, X, Clock } from 'lucide-react'
-import { scheduleApi, type CampSession, type EventProgram } from '../api/client'
+import { scheduleApi, linkedSpeakerIds, type CampSession, type EventProgram } from '../api/client'
 import { useAuth } from '../auth-context'
 import { useLang } from '../lang-context'
 import ShareModal from '../components/ShareModal'
@@ -74,6 +74,7 @@ function SessionDetailSheet({ session: s, onClose, onSignup, onUnsignup, loading
   const atCapacity = s.capacity != null && s.signupCount >= s.capacity
   const typeColor = TYPE_COLOR[s.sessionType] ?? 'var(--text-dim)'
   const pct = s.capacity ? Math.min(100, Math.round((s.signupCount / s.capacity) * 100)) : null
+  const speakerIds = linkedSpeakerIds(s)
 
   const conflictingSessions = !s.signedUp
     ? allSessions.filter(other => other.signedUp && overlaps(s, other))
@@ -130,7 +131,7 @@ function SessionDetailSheet({ session: s, onClose, onSignup, onUnsignup, loading
 
           {/* Speaker */}
           {(s.speaker || s.speakerEng) && (
-            s.speakerId != null ? (
+            speakerIds.length > 0 ? (
               <button
                 onClick={() => setSpeakerOpen(true)}
                 className="flex items-start gap-2 mt-2 hover:opacity-75 text-left w-full"
@@ -151,9 +152,9 @@ function SessionDetailSheet({ session: s, onClose, onSignup, onUnsignup, loading
               </div>
             )
           )}
-          {speakerOpen && s.speakerId != null && (
+          {speakerOpen && (
             <SpeakerSheet
-              speakerId={s.speakerId}
+              speakerIds={speakerIds}
               fallbackName={[s.speaker, s.speakerEng].filter(Boolean).join(' · ')}
               onClose={() => setSpeakerOpen(false)}
             />
@@ -249,6 +250,7 @@ function SessionRow({ session: s, onSignup, onUnsignup, onSelect, loading, isLas
   const [conflictPending, setConflictPending] = useState(false)
   const { t, primary, secondary } = useLang()
   const canGo = GOING_TYPES.has(s.sessionType)
+  const speakerIds = linkedSpeakerIds(s)
   const isOther = s.sessionType === 'OTHER'
   const typeColor = TYPE_COLOR[s.sessionType] ?? 'var(--text-dim)'
   const atCapacity = s.capacity != null && s.signupCount >= s.capacity
@@ -352,7 +354,7 @@ function SessionRow({ session: s, onSignup, onUnsignup, onSelect, loading, isLas
         {(s.speaker || s.location) && (
           <div className="flex flex-wrap gap-x-3 gap-y-0.5 mt-1">
             {(s.speaker || s.speakerEng) && (
-              s.speakerId != null ? (
+              speakerIds.length > 0 ? (
                 <button
                   onClick={e => { e.stopPropagation(); setSpeakerOpen(true) }}
                   className="flex items-center gap-1 text-xs hover:underline text-left"
@@ -366,9 +368,9 @@ function SessionRow({ session: s, onSignup, onUnsignup, onSelect, loading, isLas
                 </span>
               )
             )}
-            {speakerOpen && s.speakerId != null && (
+            {speakerOpen && (
               <SpeakerSheet
-                speakerId={s.speakerId}
+                speakerIds={speakerIds}
                 fallbackName={[s.speaker, s.speakerEng].filter(Boolean).join(' · ')}
                 onClose={() => setSpeakerOpen(false)}
               />
