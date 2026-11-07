@@ -2,8 +2,7 @@ name: CI / Deploy
 
 on:
   push:
-    branches: [main]     # build + test only
-    tags: ['v*']         # build + deploy (requires approval)
+    branches: [main]     # build + test + deploy
   pull_request:
     branches: [main]     # build + test on PRs
 
@@ -35,7 +34,7 @@ jobs:
           VITE_FEEDBACK_WHATSAPP: "17734308422"
 
       - name: Upload dist artifact
-        if: startsWith(github.ref, 'refs/tags/')
+        if: github.ref == 'refs/heads/main'
         uses: actions/upload-artifact@v4
         with:
           name: dist-${{ github.sha }}
@@ -107,14 +106,16 @@ jobs:
     name: Deploy to S3 + CloudFront
     needs: [build, test]
     runs-on: ubuntu-latest
-    if: startsWith(github.ref, 'refs/tags/')
+    if: github.ref == 'refs/heads/main'
     environment: production          # ← manual approval gate
 
     permissions:
       id-token: write
-      contents: read
+      contents: write               # needed to push the release tag
 
     steps:
+      - uses: actions/checkout@v4
+
       - name: Download dist artifact
         uses: actions/download-artifact@v4
         with:
@@ -148,9 +149,24 @@ jobs:
           fi
           echo "✓ Site is up"
 
+      - name: Tag release
+        run: |
+          VERSION=$(node -p "require('./package.json').version")
+          TAG="v$VERSION"
+          if git ls-remote --tags origin "$TAG" | grep -q "$TAG"; then
+            echo "Tag $TAG already exists — skipping"
+          else
+            git config user.email "github-actions[bot]@users.noreply.github.com"
+            git config user.name "github-actions[bot]"
+            git tag "$TAG"
+            git push origin "$TAG"
+            echo "Tagged $TAG"
+          fi
+
       - name: Deployment summary
         run: |
-          echo "## Deployed ${{ github.ref_name }}" >> $GITHUB_STEP_SUMMARY
-          echo "- **Tag:** ${{ github.ref_name }}" >> $GITHUB_STEP_SUMMARY
+          VERSION=$(node -p "require('./package.json').version")
+          echo "## Deployed v$VERSION" >> $GITHUB_STEP_SUMMARY
+          echo "- **Tag:** v$VERSION" >> $GITHUB_STEP_SUMMARY
           echo "- **Commit:** ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
           echo "- **URL:** https://gfc2026.goodvessel.org" >> $GITHUB_STEP_SUMMARY
