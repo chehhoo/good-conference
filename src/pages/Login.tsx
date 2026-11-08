@@ -5,6 +5,18 @@ import { Loader2, Mail, Phone, KeyRound } from 'lucide-react'
 import { conferenceApi, otpApi } from '../api/client'
 import { useAuth } from '../auth-context'
 
+const SERVER_DOWN_MSG =
+  '無法連線伺服器，請稍後再試。如在深夜（00:00–08:00），伺服器可能正在進行例行維護。\n' +
+  'Cannot reach server. If this is between midnight and 8am, the server may be under scheduled maintenance.'
+
+function loginError(err: unknown, fallback: string): string {
+  if (isAxiosError(err)) {
+    if (!err.response) return SERVER_DOWN_MSG   // network error — no response from server
+    return err.response.data?.message ?? err.response.data?.error ?? fallback
+  }
+  return fallback
+}
+
 function TitleImage() {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   useEffect(() => {
@@ -67,8 +79,7 @@ export default function Login() {
       setMasked(result.maskedDestination)
       setMode('otp-code')
     } catch (err) {
-      const msg = isAxiosError(err) ? err.response?.data?.message ?? err.response?.data?.error : undefined
-      setError(msg ?? '找不到此帳號，請確認輸入的電郵或電話。Account not found — please check your email or phone number.')
+      setError(loginError(err, '找不到此帳號，請確認輸入的電郵或電話。Account not found — please check your email or phone number.'))
     } finally {
       setLoading(false)
     }
@@ -83,8 +94,7 @@ export default function Login() {
       login(token, person)
       navigate('/', { replace: true })
     } catch (err) {
-      const msg = isAxiosError(err) ? err.response?.data?.message ?? err.response?.data?.error : undefined
-      setError(msg ?? '驗證碼錯誤，請再試一次。Incorrect code — please try again.')
+      setError(loginError(err, '驗證碼錯誤，請再試一次。Incorrect code — please try again.'))
     } finally {
       setLoading(false)
     }
@@ -99,8 +109,7 @@ export default function Login() {
       login(token, person)
       navigate('/', { replace: true })
     } catch (err) {
-      const msg = isAxiosError(err) ? err.response?.data?.error : undefined
-      setError(msg ?? '登入失敗，請確認報名號碼和姓氏。Sign-in failed — please check your registration code and first name.')
+      setError(loginError(err, '登入失敗，請確認報名號碼和姓氏。Sign-in failed — please check your registration code and first name.'))
     } finally {
       setLoading(false)
     }
