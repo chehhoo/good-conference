@@ -109,7 +109,17 @@ export default function Login() {
       login(token, person)
       navigate('/', { replace: true })
     } catch (err) {
-      setError(loginError(err, '登入失敗，請確認報名號碼和姓氏。Sign-in failed — please check your registration code and first name.'))
+      const msg = loginError(err, '登入失敗，請確認報名號碼和姓氏。Sign-in failed — please check your registration code and first name.')
+      // Backend explicitly says this member must use email — switch them there automatically
+      if (isAxiosError(err) && err.response?.status === 401 &&
+          (msg.includes('電郵') || msg.includes('email'))) {
+        setError('')
+        switchMode('otp-contact')
+        // Show a brief hint in the OTP form so they know why they were redirected
+        setTimeout(() => setError('請使用報名時填寫的電郵登入。Please sign in with your registration email.'), 50)
+      } else {
+        setError(msg)
+      }
     } finally {
       setLoading(false)
     }
