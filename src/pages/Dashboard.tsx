@@ -3,7 +3,7 @@ import { usePageTitle } from '../hooks/usePageTitle'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { Loader2, MapPin, Maximize2, ChevronRight } from 'lucide-react'
 import { useNavigate, Link } from 'react-router-dom'
-import { scheduleApi, myApi, linkedSpeakerIds, type CampSession, type MealDay, type MealScanRecord } from '../api/client'
+import { scheduleApi, myApi, conferenceApi, linkedSpeakerIds, type CampSession, type MealDay, type MealScanRecord } from '../api/client'
 import { useAuth } from '../auth-context'
 import { useLang } from '../lang-context'
 import BadgeOverlay from '../components/BadgeOverlay'
@@ -67,6 +67,23 @@ export default function Dashboard() {
   const [nextSpeakerOpen, setNextSpeakerOpen] = useState(false)
   const openBadge = useCallback(() => setBadgeOpen(true), [])
   const closeBadge = useCallback(() => setBadgeOpen(false), [])
+
+  const CHECKIN_KEY = `gc_self_checkin_${personId}`
+  const [selfCheckedIn, setSelfCheckedIn] = useState(() => {
+    try { return !!localStorage.getItem(CHECKIN_KEY) } catch { return false }
+  })
+  const [checkinLoading, setCheckinLoading] = useState(false)
+
+  async function handleSelfCheckin() {
+    setCheckinLoading(true)
+    try {
+      await conferenceApi.selfCheckin()
+      try { localStorage.setItem(CHECKIN_KEY, '1') } catch { /* ignore */ }
+      setSelfCheckedIn(true)
+    } finally {
+      setCheckinLoading(false)
+    }
+  }
 
   const { data: sessions = [], isLoading: sessLoading } = useQuery<CampSession[]>({
     queryKey: ['schedule', personId],
@@ -152,6 +169,13 @@ export default function Dashboard() {
     ? Math.ceil((firstSessionTime - now) / (24 * 60 * 60 * 1000))
     : null
 
+  // Show self-checkin banner only during conference dates (first session start → last session end)
+  const lastSessionTime = sessions.length > 0
+    ? Math.max(...sessions.map(s => new Date(s.endTime).getTime()))
+    : null
+  const duringConference = firstSessionTime != null && lastSessionTime != null
+    && now >= firstSessionTime && now <= lastSessionTime
+
   return (
     <>
       {badgeOpen && uid && <BadgeOverlay uid={uid} displayName={displayName} onClose={closeBadge} />}
@@ -204,6 +228,30 @@ export default function Dashboard() {
 
         {/* ── Install banner ── */}
         <InstallBanner />
+
+        {/* ── Self check-in banner ── */}
+        {duringConference && !selfCheckedIn && (
+          <div className="rounded-2xl p-4 flex items-center gap-3 border"
+            style={{ background: 'var(--surface)', borderColor: 'var(--green)' }}>
+            <div className="text-2xl select-none" aria-hidden>👋</div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-bold leading-tight" style={{ color: 'var(--text)' }}>
+                {t('您到了嗎？', 'Are you here?')}
+              </p>
+              <p className="text-xs mt-0.5" style={{ color: 'var(--text-dim)' }}>
+                {t('輕觸確認您已抵達大會現場', 'Tap to confirm you have arrived')}
+              </p>
+            </div>
+            <button
+              onClick={handleSelfCheckin}
+              disabled={checkinLoading}
+              className="shrink-0 px-4 py-2 rounded-xl text-sm font-bold disabled:opacity-60"
+              style={{ background: 'var(--green)', color: '#fff' }}
+            >
+              {checkinLoading ? '…' : t('我到了！', "I'm here!")}
+            </button>
+          </div>
+        )}
 
         {/* ── LIVE NOW hero ── */}
         {liveSession && (
