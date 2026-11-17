@@ -99,6 +99,9 @@ export const conferenceApi = {
   switchMember: (personId: number) =>
     api.post<{ token: string; person: StoredPerson }>('/conference/switch-member', { personId })
       .then(r => r.data),
+
+  selfCheckin: () =>
+    api.post<{ selfCheckedInAt: string }>('/conference/self-checkin').then(r => r.data),
 }
 
 export const otpApi = {
