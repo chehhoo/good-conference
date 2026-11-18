@@ -57,33 +57,35 @@ function SocialCapacity({ id, count, capacity }: { id: number; count: number; ca
 
   return (
     <div className="flex items-center gap-2">
-      {/* Avatar stack */}
-      {count > 0 && (
-        <div className="flex items-center" style={{ gap: -4 }}>
-          {avatars.map((color, i) => (
-            <div
-              key={i}
-              className="rounded-full flex-shrink-0"
-              style={{
-                width: 18, height: 18,
-                background: color,
-                border: '2px solid var(--surface)',
-                marginLeft: i === 0 ? 0 : -6,
-              }}
-            />
-          ))}
-        </div>
-      )}
+      {count === 0 ? (
+        /* No sign-ups yet — show plain spot count */
+        <span className="text-xs font-semibold" style={{ color: 'var(--text-dim)' }}>
+          {t(`0 / ${capacity} 位`, `0 / ${capacity} spots`)}
+        </span>
+      ) : (
+        <>
+          {/* Avatar stack */}
+          <div className="flex items-center">
+            {avatars.map((color, i) => (
+              <div
+                key={i}
+                className="rounded-full flex-shrink-0"
+                style={{
+                  width: 18, height: 18,
+                  background: color,
+                  border: '2px solid var(--surface)',
+                  marginLeft: i === 0 ? 0 : -6,
+                }}
+              />
+            ))}
+          </div>
 
-      {/* Count label */}
-      <span className="text-xs font-semibold" style={{ color: 'var(--text-dim)' }}>
-        {isFull
-          ? <span style={{ color: 'var(--accent)' }}>{t('額滿 Full', 'Full')}</span>
-          : isAlmostFull
-            ? <><span style={{ color: 'var(--text-mid)' }}>{t(`${count} 人報名`, `${count} attending`)}</span></>
-            : t(`${count} 人報名`, `${count} attending`)
-        }
-      </span>
+          {/* Count label */}
+          <span className="text-xs font-semibold" style={{ color: isFull ? 'var(--accent)' : isAlmostFull ? 'var(--text-mid)' : 'var(--text-dim)' }}>
+            {isFull ? t('額滿 Full', 'Full') : t(`${count} 人報名`, `${count} attending`)}
+          </span>
+        </>
+      )}
 
       {/* Urgency badge */}
       {isAlmostFull && !isFull && (
