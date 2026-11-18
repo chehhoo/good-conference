@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { MapPin, Users, User } from 'lucide-react'
+import { MapPin, User } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { linkedSpeakerIds, type CampSession } from '../api/client'
 import SpeakerSheet from './SpeakerSheet'
@@ -41,12 +41,74 @@ interface Props {
   viewingProgram?: string | null
 }
 
+// Deterministic avatar colors from session id — no real attendee data needed
+const AVATAR_COLORS = ['#5b6af0','#e45c8a','#22b5a0','#f07a2a','#8b5cf6','#0ea5e9','#d97706','#16a34a']
+
+function SocialCapacity({ id, count, capacity }: { id: number; count: number; capacity: number }) {
+  const { t } = useLang()
+  const pct = Math.min(100, Math.round((count / capacity) * 100))
+  const spotsLeft = Math.max(0, capacity - count)
+  const isAlmostFull = pct >= 80 && pct < 100
+  const isFull = pct >= 100
+
+  // Show up to 5 avatar circles, colors seeded by session id
+  const avatarCount = Math.min(5, count)
+  const avatars = Array.from({ length: avatarCount }, (_, i) => AVATAR_COLORS[(id + i) % AVATAR_COLORS.length])
+
+  return (
+    <div className="flex items-center gap-2">
+      {count === 0 ? (
+        /* No sign-ups yet — show plain spot count */
+        <span className="text-xs font-semibold" style={{ color: 'var(--text-dim)' }}>
+          {t(`0 / ${capacity} 位`, `0 / ${capacity} spots`)}
+        </span>
+      ) : (
+        <>
+          {/* Avatar stack */}
+          <div className="flex items-center">
+            {avatars.map((color, i) => (
+              <div
+                key={i}
+                className="rounded-full flex-shrink-0"
+                style={{
+                  width: 18, height: 18,
+                  background: color,
+                  border: '2px solid var(--surface)',
+                  marginLeft: i === 0 ? 0 : -6,
+                }}
+              />
+            ))}
+          </div>
+
+          {/* Count label */}
+          <span className="text-xs font-semibold" style={{ color: isFull ? 'var(--accent)' : isAlmostFull ? 'var(--text-mid)' : 'var(--text-dim)' }}>
+            {isFull ? t('額滿 Full', 'Full') : t(`${count} 人報名`, `${count} attending`)}
+          </span>
+        </>
+      )}
+
+      {/* Urgency badge */}
+      {isAlmostFull && !isFull && (
+        <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-md ml-auto"
+          style={{ background: 'var(--amber)', color: '#1a1200' }}>
+          {t(`剩 ${spotsLeft} 位`, `${spotsLeft} left`)}
+        </span>
+      )}
+      {isFull && (
+        <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-md ml-auto"
+          style={{ background: 'var(--accent-dim)', color: 'var(--accent)' }}>
+          {t('等候名單', 'Waitlist')}
+        </span>
+      )}
+    </div>
+  )
+}
+
 export default function SessionCard({ session: s, onSignup, onUnsignup, loading, viewingProgram }: Props) {
   const [speakerOpen, setSpeakerOpen] = useState(false)
   const { t, primary, secondary } = useLang()
   const showProgramChip = s.programCode && s.programCode !== viewingProgram
   const atCapacity = s.capacity != null && s.signupCount >= s.capacity
-  const pct = s.capacity ? Math.min(100, Math.round((s.signupCount / s.capacity) * 100)) : null
   const typeColor = TYPE_ACCENT[s.sessionType] ?? 'var(--text-dim)'
 
   return (
@@ -116,18 +178,7 @@ export default function SessionCard({ session: s, onSignup, onUnsignup, loading,
         )}
 
         {s.capacity != null && (
-          <div className="space-y-1">
-            <div className="flex items-center justify-between text-xs" style={{ color: 'var(--text-dim)' }}>
-              <span className="flex items-center gap-1"><Users size={11} />{s.signupCount} / {s.capacity}</span>
-              {atCapacity && <span style={{ color: 'var(--accent)' }} className="font-semibold">{t('額滿', 'Full')}</span>}
-            </div>
-            <div className="h-1 rounded-full overflow-hidden" style={{ background: 'var(--border)' }}>
-              <div className="h-full rounded-full" style={{
-                width: `${pct ?? 0}%`,
-                background: (pct ?? 0) >= 100 ? 'var(--accent)' : (pct ?? 0) >= 75 ? 'var(--amber)' : 'var(--green)'
-              }} />
-            </div>
-          </div>
+          <SocialCapacity id={s.id} count={s.signupCount} capacity={s.capacity} />
         )}
 
         {s.description && (
