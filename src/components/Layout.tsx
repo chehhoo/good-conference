@@ -1,5 +1,5 @@
 import { NavLink, useLocation, useNavigate } from 'react-router-dom'
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { LogOut, Sun, Moon, Monitor, User, WifiOff } from 'lucide-react'
 import { useAuth } from '../auth-context'
 import { useLang } from '../lang-context'
@@ -106,6 +106,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   const { t, lang, setLang } = useLang()
   const location = useLocation()
   const navigate = useNavigate()
+  const headerRef = useRef<HTMLElement>(null)
 
   const NAV_ITEMS = [
     { to: '/',         label: t('今日', 'Today'),    Icon: HomeIcon, exact: true },
@@ -119,6 +120,18 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   )
   const [isOnline, setIsOnline] = useState(() => navigator.onLine)
   const [logoutPending, setLogoutPending] = useState(false)
+
+  // Keep --header-h in sync so the notification dropdown can sit flush below the header
+  useEffect(() => {
+    const el = headerRef.current
+    if (!el) return
+    const obs = new ResizeObserver(() => {
+      document.documentElement.style.setProperty('--header-h', `${el.offsetHeight}px`)
+    })
+    obs.observe(el)
+    return () => obs.disconnect()
+  }, [])
+
   useEffect(() => {
     const on = () => setIsOnline(true)
     const off = () => setIsOnline(false)
@@ -152,6 +165,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
       <UpdatePrompt />
       {token && (
         <header
+          ref={headerRef}
           className="sticky top-0 z-40 flex flex-col sm:flex-row sm:items-center sm:justify-between border-b px-4 pt-2 pb-1.5 sm:py-2.5 gap-y-1.5 sm:gap-y-0"
           style={{ background: 'var(--nav)', borderColor: 'var(--border)' }}
         >
