@@ -171,6 +171,10 @@ The app uses a **dark-first CSS custom property** theming system.
 | Bold & festive redesign | ✅ Done | Dark-first, CSS custom properties, 5-tab nav |
 | Playwright E2E test suite | ✅ Done | 33 tests across 6 spec files, all API routes mocked |
 | Post-deploy health check | ✅ Done | CI curls production URL after CloudFront invalidation |
+| Self check-in banner | ✅ Done | Dashboard banner during conference dates; calls `POST /api/conference/my/self-checkin` |
+| Hotel essentials card | ✅ Done | Collapsible `HotelCard` on Dashboard — rooms (deep-link to `/map`) + hotel info |
+| Venue map | ✅ Done | `/map` with real hotel PDF floor plans, bilingual room finder dropdown, coordinate pin overlay (27 rooms incl. lettered sub-sections) |
+| Dev-phone tunnel scripts | ✅ Done | `dev-phone.ps1` / `dev-phone.sh` — Vite + Cloudflare tunnel, auto-updates good-api CORS |
 
 ---
 
@@ -183,7 +187,7 @@ These are the next features to build, ranked by guest impact on conference day.
 | Feature | Effort | Notes |
 |---|---|---|
 | **Offline mode** | Medium | Cache schedule + family data in `localStorage` on first load. Show stale banner, never blank screen. QR must render offline (already from `localStorage`). |
-| **Venue map** | Easy | Static floor-plan image per hotel. Tap session → "Get Directions" highlights the room. Even a PNG is enough. |
+| ~~**Venue map**~~ | ~~Easy~~ | ✅ Done — real hotel PDF floor plans, bilingual room finder, coordinate pin overlay |
 | **Meal table assignment** | Medium | Show "Day 2 Dinner · Grand Ballroom A · Table 34" on Dashboard. Needs backend to add `tableNumber` + `roomName` to family API response. |
 | **Live announcements feed** | Medium | New tab in nav for organizer push messages. "Room B is now Salon 3." Needs a `GET /api/conference/announcements` endpoint + push notification. |
 | **"Next up" countdown** | Easy | Dashboard widget: your next signed-up session, room, minutes remaining. Pure frontend using existing session data. |
@@ -204,7 +208,7 @@ These are the next features to build, ranked by guest impact on conference day.
 | Feature | Effort | Notes |
 |---|---|---|
 | **Full language toggle (zh/en)** | Medium | A `lang` context wrapping the app. Session content already has `titleEng` / `descriptionEng` fields. |
-| **Hotel essentials card** | Easy | WiFi password, concierge number, shuttle times pinned to Dashboard. Static data from organizer config. |
+| ~~**Hotel essentials card**~~ | ~~Easy~~ | ✅ Done — `HotelCard` on Dashboard with rooms + hotel info tabs |
 | **Social proof on capacity** | Easy | Rename "12 / 50" → "12 attending" with avatar-circle row. No backend change. |
 | **Push notifications (FCM)** | Hard | Firebase Cloud Messaging for schedule-change alerts. |
 
