@@ -9,6 +9,7 @@ import { useLang } from '../lang-context'
 import BadgeOverlay from '../components/BadgeOverlay'
 import { InstallBanner } from '../components/InstallBanner'
 import SpeakerSheet from '../components/SpeakerSheet'
+import { HotelCard } from '../components/HotelCard'
 
 const MEAL_SLOTS: { key: keyof MealDay; zh: string; en: string; icon: string }[] = [
   { key: 'breakfast', zh: '早餐', en: 'Breakfast', icon: '🌅' },
@@ -251,6 +252,11 @@ export default function Dashboard() {
               {checkinLoading ? '…' : t('我到了！', "I'm here!")}
             </button>
           </div>
+        )}
+
+        {/* ── Hotel essentials card — visible any time before end of conference ── */}
+        {firstSessionTime != null && lastSessionTime != null && now <= lastSessionTime && (
+          <HotelCard />
         )}
 
         {/* ── LIVE NOW hero ── */}
