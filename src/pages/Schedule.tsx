@@ -4,10 +4,8 @@ import { Loader2, MapPin, User, Users, X, Clock } from 'lucide-react'
 import { scheduleApi, linkedSpeakerIds, type CampSession, type EventProgram } from '../api/client'
 import { useAuth } from '../auth-context'
 import { useLang } from '../lang-context'
-import ShareModal from '../components/ShareModal'
 import SpeakerSheet from '../components/SpeakerSheet'
 import { ApiErrorCard } from '../components/ApiErrorCard'
-import { Share2 } from 'lucide-react'
 import { usePageTitle } from '../hooks/usePageTitle'
 
 type ViewMode = 'all' | 'mine'
@@ -423,9 +421,7 @@ export default function Schedule() {
   const [viewMode, setViewMode] = useState<ViewMode>('all')
   const [pendingId, setPendingId] = useState<number | null>(null)
   const [mutationError, setMutationError] = useState<string | null>(null)
-  const [showShare, setShowShare] = useState(false)
   const [detailSession, setDetailSession] = useState<CampSession | null>(null)
-  const shareUrl = window.location.origin + import.meta.env.BASE_URL
 
   const { data: sessions = [], isLoading, isError, refetch } = useQuery<CampSession[]>({
     queryKey: ['schedule', personId],
@@ -517,14 +513,6 @@ export default function Schedule() {
                 </button>
               ))}
             </div>
-            <button
-              onClick={() => setShowShare(true)}
-              className="ml-auto p-2 rounded-lg"
-              style={{ color: 'var(--text-dim)' }}
-              aria-label="分享"
-            >
-              <Share2 size={16} />
-            </button>
           </div>
 
           {/* Program chips — only shown when multiple programs exist */}
@@ -668,8 +656,6 @@ export default function Schedule() {
           </div>
         )}
       </main>
-
-      {showShare && <ShareModal url={shareUrl} onClose={() => setShowShare(false)} />}
 
       {detailSession && (
         <SessionDetailSheet
