@@ -1,9 +1,54 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { BookMarked, Loader2 } from 'lucide-react'
-import { myApi, scheduleApi } from '../api/client'
+import { BookMarked, CalendarArrowDown, Loader2 } from 'lucide-react'
+import { myApi, scheduleApi, type CampSession } from '../api/client'
 import { useAuth } from '../auth-context'
 import SessionCard from '../components/SessionCard'
 import { ApiErrorCard } from '../components/ApiErrorCard'
+import { useLang } from '../lang-context'
+
+function escapeIcs(s: string) {
+  return s.replace(/\\/g, '\\\\').replace(/;/g, '\\;').replace(/,/g, '\\,').replace(/\n/g, '\\n')
+}
+
+function toIcsDate(iso: string) {
+  return iso.replace(/[-:]/g, '').replace(/\.\d{3}/, '').replace('Z', 'Z') || iso
+}
+
+function buildIcs(sessions: CampSession[]): string {
+  const lines: string[] = [
+    'BEGIN:VCALENDAR',
+    'VERSION:2.0',
+    'PRODID:-//Good Vessel//GFC 2026//EN',
+    'CALSCALE:GREGORIAN',
+    'X-WR-CALNAME:GFC 2026 My Schedule',
+  ]
+  for (const s of sessions) {
+    const uid = `gfc2026-session-${s.id}@goodvessel.org`
+    const summary = s.titleEng ? `${s.title} / ${s.titleEng}` : s.title
+    const desc = [s.description, s.descriptionEng].filter(Boolean).join(' / ')
+    lines.push('BEGIN:VEVENT')
+    lines.push(`UID:${uid}`)
+    lines.push(`DTSTART:${toIcsDate(s.startTime)}`)
+    lines.push(`DTEND:${toIcsDate(s.endTime)}`)
+    lines.push(`SUMMARY:${escapeIcs(summary)}`)
+    if (desc) lines.push(`DESCRIPTION:${escapeIcs(desc)}`)
+    if (s.location) lines.push(`LOCATION:${escapeIcs(s.location)}`)
+    lines.push('END:VEVENT')
+  }
+  lines.push('END:VCALENDAR')
+  return lines.join('\r\n')
+}
+
+function downloadIcs(sessions: CampSession[]) {
+  const content = buildIcs(sessions)
+  const blob = new Blob([content], { type: 'text/calendar;charset=utf-8' })
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = 'gfc2026-my-schedule.ics'
+  a.click()
+  URL.revokeObjectURL(url)
+}
 
 function groupByDay(sessions: Awaited<ReturnType<typeof myApi.mySignups>>) {
   const map = new Map<number, typeof sessions>()
@@ -19,6 +64,7 @@ function groupByDay(sessions: Awaited<ReturnType<typeof myApi.mySignups>>) {
 export default function MySchedule() {
   const qc = useQueryClient()
   const { person, token } = useAuth()
+  const { t } = useLang()
   const myProgram = person?.programCode ?? null
   const personId = person?.id ?? null
 
@@ -69,9 +115,20 @@ export default function MySchedule() {
 
   return (
     <div className="max-w-2xl mx-auto px-4 py-5 space-y-6">
-      <div className="flex items-baseline gap-2">
-        <h1 className="text-2xl font-black" style={{ color: 'var(--text)' }}>我的行程</h1>
-        <span className="text-sm" style={{ color: 'var(--text-dim)' }}>My Schedule</span>
+      <div className="flex items-center justify-between gap-2">
+        <div className="flex items-baseline gap-2">
+          <h1 className="text-2xl font-black" style={{ color: 'var(--text)' }}>我的行程</h1>
+          <span className="text-sm" style={{ color: 'var(--text-dim)' }}>My Schedule</span>
+        </div>
+        <button
+          onClick={() => downloadIcs(sessions)}
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-colors"
+          style={{ background: 'var(--surface)', border: '1px solid var(--border)', color: 'var(--text-mid)' }}
+          title={t('匯出行事曆', 'Export to Calendar')}
+        >
+          <CalendarArrowDown size={14} />
+          <span>{t('匯出', 'Export .ics')}</span>
+        </button>
       </div>
 
       {byDay.map(([day, daySessions]) => (

@@ -2,7 +2,7 @@ import { useState, useRef } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import {
   Loader2, User, LogIn, ChevronDown, ChevronUp,
-  BedDouble, Bus, Home, QrCode, CalendarCheck, MessageCircleWarning, Copy, Check,
+  BedDouble, Bus, Home, QrCode, CalendarCheck, MessageCircleWarning, Copy, Check, Share2,
 } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { usePageTitle } from '../hooks/usePageTitle'
@@ -10,6 +10,7 @@ import { myApi, scheduleApi, conferenceApi, type FamilyMember, type MealDay, typ
 import { useAuth } from '../auth-context'
 import { useLang } from '../lang-context'
 import { InstallSettingsCard } from '../components/InstallBanner'
+import ShareModal from '../components/ShareModal'
 
 // ── Constants ──────────────────────────────────────────────────────────────────
 
@@ -502,9 +503,34 @@ export default function MyInfo() {
       {/* SmsOptIn hidden — AWS SMS support request pending; restore here with Settings label when approved */}
 
       <FeedbackButton person={person} />
+      <ShareAppButton />
 
       <p className="text-center text-[10px] pb-1" style={{ color: 'var(--text-dim)' }}>v{__APP_VERSION__}</p>
     </div>
+  )
+}
+
+// ── Share app button ──────────────────────────────────────────────────────────
+
+function ShareAppButton() {
+  const { t } = useLang()
+  const [open, setOpen] = useState(false)
+  const url = window.location.origin + import.meta.env.BASE_URL
+  return (
+    <>
+      <button
+        onClick={() => setOpen(true)}
+        className="w-full flex items-center gap-3 px-4 py-3.5 rounded-2xl transition-colors"
+        style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}
+      >
+        <Share2 size={18} style={{ color: 'var(--accent)' }} />
+        <div className="text-left">
+          <p className="text-sm font-bold" style={{ color: 'var(--text)' }}>{t('分享大會 App', 'Share Conference App')}</p>
+          <p className="text-xs" style={{ color: 'var(--text-dim)' }}>{t('讓朋友掃描 QR code 加入', 'Let friends scan to join')}</p>
+        </div>
+      </button>
+      {open && <ShareModal url={url} onClose={() => setOpen(false)} />}
+    </>
   )
 }
 
