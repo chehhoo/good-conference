@@ -175,6 +175,10 @@ The app uses a **dark-first CSS custom property** theming system.
 | Hotel essentials card | ✅ Done | Collapsible `HotelCard` on Dashboard — rooms (deep-link to `/map`) + hotel info |
 | Venue map | ✅ Done | `/map` with real hotel PDF floor plans, bilingual room finder dropdown, coordinate pin overlay (27 rooms incl. lettered sub-sections) |
 | Dev-phone tunnel scripts | ✅ Done | `dev-phone.ps1` / `dev-phone.sh` — Vite + Cloudflare tunnel, auto-updates good-api CORS |
+| Mobile notification panel fix | ✅ Done | Full-width panel drops from header on mobile; desktop keeps 320px dropdown. `--header-h` via ResizeObserver in Layout.tsx |
+| Calendar export (.ics) | ✅ Done | "匯出 / Export .ics" button on My Schedule; generates VCALENDAR blob client-side, works offline |
+| Share App moved to My Info | ✅ Done | Removed from Schedule; lives as card button below Feedback on My Info |
+| Social proof on capacity | ✅ Done | Avatar circles + "X 人報名 / X attending"; amber badge ≥80% full; "0 / N spots" when empty |
 
 ---
 
@@ -186,31 +190,31 @@ These are the next features to build, ranked by guest impact on conference day.
 
 | Feature | Effort | Notes |
 |---|---|---|
-| **Offline mode** | Medium | Cache schedule + family data in `localStorage` on first load. Show stale banner, never blank screen. QR must render offline (already from `localStorage`). |
+| ~~**Offline mode**~~ | ~~Medium~~ | ✅ Done — `PersistQueryClientProvider` in `main.tsx`, offline banner in `Layout.tsx` |
 | ~~**Venue map**~~ | ~~Easy~~ | ✅ Done — real hotel PDF floor plans, bilingual room finder, coordinate pin overlay |
-| **Meal table assignment** | Medium | Show "Day 2 Dinner · Grand Ballroom A · Table 34" on Dashboard. Needs backend to add `tableNumber` + `roomName` to family API response. |
-| **Live announcements feed** | Medium | New tab in nav for organizer push messages. "Room B is now Salon 3." Needs a `GET /api/conference/announcements` endpoint + push notification. |
-| **"Next up" countdown** | Easy | Dashboard widget: your next signed-up session, room, minutes remaining. Pure frontend using existing session data. |
+| ~~**Meal table assignment**~~ | ~~Medium~~ | ❌ Backlogged — never needed for this conference |
+| ~~**Live announcements feed**~~ | ~~Medium~~ | ✅ Done — `NotificationBell` polls every 30s, bilingual, marks read on open |
+| ~~**"Next up" countdown**~~ | ~~Easy~~ | ✅ Done — Dashboard countdown pill, ticks every 30s, amber urgency ≤10 min |
 
 ### High Value
 
 | Feature | Effort | Notes |
 |---|---|---|
-| **Session conflict detection** | Easy | When signing up, warn if another signed-up session overlaps in time. Frontend-only. |
-| **Live capacity urgency** | Easy | "3 spots left" in amber when ≥80% full. "Full — join waitlist?" at 100%. Frontend-only on existing data. |
-| **Calendar export (.ics)** | Easy | "Export My Schedule" button generates `.ics` from signed-up sessions. Frontend-only. |
+| ~~**Session conflict detection**~~ | ~~Easy~~ | ✅ Done — warns on signup overlap in `Schedule.tsx` |
+| ~~**Live capacity urgency**~~ | ~~Easy~~ | ✅ Done — amber badge ≥80% full, red at 100%, avatar circles |
+| ~~**Calendar export (.ics)**~~ | ~~Easy~~ | ✅ Done — Export button on My Schedule, works offline |
 | **One-tap session rating** | Medium | Push notification 15 min after session ends → star rating half-sheet. Needs backend `POST /api/schedule/:id/rating`. |
-| **Speaker bios** | Medium | Tap speaker name → bottom sheet with photo + bio. Needs `speakers` table in backend. |
+| ~~**Speaker bios**~~ | ~~Medium~~ | ✅ Done — `SpeakerSheet` bottom sheet, tappable speaker names |
 | **Check-in confirmation push** | Medium | When good-scan scans a QR, push "You're checked in · 歡迎！" back to the attendee's device. Needs FCM integration. |
 
 ### Nice to Have
 
 | Feature | Effort | Notes |
 |---|---|---|
-| **Full language toggle (zh/en)** | Medium | A `lang` context wrapping the app. Session content already has `titleEng` / `descriptionEng` fields. |
+| ~~**Full language toggle (zh/en)**~~ | ~~Medium~~ | ✅ Done — `LangProvider` + `useLang()`, ZH/EN toggle in header |
 | ~~**Hotel essentials card**~~ | ~~Easy~~ | ✅ Done — `HotelCard` on Dashboard with rooms + hotel info tabs |
-| **Social proof on capacity** | Easy | Rename "12 / 50" → "12 attending" with avatar-circle row. No backend change. |
-| **Push notifications (FCM)** | Hard | Firebase Cloud Messaging for schedule-change alerts. |
+| ~~**Social proof on capacity**~~ | ~~Easy~~ | ✅ Done — avatar circles + "X 人報名", falls back to "0 / N spots" |
+| **Push notifications (FCM)** | Hard | Firebase Cloud Messaging for schedule-change alerts. Deprioritized. |
 
 ---
 
