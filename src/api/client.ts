@@ -86,6 +86,9 @@ export const scheduleApi = {
 
   programs: () =>
     api.get<EventProgram[]>('/schedule/programs').then(r => r.data),
+
+  rate: (id: number, rating: number) =>
+    api.post<{ sessionId: number; rating: number }>(`/schedule/${id}/rating`, { rating }).then(r => r.data),
 }
 
 export const conferenceApi = {
