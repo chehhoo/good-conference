@@ -203,7 +203,7 @@ These are the next features to build, ranked by guest impact on conference day.
 | ~~**Session conflict detection**~~ | ~~Easy~~ | ✅ Done — warns on signup overlap in `Schedule.tsx` |
 | ~~**Live capacity urgency**~~ | ~~Easy~~ | ✅ Done — amber badge ≥80% full, red at 100%, avatar circles |
 | ~~**Calendar export (.ics)**~~ | ~~Easy~~ | ✅ Done — Export button on My Schedule, works offline |
-| **One-tap session rating** | Medium | Push notification 15 min after session ends → star rating half-sheet. Needs backend `POST /api/schedule/:id/rating`. |
+| ~~**One-tap session rating**~~ | ~~Medium~~ | ✅ Done — star rating embedded in session detail sheet (progressive disclosure); `PUT /api/schedule/{id}/rating` + optional comment; `DELETE` to unrate; loads prior ratings from `GET /api/schedule/my-ratings` |
 | ~~**Speaker bios**~~ | ~~Medium~~ | ✅ Done — `SpeakerSheet` bottom sheet, tappable speaker names |
 | **Check-in confirmation push** | Medium | When good-scan scans a QR, push "You're checked in · 歡迎！" back to the attendee's device. Needs FCM integration. |
 
