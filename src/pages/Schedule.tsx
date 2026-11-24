@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { Loader2, MapPin, User, Users, X, Clock } from 'lucide-react'
+import { Loader2, MapPin, User, Users, X, Clock, Star } from 'lucide-react'
 import { scheduleApi, linkedSpeakerIds, type CampSession, type EventProgram } from '../api/client'
 import { useAuth } from '../auth-context'
 import { useLang } from '../lang-context'
@@ -59,16 +59,58 @@ function overlaps(a: CampSession, b: CampSession) {
     new Date(a.endTime) > new Date(b.startTime)
 }
 
-function SessionDetailSheet({ session: s, onClose, onSignup, onUnsignup, loading, allSessions }: {
+function SessionDetailSheet({ session: s, onClose, onSignup, onUnsignup, loading, allSessions, initialRating, initialComment, onRated }: {
   session: CampSession
   onClose: () => void
   onSignup: (id: number) => void
   onUnsignup: (id: number) => void
   loading: boolean
   allSessions: CampSession[]
+  initialRating?: number
+  initialComment?: string
+  onRated?: (rating: number | null, comment?: string) => void
 }) {
   const [speakerOpen, setSpeakerOpen] = useState(false)
+  const [ratingHovered, setRatingHovered] = useState(0)
+  const [ratingChosen, setRatingChosen] = useState(initialRating ?? 0)
+  const [comment, setComment] = useState(initialComment ?? '')
+  const [ratingError, setRatingError] = useState<string | null>(null)
+  const [ratingSuccess, setRatingSuccess] = useState(false)
   const { t, primary, secondary } = useLang()
+
+  const rateMutation = useMutation({
+    mutationFn: ({ rating, comment }: { rating: number; comment: string }) =>
+      scheduleApi.rate(s.id, rating, comment),
+    onSuccess: (_, { rating, comment }) => {
+      setRatingChosen(rating)
+      setRatingSuccess(true)
+      onRated?.(rating, comment)
+      setTimeout(() => setRatingSuccess(false), 1500)
+    },
+    onError: (err: unknown) => {
+      const msg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message
+      setRatingError(msg ?? t('提交失敗，請再試', 'Submit failed, please retry'))
+    },
+  })
+
+  const unrateMutation = useMutation({
+    mutationFn: () => scheduleApi.unrate(s.id),
+    onSuccess: () => {
+      setRatingChosen(0)
+      setComment('')
+      onRated?.(null)
+    },
+    onError: (err: unknown) => {
+      const msg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message
+      setRatingError(msg ?? t('提交失敗，請再試', 'Submit failed, please retry'))
+    },
+  })
+
+  const ratingLabels: Record<number, [string, string]> = {
+    1: ['很差', 'Poor'], 2: ['普通', 'Fair'], 3: ['還好', 'Good'], 4: ['很好', 'Great'], 5: ['非常好！', 'Excellent!'],
+  }
+  const ratingDisplay = ratingHovered || ratingChosen
+  const ratingPending = rateMutation.isPending || unrateMutation.isPending
   const canGo = GOING_TYPES.has(s.sessionType)
   const atCapacity = s.capacity != null && s.signupCount >= s.capacity
   const typeColor = TYPE_COLOR[s.sessionType] ?? 'var(--text-dim)'
@@ -209,6 +251,79 @@ function SessionDetailSheet({ session: s, onClose, onSignup, onUnsignup, loading
             </div>
           )}
 
+          {/* Star Rating */}
+          <div className="mt-4 pt-4" style={{ borderTop: '1px solid var(--border)' }}>
+            {/* Label + stars inline */}
+            <div className="flex items-center gap-3">
+              <span className="text-xs font-semibold shrink-0" style={{ color: 'var(--text-dim)' }}>
+                {t('評分', 'Rate')}
+              </span>
+              <div className="flex items-center gap-1.5">
+                {[1,2,3,4,5].map(i => (
+                  <button
+                    key={i}
+                    onMouseEnter={() => setRatingHovered(i)}
+                    onMouseLeave={() => setRatingHovered(0)}
+                    onClick={() => { setRatingChosen(i); setRatingError(null) }}
+                    disabled={ratingPending}
+                    aria-label={`${i} star`}
+                    className="active:scale-90 disabled:opacity-50"
+                    style={{ transform: ratingHovered >= i ? 'scale(1.2)' : 'scale(1)', transition: 'transform 0.1s' }}
+                  >
+                    <Star
+                      size={26}
+                      fill={ratingDisplay >= i ? 'var(--gold)' : 'none'}
+                      color={ratingDisplay >= i ? 'var(--gold)' : 'var(--border2)'}
+                      strokeWidth={1.5}
+                    />
+                  </button>
+                ))}
+              </div>
+              {ratingDisplay > 0 && (
+                <span className="text-xs font-semibold" style={{ color: 'var(--gold)' }}>
+                  {t(ratingLabels[ratingDisplay][0], ratingLabels[ratingDisplay][1])}
+                </span>
+              )}
+            </div>
+
+            {/* Expand comment + submit only after a star is chosen */}
+            {ratingChosen > 0 && (
+              <div className="mt-3">
+                <textarea
+                  value={comment}
+                  onChange={e => setComment(e.target.value.slice(0, 500))}
+                  placeholder={t('留下評語（選填）', 'Leave a comment (optional)')}
+                  rows={2}
+                  className="w-full rounded-xl px-3 py-2 text-sm resize-none mb-2"
+                  style={{ background: 'var(--surface2)', border: '1px solid var(--border)', color: 'var(--text)', outline: 'none' }}
+                />
+                <div className="flex items-center gap-3">
+                  <button
+                    onClick={() => { setRatingError(null); rateMutation.mutate({ rating: ratingChosen, comment }) }}
+                    disabled={ratingPending}
+                    className="px-5 py-1.5 rounded-full text-sm font-bold disabled:opacity-40"
+                    style={{ background: ratingSuccess ? 'var(--green)' : 'var(--gold)', color: ratingSuccess ? '#fff' : '#1a0f00' }}
+                  >
+                    {ratingPending ? '…' : ratingSuccess ? t('已送出 ✓', 'Submitted ✓') : t('送出', 'Submit')}
+                  </button>
+                  {initialRating && (
+                    <button
+                      onClick={() => { setRatingError(null); unrateMutation.mutate() }}
+                      disabled={ratingPending}
+                      className="text-xs disabled:opacity-40"
+                      style={{ color: 'var(--text-dim)' }}
+                    >
+                      {t('移除評分', 'Remove rating')}
+                    </button>
+                  )}
+                </div>
+                {ratingError && (
+                  <p className="text-xs mt-2" style={{ color: 'var(--accent)' }}>{ratingError}</p>
+                )}
+              </div>
+            )}
+          </div>
+
           {/* Going toggle */}
           {canGo && (
             <div className="mt-5">
@@ -294,9 +409,9 @@ function SessionRow({ session: s, onSignup, onUnsignup, onSelect, loading, isLas
         )}
 
         {/* Title + going toggle inline */}
-        <div className="flex items-center gap-2 mt-0.5 flex-wrap">
+        <div className="flex items-start gap-2 mt-0.5">
           <span
-            className="font-semibold leading-snug"
+            className="font-semibold leading-snug flex-1 min-w-0"
             style={{ color: isOther ? 'var(--text-dim)' : 'var(--text)', fontSize: 14 }}
           >
             {primary(s.title, s.titleEng)}
@@ -409,6 +524,7 @@ function SessionRow({ session: s, onSignup, onUnsignup, onSelect, loading, isLas
   )
 }
 
+
 export default function Schedule() {
   usePageTitle('大會行程', 'Conference Schedule')
   const qc = useQueryClient()
@@ -422,6 +538,17 @@ export default function Schedule() {
   const [pendingId, setPendingId] = useState<number | null>(null)
   const [mutationError, setMutationError] = useState<string | null>(null)
   const [detailSession, setDetailSession] = useState<CampSession | null>(null)
+  const [localRatings, setLocalRatings] = useState<Record<number, { rating: number; comment?: string } | null>>({})
+
+  const { data: myRatingsData } = useQuery({
+    queryKey: ['my-ratings', personId],
+    queryFn: scheduleApi.myRatings,
+    staleTime: 60_000,
+  })
+  // Merge server ratings with local overrides
+  const mergedRatings: Record<number, { rating: number; comment?: string } | null> = {}
+  for (const r of myRatingsData ?? []) mergedRatings[r.sessionId] = { rating: r.rating, comment: r.comment }
+  for (const [id, v] of Object.entries(localRatings)) mergedRatings[Number(id)] = v
 
   const { data: sessions = [], isLoading, isError, refetch } = useQuery<CampSession[]>({
     queryKey: ['schedule', personId],
@@ -665,6 +792,12 @@ export default function Schedule() {
           onUnsignup={id => { unsignup.mutate(id); setDetailSession(s => s?.id === id ? { ...s, signedUp: false } : s) }}
           loading={pendingId === detailSession.id}
           allSessions={sessions}
+          initialRating={mergedRatings[detailSession.id]?.rating}
+          initialComment={mergedRatings[detailSession.id]?.comment}
+          onRated={(rating, comment) => setLocalRatings(prev => ({
+            ...prev,
+            [detailSession.id]: rating != null ? { rating, comment } : null,
+          }))}
         />
       )}
     </div>
