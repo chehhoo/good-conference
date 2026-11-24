@@ -39,7 +39,7 @@ test.describe('Schedule', () => {
   test('detail sheet closes on X button', async ({ page }) => {
     await page.locator('div.cursor-pointer', { hasText: '聖經工作坊 A' }).first().click()
     await expect(page.getByText('深入研讀聖經')).toBeVisible()
-    await page.getByRole('button', { name: '' }).filter({ has: page.locator('svg') }).last().click()
+    await page.getByRole('button', { name: 'Close' }).click()
     await expect(page.getByText('深入研讀聖經')).toBeHidden()
   })
 

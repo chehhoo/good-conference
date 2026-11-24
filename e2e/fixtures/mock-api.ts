@@ -27,6 +27,17 @@ export async function mockAll(page: Page) {
   await page.route('**/api/schedule/my-signups', (r) =>
     r.fulfill({ json: TEST_SESSIONS.filter(s => s.signedUp) })
   )
+  await page.route('**/api/schedule/my-ratings', (r) =>
+    r.fulfill({ json: [] })
+  )
+  await page.route('**/api/schedule/*/rating', (r) => {
+    if (r.request().method() === 'PUT') {
+      const id = Number(r.request().url().match(/schedule\/(\d+)/)?.[1])
+      r.fulfill({ json: { sessionId: id, rating: 4, comment: '' } })
+    } else {
+      r.fulfill({ status: 204, body: '' })
+    }
+  })
   await page.route('**/api/schedule/*/signup', (r) => {
     if (r.request().method() === 'POST') {
       const id = Number(r.request().url().match(/schedule\/(\d+)/)?.[1])
