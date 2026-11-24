@@ -145,7 +145,7 @@ function SessionDetailSheet({ session: s, onClose, onSignup, onUnsignup, loading
         <div className="px-5 pb-24 pt-2">
           {/* Close */}
           <div className="flex justify-end mb-2">
-            <button onClick={onClose} className="p-1.5 rounded-full" style={{ background: 'var(--surface2)', color: 'var(--text-dim)' }}>
+            <button onClick={onClose} aria-label="Close" className="p-1.5 rounded-full" style={{ background: 'var(--surface2)', color: 'var(--text-dim)' }}>
               <X size={16} />
             </button>
           </div>
