@@ -70,8 +70,7 @@ export default function MySchedule() {
   const myProgram = person?.programCode ?? null
   const personId = person?.id ?? null
   const [ratingSession, setRatingSession] = useState<CampSession | null>(null)
-  const [localRatings, setLocalRatings] = useState<Record<number, number>>({})
-  const now = Date.now()
+  const [localRatings, setLocalRatings] = useState<Record<number, number | null>>({})
 
   const { data, isLoading, isError, refetch } = useQuery({
     queryKey: ['my-signups', personId],
@@ -140,7 +139,7 @@ export default function MySchedule() {
         <StarRatingSheet
           sessionId={ratingSession.id}
           sessionTitle={[ratingSession.title, ratingSession.titleEng].filter(Boolean).join(' / ')}
-          initialRating={localRatings[ratingSession.id]}
+          initialRating={localRatings[ratingSession.id] ?? undefined}
           onClose={() => setRatingSession(null)}
           onRated={rating => setLocalRatings(prev => ({ ...prev, [ratingSession.id]: rating }))}
         />
@@ -155,36 +154,33 @@ export default function MySchedule() {
           )}
           <div className="space-y-3">
             {daySessions.map(s => {
-              const ended = new Date(s.endTime).getTime() < now
-              const rated = localRatings[s.id]
+              const rated = localRatings[s.id] ?? undefined
               return (
                 <div key={s.id}>
                   <SessionCard
                     session={s}
                     loading={unsignup.isPending && unsignup.variables === s.id}
-                    onUnsignup={ended ? undefined : () => unsignup.mutate(s.id)}
+                    onUnsignup={() => unsignup.mutate(s.id)}
                     viewingProgram={myProgram}
                   />
-                  {ended && (
-                    <button
-                      onClick={() => setRatingSession(s)}
-                      className="w-full mt-1.5 flex items-center justify-center gap-2 py-2 rounded-xl text-xs font-bold transition-colors"
-                      style={{
-                        background: rated ? 'var(--gold-dim)' : 'var(--surface)',
-                        border: '1px solid var(--border)',
-                        color: rated ? 'var(--gold)' : 'var(--text-dim)',
-                      }}
-                    >
-                      {[1,2,3,4,5].map(i => (
-                        <Star key={i} size={13}
-                          fill={rated && i <= rated ? 'var(--gold)' : 'none'}
-                          color={rated && i <= rated ? 'var(--gold)' : 'var(--border)'}
-                          strokeWidth={1.5}
-                        />
-                      ))}
-                      <span>{rated ? t('已評分', 'Rated') : t('評分此場次', 'Rate this session')}</span>
-                    </button>
-                  )}
+                  <button
+                    onClick={() => setRatingSession(s)}
+                    className="w-full mt-1.5 flex items-center justify-center gap-2 py-2 rounded-xl text-xs font-bold transition-colors"
+                    style={{
+                      background: rated ? 'var(--gold-dim)' : 'var(--surface)',
+                      border: '1px solid var(--border)',
+                      color: rated ? 'var(--gold)' : 'var(--text-dim)',
+                    }}
+                  >
+                    {[1,2,3,4,5].map(i => (
+                      <Star key={i} size={13}
+                        fill={rated && i <= rated ? 'var(--gold)' : 'none'}
+                        color={rated && i <= rated ? 'var(--gold)' : 'var(--border)'}
+                        strokeWidth={1.5}
+                      />
+                    ))}
+                    <span>{rated ? t('已評分', 'Rated') : t('評分', 'Rate')}</span>
+                  </button>
                 </div>
               )
             })}

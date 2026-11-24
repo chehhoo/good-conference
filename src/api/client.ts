@@ -87,8 +87,16 @@ export const scheduleApi = {
   programs: () =>
     api.get<EventProgram[]>('/schedule/programs').then(r => r.data),
 
-  rate: (id: number, rating: number) =>
-    api.post<{ sessionId: number; rating: number }>(`/schedule/${id}/rating`, { rating }).then(r => r.data),
+  rate: (id: number, rating: number, comment?: string) =>
+    api.put<{ sessionId: number; rating: number; comment?: string }>(
+      `/schedule/${id}/rating`, { rating, comment: comment ?? '' }
+    ).then(r => r.data),
+
+  unrate: (id: number) =>
+    api.delete(`/schedule/${id}/rating`),
+
+  myRatings: () =>
+    api.get<{ sessionId: number; rating: number; comment?: string }[]>('/schedule/my-ratings').then(r => r.data),
 }
 
 export const conferenceApi = {
