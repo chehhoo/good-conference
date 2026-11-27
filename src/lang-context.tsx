@@ -40,9 +40,12 @@ export function LangProvider({ children }: { children: React.ReactNode }) {
     return lang === 'en' ? (en ?? zh ?? '') : (zh ?? en ?? '')
   }
 
+  // The other language's text, shown under the primary line. Nothing when it would only repeat it:
+  // a session written in one language only (every Grace Conference session) has the same text in both fields.
   function secondary(zh: string | null | undefined, en: string | null | undefined): string | null {
-    if (lang === 'en') return zh ?? null
-    return en ?? null
+    const other = lang === 'en' ? zh : en
+    if (!other) return null
+    return other.trim() === primary(zh, en).trim() ? null : other
   }
 
   return (
