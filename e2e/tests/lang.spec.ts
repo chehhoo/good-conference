@@ -56,6 +56,26 @@ test.describe('Language toggle', () => {
     await expect(page.getByText('Opening Ceremony').first()).toBeVisible()
     await expect(page.getByText('開幕式').first()).toBeVisible()
   })
+
+  test('a title with the same text in both languages is shown once, in either language', async ({ page }) => {
+    // Grace Conference sessions are written in English only (title === titleEng); a Chinese-only session has no titleEng.
+    const base = { description: null, descriptionEng: null, speaker: null, speakerEng: null, startTime: '2026-08-01T09:00:00', endTime: '2026-08-01T10:30:00', location: null, capacity: null, day: 1, sessionType: 'GENERAL', signupCount: 0, signedUp: false }
+    await page.route('**/api/schedule', (r) => r.fulfill({
+      json: [
+        { ...base, id: 1, title: 'Prayer and Praise', titleEng: 'Prayer and Praise' },
+        { ...base, id: 2, title: '註冊', titleEng: null },
+      ],
+    }))
+    await seedAuth(page)
+    await page.goto('/schedule')
+    await expect(page.getByText('註冊', { exact: true })).toHaveCount(1)
+    await expect(page.getByText('Prayer and Praise', { exact: true })).toHaveCount(1)
+
+    await page.getByRole('button', { name: 'EN', exact: true }).click()
+    await expect(page.getByRole('link', { name: 'Today' })).toBeVisible()
+    await expect(page.getByText('註冊', { exact: true })).toHaveCount(1)
+    await expect(page.getByText('Prayer and Praise', { exact: true })).toHaveCount(1)
+  })
 })
 
 test.describe('Language toggle — persistence', () => {
